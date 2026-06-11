@@ -115,18 +115,6 @@
           gain.connect(this.ctx.destination);
           osc.start(now);
           osc.stop(now + 0.85);
-          if (step % 2 === 0) {
-            const pulseOsc = this.ctx.createOscillator();
-            const pulseGain = this.ctx.createGain();
-            pulseOsc.type = 'triangle';
-            pulseOsc.frequency.setValueAtTime(note / 2, now);
-            pulseGain.gain.setValueAtTime(0.03, now);
-            pulseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
-            pulseOsc.connect(pulseGain);
-            pulseGain.connect(this.ctx.destination);
-            pulseOsc.start(now);
-            pulseOsc.stop(now + 0.45);
-          }
           step++;
         };
         this.bgmInterval = setInterval(playStep, 500);
@@ -150,60 +138,134 @@
     // ==========================================
     // 📚 QUIZ DATA (ZOROASTRIANISM TOPICS)
     // ==========================================
-    const QUIZ_SETS = [
+    const QUESTIONS = [
       {
-        id: 1,
-        book: "Book 1: History and Development",
-        bookMalay: "Buku 1: Sejarah dan Perkembangan",
-        title: "Origins & Zarathustra's Mission",
-        malayTitle: "Asal-usul & Misi Perjuangan Zarathustra",
-        description: "Explore the miraculous birth, Spitama clan origins, and Zarathustra's divine mission to reform ancient Persian religion.",
-        malayDescription: "Terokai kelahiran ajaib, asal-usul puak Spitama, dan misi suci Zarathustra dalam memperbaharui kepercayaan Parsi purba.",
-        color: "from-amber-400 to-orange-500",
-        questions: [
-          {
-            q: "In which geographical region do historical estimations place the birth of Zarathustra?",
-            qM: "Di manakah kawasan geografi yang dikaitkan oleh ahli sejarah sebagai tempat lahir Zarathustra?",
-            options: [
-              { text: "Azerbaijan (Northern/Northwestern Iran)", textM: "Azerbaijan (Utara/Barat Laut Iran)", isCorrect: true },
-              { text: "Mesopotamia (Modern Iraq)", textM: "Mesopotamia (Iraq Moden)" },
-              { text: "Persepolis (Southern Iran)", textM: "Persepolis (Selatan Iran)" },
-              { text: "The Arabian Peninsula", textM: "Semenanjung Arab" }
-            ],
-            hint: "This rugged mountainous area in Northwestern Iran is central to his early life.",
-            hintM: "Kawasan bergunung-ganang di Barat Laut Iran ini sangat penting bagi awal hidupnya.",
-            tip: "Historians and scriptures suggest Zarathustra was born in Northwestern Iran/Azerbaijan in the Spitama clan.",
-            tipM: "Sejarahwan dan kitab suci mencatatkan bahawa Zarathustra dilahirkan di Barat Laut Iran/Azerbaijan dalam puak Spitama."
-          },
-          {
-            q: "Zarathustra belonged to which ancient noble and priestly lineage?",
-            qM: "Zarathustra tergolong dalam keturunan bangsawan dan golongan pendeta purba yang mana?",
-            options: [
-              { text: "The Spitama Clan", textM: "Puak Spitama", isCorrect: true },
-              { text: "The Sasanian Clan", textM: "Puak Sasanian" },
-              { text: "The Achaemenid Lineage", textM: "Keturunan Achaemenid" },
-              { text: "The Parthian Dynasty", textM: "Dinasti Parthian" }
-            ],
-            hint: "The name of this lineage translates to 'of brilliant or white descent'.",
-            hintM: "Nama keturunan ini diterjemahkan sebagai 'daripada keturunan yang putih berkilau'.",
-            tip: "Zarathustra came from the Spitama family, a family revered for spiritual devotion.",
-            tipM: "Zarathustra berasal daripada keluarga Spitama, sebuah keluarga yang dihormati dalam hal keagamaan."
-          },
-          {
-            q: "Who were the parents of the prophet Zarathustra according to historical records?",
-            qM: "Siapakah nama ibu bapa nabi Zarathustra menurut catatan sejarah?",
-            options: [
-              { text: "Pourushaspa and Dughdova", textM: "Pourushaspa dan Dughdova", isCorrect: true },
-              { text: "King Vishtaspa and Hutosa", textM: "Raja Vishtaspa dan Hutosa" },
-              { text: "Cyrus the Great and Cassandane", textM: "Cyrus Agung dan Cassandane" },
-              { text: "Darius and Atossa", textM: "Darius dan Atossa" }
-            ],
-            hint: "His father's name relates to horses, and his mother's name means 'maiden of light'.",
-            hintM: "Nama bapanya mempunyai maksud berkaitan kuda, dan ibunya bermaksud 'gadis cahaya'.",
-            tip: "His father, Pourushaspa, and his mother, Dughdova, brought up Zarathustra despite early magical threats.",
-            tipM: "Bapanya, Pourushaspa, dan ibunya, Dughdova, membesarkan Zarathustra walaupun menghadapi ancaman sihir awal."
-          },
-          {
-            q: "What miraculous baby behavior is unique to Zarathustra at the moment of his birth?",
-            qM: "Apakah kelakuan ajaib bayi yang unik kepada Zarathustra ketika beliau dilahirkan?",
-            options:
+        q: "In which geographical region do historical estimations place the birth of Zarathustra?",
+        qM: "Di manakah kawasan geografi yang dikaitkan oleh ahli sejarah sebagai tempat lahir Zarathustra?",
+        options: [
+          { text: "Azerbaijan (Northern/Northwestern Iran)", textM: "Azerbaijan (Utara/Barat Laut Iran)", isCorrect: true },
+          { text: "Mesopotamia (Modern Iraq)", textM: "Mesopotamia (Iraq Moden)" },
+          { text: "Persepolis (Southern Iran)", textM: "Persepolis (Selatan Iran)" },
+          { text: "The Arabian Peninsula", textM: "Semenanjung Arab" }
+        ],
+        hint: "This rugged mountainous area in Northwestern Iran is central to his early life.",
+        hintM: "Kawasan bergunung-ganang di Barat Laut Iran ini sangat penting bagi awal hidupnya.",
+        tip: "Historians and scriptures suggest Zarathustra was born in Northwestern Iran/Azerbaijan in the Spitama clan.",
+        tipM: "Sejarahwan dan kitab suci mencatatkan bahawa Zarathustra dilahirkan di Barat Laut Iran/Azerbaijan dalam puak Spitama."
+      },
+      {
+        q: "Zarathustra belonged to which ancient noble and priestly lineage?",
+        qM: "Zarathustra tergolong dalam keturunan bangsawan dan golongan pendeta purba yang mana?",
+        options: [
+          { text: "The Spitama Clan", textM: "Puak Spitama", isCorrect: true },
+          { text: "The Sasanian Clan", textM: "Puak Sasanian" },
+          { text: "The Achaemenid Lineage", textM: "Keturunan Achaemenid" },
+          { text: "The Parthian Dynasty", textM: "Dinasti Parthian" }
+        ],
+        hint: "The name of this lineage translates to 'of brilliant or white descent'.",
+        hintM: "Nama keturunan ini diterjemahkan sebagai 'daripada keturunan yang putih berkilau'.",
+        tip: "Zarathustra came from the Spitama family, a family revered for spiritual devotion.",
+        tipM: "Zarathustra berasal daripada keluarga Spitama, sebuah keluarga yang dihormati dalam hal keagamaan."
+      },
+      {
+        q: "Who were the parents of the prophet Zarathustra according to historical records?",
+        qM: "Siapakah nama ibu bapa nabi Zarathustra menurut catatan sejarah?",
+        options: [
+          { text: "Pourushaspa and Dughdova", textM: "Pourushaspa dan Dughdova", isCorrect: true },
+          { text: "King Vishtaspa and Hutosa", textM: "Raja Vishtaspa dan Hutosa" },
+          { text: "Cyrus the Great and Cassandane", textM: "Cyrus Agung dan Cassandane" },
+          { text: "Darius and Atossa", textM: "Darius dan Atossa" }
+        ],
+        hint: "His father's name relates to horses, and his mother's name means 'maiden of light'.",
+        hintM: "Nama bapanya mempunyai maksud berkaitan kuda, dan ibunya bermaksud 'gadis cahaya'.",
+        tip: "His father, Pourushaspa, and his mother, Dughdova, brought up Zarathustra despite early magical threats.",
+        tipM: "Bapanya, Pourushaspa, dan ibunya, Dughdova, membesarkan Zarathustra walaupun menghadapi ancaman sihir awal."
+      },
+      {
+        q: "What miraculous baby behavior is unique to Zarathustra at the moment of his birth?",
+        qM: "Apakah kelakuan ajaib bayi yang unik kepada Zarathustra ketika beliau dilahirkan?",
+        options: [
+          { text: "He laughed out loud instead of crying", textM: "Beliau ketawa riang dan bukannya menangis", isCorrect: true },
+          { text: "He pointed towards the eastern sky", textM: "Beliau menunjuk ke arah langit timur" },
+          { text: "A small flame burned gently on his head", textM: "Api kecil menyala lembut di kepalanya" },
+          { text: "He spoke clearly to comfort his mother", textM: "Beliau berkata-kata dengan jelas untuk menenangkan ibunya" }
+        ],
+        hint: "His joyous laughter signaled the ultimate triumph of optimism over dark spiritual forces.",
+        hintM: "Ketawa gembiranya menandakan kemenangan muktamad cahaya ke atas kuasa gelap.",
+        tip: "The sacred texts highlight that Zarathustra laughed at birth, scattering dark elements and evil spirits.",
+        tipM: "Kitab suci menekankan bahawa Zarathustra ketawa semasa lahir, menakutkan unsur-unsur gelap dan roh jahat."
+      },
+      {
+        q: "What was the dominant religious state of ancient Persians before Zarathustra's historical reforms?",
+        qM: "Apakah keadaan keagamaan utama orang Parsi kuno sebelum reformasi bersejarah Zarathustra?",
+        options: [
+          { text: "Polytheism with blood-soaked animal sacrifices", textM: "Politeisme dengan upacara korban haiwan berdarah", isCorrect: true },
+          { text: "Strict philosophical atheism", textM: "Ateisme berfalsafah yang ketat" },
+          { text: "Sun-centric worship without any rituals", textM: "Penyembahan matahari tanpa sebarang ritual" },
+          { text: "Worship of water spirits inside dark caves", textM: "Penyembahan roh air di dalam gua gelap" }
+        ],
+        hint: "This pre-Zoroastrian practice involved appeasing multiple 'daevas' with brutal killings.",
+        hintM: "Amalan sebelum Zoroastrian ini melibatkan pemuasan banyak tuhan dengan pembunuhan kejam.",
+        tip: "Zarathustra courageously condemned the animal slaughter and multi-god magic of the existing priests.",
+        tipM: "Zarathustra dengan berani mengecam penyembelihan haiwan dan sihir berbilang tuhan oleh para pendeta lama."
+      },
+      {
+        q: "At what key age did Zarathustra leave his home to search for true spiritual wisdom?",
+        qM: "Pada usia penting berapakah Zarathustra meninggalkan rumahnya untuk mencari kebijaksanaan rohani yang sebenar?",
+        options: [
+          { text: "30 years old", textM: "30 tahun", isCorrect: true },
+          { text: "15 years old", textM: "15 tahun" },
+          { text: "20 years old", textM: "20 tahun" },
+          { text: "40 years old", textM: "40 tahun" }
+        ],
+        hint: "It represents a standard stage of intellectual and emotional maturity in ancient history.",
+        hintM: "Ia mewakili peringkat matang dari segi intelek dan emosi dalam sejarah purba." ,
+        tip: "At age 30, Zarathustra received his first massive revelation after a decade of searching.",
+        tipM: "Pada usia 30 tahun, Zarathustra menerima wahyu agung pertamanya setelah sedekad mencari."
+      },
+      {
+        q: "Which volcanic peak in Northwestern Iran is celebrated as his spot of high meditation and vision?",
+        qM: "Puncak gunung berapi manakah di Barat Laut Iran yang diraikan sebagai tempat meditasi dan wahyu agungnya?",
+        options: [
+          { text: "Mount Sabalan", textM: "Gunung Sabalan", isCorrect: true },
+          { text: "Mount Damavand", textM: "Gunung Damavand" },
+          { text: "Mount Ararat", textM: "Gunung Ararat" },
+          { text: "Mount Sinai", textM: "Gunung Sinai" }
+        ],
+        hint: "This peaks stands high in Azerbaijan, covered with snow and holy springs.",
+        hintM: "Gunung ini berdiri tinggi di Azerbaijan, dilitupi salji dan kolam air suci.",
+        tip: "According to historical accounts, Mount Sabalan was where Zarathustra communed with God.",
+        tipM: "Menurut sejarah, Gunung Sabalan merupakan tempat Zarathustra merenung dan berhubung dengan Tuhan."
+      },
+      {
+        q: "Who was the brilliant celestial being (Amesha Spenta) that led him to Ahura Mazda?",
+        qM: "Siapakah makhluk syurga bercahaya (Amesha Spenta) yang memimpin beliau menemui Ahura Mazda?",
+        options: [
+          { text: "Vohu Manah (The Good Mind)", textM: "Vohu Manah (Minda yang Baik)", isCorrect: true },
+          { text: "Ahriman (The Dark One)", textM: "Ahriman (Si Gelap)" },
+          { text: "Mithra (The Guardian)", textM: "Mithra (Sang Penjaga)" },
+          { text: "Atar (The Flame)", textM: "Atar (Sang Api)" }
+        ],
+        hint: "This entity represents divine wisdom, clean consciousness, and pure mind.",
+        hintM: "Entiti ini mewakili kebijaksanaan ilahi, kesedaran murni, dan minda yang bersih.",
+        tip: "Vohu Manah appeared as an immense figure of pure light, asking Zarathustra who he was.",
+        tipM: "Vohu Manah muncul sebagai lembaga cahaya yang sangat besar, menanyakan Zarathustra siapa dirinya."
+      },
+      {
+        q: "How many years of preaching did it take before Zarathustra gained his very first convert?",
+        qM: "Berapa tahunkah masa yang diambil untuk berdakwah sebelum Zarathustra mendapat pengikut pertamanya?",
+        options: [
+          { text: "10 years", textM: "10 tahun", isCorrect: true },
+          { text: "1 year", textM: "1 tahun" },
+          { text: "5 years", textM: "5 tahun" },
+          { text: "12 years", textM: "12 tahun" }
+        ],
+        hint: "It required an entire decade of continuous rejection, persecution, and isolation.",
+        hintM: "Ia memerlukan sedekad penuh penolakan, penindasan, dan pengasingan diri.",
+        tip: "Zarathustra struggled for ten long years until his cousin accepted his monotheistic vision.",
+        tipM: "Zarathustra berjuang selama sepuluh tahun sebelum sepupunya menerima ajaran monoteistik ini."
+      },
+      {
+        q: "Who was this very first convert who recognized his divine revelation?",
+        qM: "Siapakah nama pengikut pertama yang mengakui kebenaran wahyu beliau?",
+        options:
