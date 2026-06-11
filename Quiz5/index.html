@@ -1,271 +1,530 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Kembara Agama - Quiz 5: Zoroastrianism</title>
+import React, { useState, useEffect } from 'react';
+
+// ==========================================
+// 🔊 AUDIO SYNTH ENGINE (WEB AUDIO API)
+// ==========================================
+class EducationalSoundSynth {
+  constructor() {
+    this.ctx = null;
+    this.bgmInterval = null;
+    this.isMuted = false;
+  }
+
+  init() {
+    if (!this.ctx) {
+      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+    if (this.ctx.state === 'suspended') {
+      this.ctx.resume();
+    }
+  }
+
+  playCorrect() {
+    if (this.isMuted) return;
+    this.init();
+    const now = this.ctx.currentTime;
+    const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51]; 
+    notes.forEach((freq, idx) => {
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(freq, now + idx * 0.06);
+      gain.gain.setValueAtTime(0.25, now + idx * 0.06);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.4);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now + idx * 0.06);
+      osc.stop(now + idx * 0.06 + 0.45);
+    });
+  }
+
+  playWrong() {
+    if (this.isMuted) return;
+    this.init();
+    const now = this.ctx.currentTime;
+    const osc1 = this.ctx.createOscillator();
+    const osc2 = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc1.type = 'sawtooth';
+    osc1.frequency.setValueAtTime(150, now);
+    osc1.frequency.linearRampToValueAtTime(80, now + 0.35);
+    osc2.type = 'sine';
+    osc2.frequency.setValueAtTime(155, now);
+    osc2.frequency.linearRampToValueAtTime(85, now + 0.35);
+    gain.gain.setValueAtTime(0.22, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+    osc1.connect(gain);
+    osc2.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc1.start(now);
+    osc2.start(now);
+    osc1.stop(now + 0.35);
+    osc2.stop(now + 0.35);
+  }
+
+  startBGM() {
+    if (this.isMuted) return;
+    this.init();
+    if (this.bgmInterval) return;
+    let step = 0;
+    const melody = [329.63, 392.00, 440.00, 392.00, 329.63, 392.00, 440.00, 349.23];
+    const playStep = () => {
+      const now = this.ctx.currentTime;
+      const note = melody[step % melody.length];
+      const osc = this.ctx.createOscillator();
+      const gain = this.ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(note, now);
+      gain.gain.setValueAtTime(0.05, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+      osc.connect(gain);
+      gain.connect(this.ctx.destination);
+      osc.start(now);
+      osc.stop(now + 0.85);
+      step++;
+    };
+    this.bgmInterval = setInterval(playStep, 500);
+  }
+
+  stopBGM() {
+    if (this.bgmInterval) {
+      clearInterval(this.bgmInterval);
+      this.bgmInterval = null;
+    }
+  }
+
+  toggleMute() {
+    this.isMuted = !this.isMuted;
+    if (this.isMuted) this.stopBGM();
+    else this.startBGM();
+    return this.isMuted;
+  }
+}
+
+// ==========================================
+// 📚 QUIZ DATA (ZOROASTRIANISM TOPICS)
+// ==========================================
+const QUESTIONS = [
+  {
+    q: "In which geographical region do historical estimations place the birth of Zarathustra?",
+    qM: "Di manakah kawasan geografi yang dikaitkan oleh ahli sejarah sebagai tempat lahir Zarathustra?",
+    options: [
+      { text: "Azerbaijan (Northern/Northwestern Iran)", textM: "Azerbaijan (Utara/Barat Laut Iran)", isCorrect: true },
+      { text: "Mesopotamia (Modern Iraq)", textM: "Mesopotamia (Iraq Moden)" },
+      { text: "Persepolis (Southern Iran)", textM: "Persepolis (Selatan Iran)" },
+      { text: "The Arabian Peninsula", textM: "Semenanjung Arab" }
+    ],
+    hint: "This rugged mountainous area in Northwestern Iran is central to his early life.",
+    hintM: "Kawasan bergunung-ganang di Barat Laut Iran ini sangat penting bagi awal hidupnya.",
+    tip: "Historians and scriptures suggest Zarathustra was born in Northwestern Iran/Azerbaijan in the Spitama clan.",
+    tipM: "Sejarahwan dan kitab suci mencatatkan bahawa Zarathustra dilahirkan di Barat Laut Iran/Azerbaijan dalam puak Spitama."
+  },
+  {
+    q: "Zarathustra belonged to which ancient noble and priestly lineage?",
+    qM: "Zarathustra tergolong dalam keturunan bangsawan dan golongan pendeta purba yang mana?",
+    options: [
+      { text: "The Spitama Clan", textM: "Puak Spitama", isCorrect: true },
+      { text: "The Sasanian Clan", textM: "Puak Sasanian" },
+      { text: "The Achaemenid Lineage", textM: "Keturunan Achaemenid" },
+      { text: "The Parthian Dynasty", textM: "Dinasti Parthian" }
+    ],
+    hint: "The name of this lineage translates to 'of brilliant or white descent'.",
+    hintM: "Nama keturunan ini diterjemahkan sebagai 'daripada keturunan yang putih berkilau'.",
+    tip: "Zarathustra came from the Spitama family, a family revered for spiritual devotion.",
+    tipM: "Zarathustra berasal daripada keluarga Spitama, sebuah keluarga yang dihormati dalam hal keagamaan."
+  },
+  {
+    q: "Who were the parents of the prophet Zarathustra according to historical records?",
+    qM: "Siapakah nama ibu bapa nabi Zarathustra menurut catatan sejarah?",
+    options: [
+      { text: "Pourushaspa and Dughdova", textM: "Pourushaspa dan Dughdova", isCorrect: true },
+      { text: "King Vishtaspa and Hutosa", textM: "Raja Vishtaspa dan Hutosa" },
+      { text: "Cyrus the Great and Cassandane", textM: "Cyrus Agung dan Cassandane" },
+      { text: "Darius and Atossa", textM: "Darius dan Atossa" }
+    ],
+    hint: "His father's name relates to horses, and his mother's name means 'maiden of light'.",
+    hintM: "Nama bapanya mempunyai maksud berkaitan kuda, dan ibunya bermaksud 'gadis cahaya'.",
+    tip: "His father, Pourushaspa, and his mother, Dughdova, brought up Zarathustra despite early magical threats.",
+    tipM: "Bapanya, Pourushaspa, dan ibunya, Dughdova, membesarkan Zarathustra walaupun menghadapi ancaman sihir awal."
+  },
+  {
+    q: "What miraculous baby behavior is unique to Zarathustra at the moment of his birth?",
+    qM: "Apakah kelakuan ajaib bayi yang unik kepada Zarathustra ketika beliau dilahirkan?",
+    options: [
+      { text: "He laughed out loud instead of crying", textM: "Beliau ketawa riang dan bukannya menangis", isCorrect: true },
+      { text: "He pointed towards the eastern sky", textM: "Beliau menunjuk ke arah langit timur" },
+      { text: "A small flame burned gently on his head", textM: "Api kecil menyala lembut di kepalanya" },
+      { text: "He spoke clearly to comfort his mother", textM: "Beliau berkata-kata dengan jelas untuk menenangkan ibunya" }
+    ],
+    hint: "His joyous laughter signaled the ultimate triumph of optimism over dark spiritual forces.",
+    hintM: "Ketawa gembiranya menandakan kemenangan muktamad cahaya ke atas kuasa gelap.",
+    tip: "The sacred texts highlight that Zarathustra laughed at birth, scattering dark elements and evil spirits.",
+    tipM: "Kitab suci menekankan bahawa Zarathustra ketawa semasa lahir, menakutkan unsur-unsur gelap dan roh jahat."
+  },
+  {
+    q: "What was the dominant religious state of ancient Persians before Zarathustra's historical reforms?",
+    qM: "Apakah keadaan keagamaan utama orang Parsi kuno sebelum reformasi bersejarah Zarathustra?",
+    options: [
+      { text: "Polytheism with blood-soaked animal sacrifices", textM: "Politeisme dengan upacara korban haiwan berdarah", isCorrect: true },
+      { text: "Strict philosophical atheism", textM: "Ateisme berfalsafah yang ketat" },
+      { text: "Sun-centric worship without any rituals", textM: "Penyembahan matahari tanpa sebarang ritual" },
+      { text: "Worship of water spirits inside dark caves", textM: "Penyembahan roh air di dalam gua gelap" }
+    ],
+    hint: "This pre-Zoroastrian practice involved appeasing multiple 'daevas' with brutal killings.",
+    hintM: "Amalan sebelum Zoroastrian ini melibatkan pemuasan banyak tuhan dengan pembunuhan kejam.",
+    tip: "Zarathustra courageously condemned the animal slaughter and multi-god magic of the existing priests.",
+    tipM: "Zarathustra dengan berani mengecam penyembelihan haiwan dan sihir berbilang tuhan oleh para pendeta lama."
+  },
+  {
+    q: "At what key age did Zarathustra leave his home to search for true spiritual wisdom?",
+    qM: "Pada usia penting berapakah Zarathustra meninggalkan rumahnya untuk mencari kebijaksanaan rohani yang sebenar?",
+    options: [
+      { text: "30 years old", textM: "30 tahun", isCorrect: true },
+      { text: "15 years old", textM: "15 tahun" },
+      { text: "20 years old", textM: "20 tahun" },
+      { text: "40 years old", textM: "40 tahun" }
+    ],
+    hint: "It represents a standard stage of intellectual and emotional maturity in ancient history.",
+    hintM: "Ia mewakili peringkat matang dari segi intelek dan emosi dalam sejarah purba." ,
+    tip: "At age 30, Zarathustra received his first massive revelation after a decade of searching.",
+    tipM: "Pada usia 30 tahun, Zarathustra menerima wahyu agung pertamanya setelah sedekad mencari."
+  },
+  {
+    q: "Which volcanic peak in Northwestern Iran is celebrated as his spot of high meditation and vision?",
+    qM: "Puncak gunung berapi manakah di Barat Laut Iran yang diraikan sebagai tempat meditasi dan wahyu agungnya?",
+    options: [
+      { text: "Mount Sabalan", textM: "Gunung Sabalan", isCorrect: true },
+      { text: "Mount Damavand", textM: "Gunung Damavand" },
+      { text: "Mount Ararat", textM: "Gunung Ararat" },
+      { text: "Mount Sinai", textM: "Gunung Sinai" }
+    ],
+    hint: "This peaks stands high in Azerbaijan, covered with snow and holy springs.",
+    hintM: "Gunung ini berdiri tinggi di Azerbaijan, dilitupi salji dan kolam air suci.",
+    tip: "According to historical accounts, Mount Sabalan was where Zarathustra communed with God.",
+    tipM: "Menurut sejarah, Gunung Sabalan merupakan tempat Zarathustra merenung dan berhubung dengan Tuhan."
+  },
+  {
+    q: "Who was the brilliant celestial being (Amesha Spenta) that led him to Ahura Mazda?",
+    qM: "Siapakah makhluk syurga bercahaya (Amesha Spenta) yang memimpin beliau menemui Ahura Mazda?",
+    options: [
+      { text: "Vohu Manah (The Good Mind)", textM: "Vohu Manah (Minda yang Baik)", isCorrect: true },
+      { text: "Ahriman (The Dark One)", textM: "Ahriman (Si Gelap)" },
+      { text: "Mithra (The Guardian)", textM: "Mithra (Sang Penjaga)" },
+      { text: "Atar (The Flame)", textM: "Atar (Sang Api)" }
+    ],
+    hint: "This entity represents divine wisdom, clean consciousness, and pure mind.",
+    hintM: "Entiti ini mewakili kebijaksanaan ilahi, kesedaran murni, dan minda yang bersih.",
+    tip: "Vohu Manah appeared as an immense figure of pure light, asking Zarathustra who he was.",
+    tipM: "Vohu Manah muncul sebagai lembaga cahaya yang sangat besar, menanyakan Zarathustra siapa dirinya."
+  },
+  {
+    q: "How many years of preaching did it take before Zarathustra gained his very first convert?",
+    qM: "Berapa tahunkah masa yang diambil untuk berdakwah sebelum Zarathustra mendapat pengikut pertamanya?",
+    options: [
+      { text: "10 years", textM: "10 tahun", isCorrect: true },
+      { text: "1 year", textM: "1 tahun" },
+      { text: "5 years", textM: "5 tahun" },
+      { text: "12 years", textM: "12 tahun" }
+    ],
+    hint: "It required an entire decade of continuous rejection, persecution, and isolation.",
+    hintM: "Ia memerlukan sedekad penuh penolakan, penindasan, dan pengasingan diri.",
+    tip: "Zarathustra struggled for ten long years until his cousin accepted his monotheistic vision.",
+    tipM: "Zarathustra berjuang selama sepuluh tahun sebelum sepupunya menerima ajaran monoteistik ini."
+  },
+  {
+    q: "Who was this very first convert who recognized his divine revelation?",
+    qM: "Siapakah nama pengikut pertama yang mengakui kebenaran wahyu beliau?",
+    options: [
+      { text: "Maidhyoimanha (His cousin)", textM: "Maidhyoimanha (Sepupunya)", isCorrect: true },
+      { text: "King Vishtaspa", textM: "Raja Vishtaspa" },
+      { text: "Queen Hutosa", textM: "Ratu Hutosa" },
+      { text: "Jamshid the Ruler", textM: "Jamshid sang Pemerintah" }
+    ],
+    hint: "He was a close cousin of Zarathustra who remained loyal through difficult trials.",
+    hintM: "Beliau ialah sepupu rapat Zarathustra yang setia melalui tempoh sukar.",
+    tip: "Maidhyoimanha accepted the faith first, followed eventually by powerful rulers.",
+    tipM: "Maidhyoimanha menerima agama ini pertama kali, diikuti kemudian oleh pemerintah yang berkuasa."
+  }
+];
+
+const THEME_ICONS = [
+  { id: 'scroll', name: 'Scroll', emoji: '📜', title: 'Kitab Purba / Ancient Text' },
+  { id: 'flame', name: 'Flame', emoji: '🔥', title: 'Api Suci / Sacred Flame' },
+  { id: 'temple', name: 'Gateway', emoji: '🏛️', title: 'Pintu Sejarah / Historical Path' }
+];
+
+export default function App() {
+  const [gameState, setGameState] = useState('cover'); 
+  const [lang, setLang] = useState('ms'); 
+  const [playerName, setPlayerName] = useState('');
+  const [selectedIcon, setSelectedIcon] = useState(THEME_ICONS[0]);
   
-  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  const [currentQIdx, setCurrentQIdx] = useState(0);
+  const [score, setScore] = useState(0);
+  const [chosenOption, setChosenOption] = useState(null);
+  const [isAnswered, setIsAnswered] = useState(false);
+  const [hintOpen, setHintOpen] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
   
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  const [synth] = useState(() => new EducationalSoundSynth());
+  const [isMuted, setIsMuted] = useState(false);
 
-  <style>
-    body {
-      -webkit-tap-highlight-color: transparent;
-      user-select: none;
+  useEffect(() => {
+    if (gameState === 'quiz') {
+      synth.startBGM();
+    } else {
+      synth.stopBGM();
     }
-    .custom-scrollbar::-webkit-scrollbar {
-      width: 6px;
+    return () => synth.stopBGM();
+  }, [gameState, synth]);
+
+  const toggleAudio = () => {
+    const status = synth.toggleMute();
+    setIsMuted(status);
+  };
+
+  const handleStartGame = (e) => {
+    e.preventDefault();
+    if (!playerName.trim()) return;
+    setGameState('quiz');
+  };
+
+  const handleOptionSelect = (option) => {
+    if (isAnswered) return;
+    setChosenOption(option);
+    setIsAnswered(true);
+    if (option.isCorrect) {
+      setScore(prev => prev + 1);
+      synth.playCorrect();
+    } else {
+      synth.playWrong();
     }
-    .custom-scrollbar::-webkit-scrollbar-track {
-      background: rgba(15, 23, 42, 0.6);
+    setModalOpen(true);
+  };
+
+  const handleNextQuestion = () => {
+    setModalOpen(false);
+    setIsAnswered(false);
+    setChosenOption(null);
+    setHintOpen(false);
+    
+    if (currentQIdx + 1 < QUESTIONS.length) {
+      setCurrentQIdx(prev => prev + 1);
+    } else {
+      setGameState('scoreboard');
     }
-    .custom-scrollbar::-webkit-scrollbar-thumb {
-      background: rgba(99, 102, 241, 0.4);
-      border-radius: 4px;
-    }
-  </style>
-</head>
-<body class="bg-slate-950 text-slate-100 min-h-screen selection:bg-indigo-500/30">
+  };
 
-  <div id="root"></div>
+  const handleRetryQuestion = () => {
+    setModalOpen(false);
+    setIsAnswered(false);
+    setChosenOption(null);
+  };
 
-  <script type="text/babel">
+  const handleRestartAll = () => {
+    setCurrentQIdx(0);
+    setScore(0);
+    setGameState('cover');
+    setIsAnswered(false);
+    setChosenOption(null);
+    setHintOpen(false);
+  };
 
-    // ==========================================
-    // 🔊 AUDIO SYNTH ENGINE (WEB AUDIO API)
-    // ==========================================
-    class EducationalSoundSynth {
-      constructor() {
-        this.ctx = null;
-        this.bgmInterval = null;
-        this.isMuted = false;
-      }
+  const currentQuestion = QUESTIONS[currentQIdx];
 
-      init() {
-        if (!this.ctx) {
-          this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-        }
-        if (this.ctx.state === 'suspended') {
-          this.ctx.resume();
-        }
-      }
+  return (
+    <div className="max-w-xl mx-auto min-h-screen px-4 py-6 flex flex-col justify-between text-slate-100 bg-slate-950">
+      
+      {/* --- CORE HEADER BRANDING --- */}
+      <header className="flex justify-between items-center bg-slate-900 border border-slate-800 p-4 rounded-2xl shadow-lg">
+        <div>
+          <span className="text-xs uppercase tracking-widest font-black text-indigo-400 block">Siri Pembelajaran Digital</span>
+          <h1 className="text-xl font-black text-white flex items-center gap-1.5 mt-0.5">
+            <span>🔥 Kembara Agama</span>
+            <span className="text-xs bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded-full border border-indigo-500/20 font-bold">Quiz 5</span>
+          </h1>
+        </div>
+        <button type="button" onClick={toggleAudio} className="p-2.5 bg-slate-800 border border-slate-700 rounded-xl text-xs font-bold text-slate-300">
+          {isMuted ? '🔇 Muted' : '🔊 Sound'}
+        </button>
+      </header>
 
-      playCorrect() {
-        if (this.isMuted) return;
-        this.init();
-        const now = this.ctx.currentTime;
-        const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51]; 
-        notes.forEach((freq, idx) => {
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(freq, now + idx * 0.06);
-          gain.gain.setValueAtTime(0.25, now + idx * 0.06);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.4);
-          osc.connect(gain);
-          gain.connect(this.ctx.destination);
-          osc.start(now + idx * 0.06);
-          osc.stop(now + idx * 0.06 + 0.45);
-        });
-      }
+      {/* --- SCREEN VIEW CONTROLLER --- */}
+      {gameState === 'cover' && (
+        <div className="my-auto py-8">
+          <div className="text-center mb-6">
+            <div className="inline-flex text-4xl bg-amber-500/10 border border-amber-500/30 p-4 rounded-full mb-3 shadow-inner">💡</div>
+            <h2 className="text-2xl font-black text-amber-400">Zoroastrianisme</h2>
+            <p className="text-xs text-slate-400 max-w-xs mx-auto mt-1 leading-relaxed">
+              Asal-usul, Misi Perjuangan Zarathustra & Pemikiran Sejarah Dunia.
+            </p>
+          </div>
 
-      playWrong() {
-        if (this.isMuted) return;
-        this.init();
-        const now = this.ctx.currentTime;
-        const osc1 = this.ctx.createOscillator();
-        const osc2 = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc1.type = 'sawtooth';
-        osc1.frequency.setValueAtTime(150, now);
-        osc1.frequency.linearRampToValueAtTime(80, now + 0.35);
-        osc2.type = 'sine';
-        osc2.frequency.setValueAtTime(155, now);
-        osc2.frequency.linearRampToValueAtTime(85, now + 0.35);
-        gain.gain.setValueAtTime(0.22, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
-        osc1.connect(gain);
-        osc2.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc1.start(now);
-        osc2.start(now);
-        osc1.stop(now + 0.35);
-        osc2.stop(now + 0.35);
-      }
+          {/* Language Switcher */}
+          <div className="bg-slate-900 border border-slate-800 p-1.5 rounded-xl flex gap-2 mb-6">
+            <button type="button" onClick={() => setLang('ms')} className={`flex-1 py-2 text-xs font-black rounded-lg transition uppercase tracking-wider ${lang === 'ms' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400'}`}>
+              🇲🇾 Bahasa Melayu
+            </button>
+            <button type="button" onClick={() => setLang('en')} className={`flex-1 py-2 text-xs font-black rounded-lg transition uppercase tracking-wider ${lang === 'en' ? 'bg-indigo-600 text-white shadow' : 'text-slate-400'}`}>
+              🇬🇧 English View
+            </button>
+          </div>
 
-      startBGM() {
-        if (this.isMuted) return;
-        this.init();
-        if (this.bgmInterval) return;
-        let step = 0;
-        const melody = [329.63, 392.00, 440.00, 392.00, 329.63, 392.00, 440.00, 349.23];
-        const playStep = () => {
-          const now = this.ctx.currentTime;
-          const note = melody[step % melody.length];
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(note, now);
-          gain.gain.setValueAtTime(0.05, now);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
-          osc.connect(gain);
-          gain.connect(this.ctx.destination);
-          osc.start(now);
-          osc.stop(now + 0.85);
-          step++;
-        };
-        this.bgmInterval = setInterval(playStep, 500);
-      }
+          {/* Registration Form */}
+          <form onSubmit={handleStartGame} className="space-y-5 bg-slate-900/60 border border-slate-800 p-5 rounded-2xl">
+            <div>
+              <label className="block text-xs uppercase font-black text-slate-400 tracking-wider mb-2">
+                {lang === 'ms' ? 'Masukkan Nama Player:' : 'Enter Player Name:'}
+              </label>
+              <input 
+                type="text" 
+                required
+                placeholder={lang === 'ms' ? 'Nama anda...' : 'Your academic name...'}
+                value={playerName}
+                onChange={(e) => setPlayerName(e.target.value)}
+                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3.5 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:border-indigo-500 font-bold"
+              />
+            </div>
 
-      stopBGM() {
-        if (this.bgmInterval) {
-          clearInterval(this.bgmInterval);
-          this.bgmInterval = null;
-        }
-      }
+            {/* Icons Selection Panel */}
+            <div>
+              <label className="block text-xs uppercase font-black text-slate-400 tracking-wider mb-2">
+                {lang === 'ms' ? 'Pilih Ikon Penanda Skor:' : 'Select Score Marker Icon:'}
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {THEME_ICONS.map((icon) => (
+                  <button 
+                    type="button"
+                    key={icon.id}
+                    onClick={() => setSelectedIcon(icon)}
+                    className={`p-3 rounded-xl border text-center flex flex-col items-center relative ${selectedIcon.id === icon.id ? 'bg-indigo-950/60 border-indigo-500 shadow-md' : 'bg-slate-950/80 border-slate-800 hover:border-slate-700'}`}
+                  >
+                    <span className="text-3xl mb-1">{icon.emoji}</span>
+                    <span className="text-[10px] font-black block text-slate-200">{lang === 'ms' ? icon.title.split(' / ')[0] : icon.title.split(' / ')[1]}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
 
-      toggleMute() {
-        this.isMuted = !this.isMuted;
-        if (this.isMuted) this.stopBGM();
-        else this.startBGM();
-        return this.isMuted;
-      }
-    }
+            <button 
+              type="submit" 
+              disabled={!playerName.trim()}
+              className="w-full py-4 mt-2 bg-gradient-to-r from-indigo-500 to-purple-600 disabled:from-slate-800 disabled:to-slate-800 disabled:text-slate-600 font-black rounded-xl text-sm tracking-widest shadow-lg uppercase"
+            >
+              🚀 {lang === 'ms' ? 'Mula Pengembaraan' : 'Start Quest'}
+            </button>
+          </form>
+        </div>
+      )}
 
-    // ==========================================
-    // 📚 QUIZ DATA (ZOROASTRIANISM TOPICS)
-    // ==========================================
-    const QUESTIONS = [
-      {
-        q: "In which geographical region do historical estimations place the birth of Zarathustra?",
-        qM: "Di manakah kawasan geografi yang dikaitkan oleh ahli sejarah sebagai tempat lahir Zarathustra?",
-        options: [
-          { text: "Azerbaijan (Northern/Northwestern Iran)", textM: "Azerbaijan (Utara/Barat Laut Iran)", isCorrect: true },
-          { text: "Mesopotamia (Modern Iraq)", textM: "Mesopotamia (Iraq Moden)" },
-          { text: "Persepolis (Southern Iran)", textM: "Persepolis (Selatan Iran)" },
-          { text: "The Arabian Peninsula", textM: "Semenanjung Arab" }
-        ],
-        hint: "This rugged mountainous area in Northwestern Iran is central to his early life.",
-        hintM: "Kawasan bergunung-ganang di Barat Laut Iran ini sangat penting bagi awal hidupnya.",
-        tip: "Historians and scriptures suggest Zarathustra was born in Northwestern Iran/Azerbaijan in the Spitama clan.",
-        tipM: "Sejarahwan dan kitab suci mencatatkan bahawa Zarathustra dilahirkan di Barat Laut Iran/Azerbaijan dalam puak Spitama."
-      },
-      {
-        q: "Zarathustra belonged to which ancient noble and priestly lineage?",
-        qM: "Zarathustra tergolong dalam keturunan bangsawan dan golongan pendeta purba yang mana?",
-        options: [
-          { text: "The Spitama Clan", textM: "Puak Spitama", isCorrect: true },
-          { text: "The Sasanian Clan", textM: "Puak Sasanian" },
-          { text: "The Achaemenid Lineage", textM: "Keturunan Achaemenid" },
-          { text: "The Parthian Dynasty", textM: "Dinasti Parthian" }
-        ],
-        hint: "The name of this lineage translates to 'of brilliant or white descent'.",
-        hintM: "Nama keturunan ini diterjemahkan sebagai 'daripada keturunan yang putih berkilau'.",
-        tip: "Zarathustra came from the Spitama family, a family revered for spiritual devotion.",
-        tipM: "Zarathustra berasal daripada keluarga Spitama, sebuah keluarga yang dihormati dalam hal keagamaan."
-      },
-      {
-        q: "Who were the parents of the prophet Zarathustra according to historical records?",
-        qM: "Siapakah nama ibu bapa nabi Zarathustra menurut catatan sejarah?",
-        options: [
-          { text: "Pourushaspa and Dughdova", textM: "Pourushaspa dan Dughdova", isCorrect: true },
-          { text: "King Vishtaspa and Hutosa", textM: "Raja Vishtaspa dan Hutosa" },
-          { text: "Cyrus the Great and Cassandane", textM: "Cyrus Agung dan Cassandane" },
-          { text: "Darius and Atossa", textM: "Darius dan Atossa" }
-        ],
-        hint: "His father's name relates to horses, and his mother's name means 'maiden of light'.",
-        hintM: "Nama bapanya mempunyai maksud berkaitan kuda, dan ibunya bermaksud 'gadis cahaya'.",
-        tip: "His father, Pourushaspa, and his mother, Dughdova, brought up Zarathustra despite early magical threats.",
-        tipM: "Bapanya, Pourushaspa, dan ibunya, Dughdova, membesarkan Zarathustra walaupun menghadapi ancaman sihir awal."
-      },
-      {
-        q: "What miraculous baby behavior is unique to Zarathustra at the moment of his birth?",
-        qM: "Apakah kelakuan ajaib bayi yang unik kepada Zarathustra ketika beliau dilahirkan?",
-        options: [
-          { text: "He laughed out loud instead of crying", textM: "Beliau ketawa riang dan bukannya menangis", isCorrect: true },
-          { text: "He pointed towards the eastern sky", textM: "Beliau menunjuk ke arah langit timur" },
-          { text: "A small flame burned gently on his head", textM: "Api kecil menyala lembut di kepalanya" },
-          { text: "He spoke clearly to comfort his mother", textM: "Beliau berkata-kata dengan jelas untuk menenangkan ibunya" }
-        ],
-        hint: "His joyous laughter signaled the ultimate triumph of optimism over dark spiritual forces.",
-        hintM: "Ketawa gembiranya menandakan kemenangan muktamad cahaya ke atas kuasa gelap.",
-        tip: "The sacred texts highlight that Zarathustra laughed at birth, scattering dark elements and evil spirits.",
-        tipM: "Kitab suci menekankan bahawa Zarathustra ketawa semasa lahir, menakutkan unsur-unsur gelap dan roh jahat."
-      },
-      {
-        q: "What was the dominant religious state of ancient Persians before Zarathustra's historical reforms?",
-        qM: "Apakah keadaan keagamaan utama orang Parsi kuno sebelum reformasi bersejarah Zarathustra?",
-        options: [
-          { text: "Polytheism with blood-soaked animal sacrifices", textM: "Politeisme dengan upacara korban haiwan berdarah", isCorrect: true },
-          { text: "Strict philosophical atheism", textM: "Ateisme berfalsafah yang ketat" },
-          { text: "Sun-centric worship without any rituals", textM: "Penyembahan matahari tanpa sebarang ritual" },
-          { text: "Worship of water spirits inside dark caves", textM: "Penyembahan roh air di dalam gua gelap" }
-        ],
-        hint: "This pre-Zoroastrian practice involved appeasing multiple 'daevas' with brutal killings.",
-        hintM: "Amalan sebelum Zoroastrian ini melibatkan pemuasan banyak tuhan dengan pembunuhan kejam.",
-        tip: "Zarathustra courageously condemned the animal slaughter and multi-god magic of the existing priests.",
-        tipM: "Zarathustra dengan berani mengecam penyembelihan haiwan dan sihir berbilang tuhan oleh para pendeta lama."
-      },
-      {
-        q: "At what key age did Zarathustra leave his home to search for true spiritual wisdom?",
-        qM: "Pada usia penting berapakah Zarathustra meninggalkan rumahnya untuk mencari kebijaksanaan rohani yang sebenar?",
-        options: [
-          { text: "30 years old", textM: "30 tahun", isCorrect: true },
-          { text: "15 years old", textM: "15 tahun" },
-          { text: "20 years old", textM: "20 tahun" },
-          { text: "40 years old", textM: "40 tahun" }
-        ],
-        hint: "It represents a standard stage of intellectual and emotional maturity in ancient history.",
-        hintM: "Ia mewakili peringkat matang dari segi intelek dan emosi dalam sejarah purba." ,
-        tip: "At age 30, Zarathustra received his first massive revelation after a decade of searching.",
-        tipM: "Pada usia 30 tahun, Zarathustra menerima wahyu agung pertamanya setelah sedekad mencari."
-      },
-      {
-        q: "Which volcanic peak in Northwestern Iran is celebrated as his spot of high meditation and vision?",
-        qM: "Puncak gunung berapi manakah di Barat Laut Iran yang diraikan sebagai tempat meditasi dan wahyu agungnya?",
-        options: [
-          { text: "Mount Sabalan", textM: "Gunung Sabalan", isCorrect: true },
-          { text: "Mount Damavand", textM: "Gunung Damavand" },
-          { text: "Mount Ararat", textM: "Gunung Ararat" },
-          { text: "Mount Sinai", textM: "Gunung Sinai" }
-        ],
-        hint: "This peaks stands high in Azerbaijan, covered with snow and holy springs.",
-        hintM: "Gunung ini berdiri tinggi di Azerbaijan, dilitupi salji dan kolam air suci.",
-        tip: "According to historical accounts, Mount Sabalan was where Zarathustra communed with God.",
-        tipM: "Menurut sejarah, Gunung Sabalan merupakan tempat Zarathustra merenung dan berhubung dengan Tuhan."
-      },
-      {
-        q: "Who was the brilliant celestial being (Amesha Spenta) that led him to Ahura Mazda?",
-        qM: "Siapakah makhluk syurga bercahaya (Amesha Spenta) yang memimpin beliau menemui Ahura Mazda?",
-        options: [
-          { text: "Vohu Manah (The Good Mind)", textM: "Vohu Manah (Minda yang Baik)", isCorrect: true },
-          { text: "Ahriman (The Dark One)", textM: "Ahriman (Si Gelap)" },
-          { text: "Mithra (The Guardian)", textM: "Mithra (Sang Penjaga)" },
-          { text: "Atar (The Flame)", textM: "Atar (Sang Api)" }
-        ],
-        hint: "This entity represents divine wisdom, clean consciousness, and pure mind.",
-        hintM: "Entiti ini mewakili kebijaksanaan ilahi, kesedaran murni, dan minda yang bersih.",
-        tip: "Vohu Manah appeared as an immense figure of pure light, asking Zarathustra who he was.",
-        tipM: "Vohu Manah muncul sebagai lembaga cahaya yang sangat besar, menanyakan Zarathustra siapa dirinya."
-      },
-      {
-        q: "How many years of preaching did it take before Zarathustra gained his very first convert?",
-        qM: "Berapa tahunkah masa yang diambil untuk berdakwah sebelum Zarathustra mendapat pengikut pertamanya?",
-        options: [
-          { text: "10 years", textM: "10 tahun", isCorrect: true },
-          { text: "1 year", textM: "1 tahun" },
-          { text: "5 years", textM: "5 tahun" },
-          { text: "12 years", textM: "12 tahun" }
-        ],
-        hint: "It required an entire decade of continuous rejection, persecution, and isolation.",
-        hintM: "Ia memerlukan sedekad penuh penolakan, penindasan, dan pengasingan diri.",
-        tip: "Zarathustra struggled for ten long years until his cousin accepted his monotheistic vision.",
-        tipM: "Zarathustra berjuang selama sepuluh tahun sebelum sepupunya menerima ajaran monoteistik ini."
-      },
-      {
-        q: "Who was this very first convert who recognized his divine revelation?",
-        qM: "Siapakah nama pengikut pertama yang mengakui kebenaran wahyu beliau?",
-        options:
+      {gameState === 'quiz' && (
+        <div className="my-auto py-4">
+          {/* Question Dashboard Progress */}
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-3.5 mb-4 flex justify-between items-center text-xs">
+            <div className="flex items-center gap-2">
+              <span className="text-xl">{selectedIcon.emoji}</span>
+              <div>
+                <p className="font-black text-slate-200 leading-none">{playerName}</p>
+                <p className="text-[10px] text-indigo-400 mt-0.5 uppercase tracking-tight">
+                  {lang === 'ms' ? selectedIcon.title.split(' / ')[0] : selectedIcon.title.split(' / ')[1]}
+                </p>
+              </div>
+            </div>
+            <div className="text-right">
+              <span className="font-bold text-slate-400 uppercase tracking-widest block text-[10px]">Progress</span>
+              <span className="font-black text-indigo-400 text-sm mt-0.5 block">{currentQIdx + 1} / {QUESTIONS.length}</span>
+            </div>
+          </div>
+
+          {/* Main Prompt Container */}
+          <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-xl mb-5">
+            <h3 className="text-base sm:text-lg font-bold text-slate-100 leading-relaxed mb-2">
+              {lang === 'ms' && currentQuestion.qM ? currentQuestion.qM : currentQuestion.q}
+            </h3>
+            <p className="text-slate-400 italic text-xs border-l-2 border-indigo-500/40 pl-3 leading-relaxed">
+              {lang === 'ms' ? currentQuestion.q : currentQuestion.qM}
+            </p>
+          </div>
+
+          {/* Options Stack */}
+          <div className="space-y-3">
+            {currentQuestion.options.map((opt, idx) => {
+              let buttonStyle = "bg-slate-900/40 border-slate-800 hover:border-slate-700 hover:bg-slate-900/80 text-slate-300";
+              if (isAnswered) {
+                if (opt.isCorrect) buttonStyle = "bg-emerald-950/40 border-emerald-500 text-emerald-300";
+                else if (chosenOption === opt) buttonStyle = "bg-rose-950/40 border-rose-500 text-rose-300";
+                else buttonStyle = "bg-slate-900/10 border-slate-950 text-slate-600 opacity-50";
+              }
+
+              return (
+                <button 
+                  type="button"
+                  key={idx}
+                  onClick={() => handleOptionSelect(opt)}
+                  disabled={isAnswered}
+                  className={`w-full text-left p-4 rounded-xl border text-sm flex flex-col ${buttonStyle}`}
+                >
+                  <span className="font-semibold text-white">{lang === 'ms' && opt.textM ? opt.textM : opt.text}</span>
+                  <span className="italic text-xs mt-0.5 opacity-70 font-medium">{lang === 'ms' ? opt.text : opt.textM}</span>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Help & Insights bar */}
+          <div className="mt-5 flex gap-2">
+            <button 
+              type="button"
+              onClick={() => setHintOpen(!hintOpen)}
+              className="px-4 py-3 bg-slate-900 text-slate-400 font-bold border border-slate-800 rounded-xl text-xs tracking-wider transition hover:text-slate-200"
+            >
+              💡 {lang === 'ms' ? 'Petunjuk / Hint' : 'Hint Clue'}
+            </button>
+          </div>
+
+          {hintOpen && (
+            <div className="mt-4 bg-amber-950/20 border border-amber-500/20 rounded-xl p-4 text-xs sm:text-sm text-amber-300 leading-relaxed shadow-inner">
+              <p className="font-bold mb-1">🇲🇾 Petunjuk Melayu:</p>
+              <p className="text-slate-300 mb-2 italic">"{currentQuestion.hintM}"</p>
+              <p className="font-bold mb-1 border-t border-amber-500/10 pt-2">🇬🇧 English Hint:</p>
+              <p className="text-slate-400">"{currentQuestion.hint}"</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {gameState === 'scoreboard' && (
+        <div className="my-auto bg-slate-900/60 p-8 rounded-2xl border border-slate-800 text-center shadow-2xl">
+          <span className="text-5xl">🏆</span>
+          <h2 className="text-2xl font-black text-white mt-4">Tahniah Selesai!</h2>
+          <p className="text-slate-400 text-xs mt-1 uppercase tracking-widest font-bold">Kembara Modul 5 Tamat</p>
+          
+          <div className="inline-block bg-indigo-950/30 border border-indigo-500/30 rounded-2xl px-10 py-5 my-6 shadow-inner">
+            <p className="text-[10px] text-indigo-300 uppercase font-black tracking-widest">Skor Akhir {playerName}</p>
+            <p className="text-5xl font-black text-indigo-400 mt-1">{score} / {QUESTIONS.length}</p>
+          </div>
+
+          <button 
+            type="button"
+            onClick={handleRestartAll} 
+            className="w-full py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-black rounded-xl text-xs tracking-widest shadow-lg uppercase"
+          >
+            🔄 Ulang Kuiz Baru / Restart Quest
+          </button>
+        </div>
+      )}
+
+      {/* --- DIALOG MODAL SYSTEM FOR EXPLANATION --- */}
+      {modalOpen && chosenOption && (
+        <div className="fixed inset-0 bg-slate-950/80 z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-slate-800 w-full max-w-md p-6 rounded-2xl shadow-2xl flex flex-col max-h-[90vh]">
+            
+            <div className="text-center mb-4 shrink-0">
+              {chosenOption.isCorrect ? (
+                <div>
+                  <span className="inline-flex p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-2xl text-emerald-400 shadow-inner">✨</span>
+                  <h4 className="text-lg font-black text-emerald-400 mt-2 uppercase tracking-widest">Tepat Sekali! / Correct</h4>
+                </div>
+              ) : (
+                <div>
+                  <span className="inline-flex p-3
