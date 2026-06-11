@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Siri Kembara Agama Set 2 - Dr. MRAR</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: radial-gradient(circle, #e0f2fe 0%, #f0fdf4 100%);
+            touch-action: manipulation;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .title-font { font-family: 'Fredoka One', cursive; }
+        .bubbly-shadow { box-shadow: 0 8px 0px 0px rgba(0, 0, 0, 0.1); }
+        .bubbly-btn { transition: all 0.1s ease; box-shadow: 0 6px 0px 0px currentColor; }
+        .bubbly-btn:active { transform: translateY(4px); box-shadow: 0 2px 0px 0px currentColor; }
+        .draggable { touch-action: none; cursor: grab; }
+        .draggable:active { cursor: grabbing; }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-10px); }
+            40%, 80% { transform: translateX(10px); }
+        }
+        .shake-effect { animation: shake 0.5s ease-in-out; }
+        
+        /* 3D Realistic Book Cover Simulation CSS */
+        .book-container {
+            perspective: 1200px;
+        }
+        .book-cover {
+            transform-style: preserve-3d;
+            transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1), box-shadow 0.6s ease;
+            box-shadow: 5px 8px 18px rgba(0, 0, 0, 0.2), inset -3px 0 6px rgba(0, 0, 0, 0.3);
+        }
+        .book-cover:hover {
+            transform: rotateY(-18deg) rotateX(5deg) translateY(-12px);
+            box-shadow: 20px 25px 35px rgba(0, 0, 0, 0.25), inset -3px 0 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Glossy overlay effect for the book */
+        .book-gloss {
+            background: linear-gradient(135deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0) 50%);
+            pointer-events: none;
+        }
+        
+        /* Book spine/fold line */
+        .book-spine-line {
+            background: linear-gradient(to right, rgba(0,0,0,0.3) 0%, rgba(255,255,255,0.1) 50%, rgba(0,0,0,0.1) 100%);
+        }
+
+        /* Floating animations for stars */
+        @keyframes floating {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(5deg); }
+        }
+        .float-star {
+            animation: floating 3s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-between p-3 md:p-6 overflow-x-hidden">
+
+    <!-- Kanvas untuk Letupan Bunga Api -->
+    <canvas id="fireworksCanvas" class="fixed inset-0 pointer-events-none z-50 w-full h-full"></canvas>
+
+    <!-- KANDUNGAN UTAMA PERMAINAN -->
+    <div class="w-full max-w-4xl bg-white/95 backdrop-blur-md rounded-3xl border-4 border-emerald-400 p-4 md:p-6 bubbly-shadow relative z-10 flex-grow flex flex-col justify-between">
+        
+        <!-- HEADER UTAMA -->
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b-2 border-emerald-100 pb-4 mb-4">
+            <div class="flex items-center gap-3">
+                <button onclick="resetToMenu()" class="w-11 h-11 bg-emerald-100 rounded-full border-2 border-emerald-400 flex items-center justify-center text-xl hover:bg-emerald-200 transition-all bubbly-btn" title="Kembali ke Menu Utama">
+                    🏠
+                </button>
+                <div>
+                    <h1 class="text-xl md:text-2xl title-font text-emerald-700 leading-none">Kembara Agama 2</h1>
+                    <span class="text-xs text-emerald-500 font-bold" id="subtitleText">Siri Buku Pendidikan Dr. MRAR</span>
+                </div>
+            </div>
+
+            <!-- Sistem Skor, Tukar Bahasa & Suara -->
+            <div class="flex items-center gap-2">
+                <div class="bg-amber-100 border-2 border-amber-400 text-amber-700 px-3 py-1.5 rounded-full font-bold text-sm">
+                    ⭐ <span id="scoreVal">0</span>
+                </div>
+                <button onclick="toggleLanguage()" class="bg-emerald-600 text-white border-2 border-emerald-800 bubbly-btn px-4 py-1.5 rounded-full text-xs font-bold flex items-center gap-1 transition-all">
+                    🌐 <span id="langBtnText">English</span>
+                </button>
+                <button onclick="toggleSound()" id="soundBtn" class="bg-teal-500 text-white border-2 border-teal-700 bubbly-btn p-1.5 rounded-full text-sm">
+                    🔊
+                </button>
+            </div>
+        </div>
+
+        <!-- BEKAS SKRIN UTAMA -->
+        <div class="flex-grow flex flex-col justify-center">
+            
+            <!-- SKRIN SELAMAT DATANG (WELCOME SCREEN) -->
+            <div id="welcomeScreen" class="text-center py-4 flex flex-col items-center gap-4">
+                
+                <!-- Ikon Hiasan Atas (Bumi 🌍 & Bintang Berkilau ✨) -->
+                <div class="flex items-center justify-center gap-3 animate-bounce mb-1">
+                    <span class="text-5xl md:text-6xl filter drop-shadow-md select-none float-star">🌍</span>
+                    <span class="text-4xl md:text-5xl filter drop-shadow-md select-none">✨</span>
+                </div>
+                
+                <!-- Tajuk Utama Gergasi Berwarna Biru -->
+                <h2 id="welcomeTitle" class="text-2xl md:text-4xl font-extrabold title-font text-[#2563eb] tracking-tight leading-tight max-w-2xl">
+                    Selamat Datang ke Kembara Teori & Kategori!
+                </h2>
+                <!-- Sub-tajuk Kelabu/Slate Premium -->
+                <p id="welcomeSubtitle" class="text-xs md:text-sm font-bold text-slate-500 max-w-xl leading-relaxed">
+                    Terokai teori Barat tentang agama, konsep Din dalam Islam, dan pengelasan agama-agama dunia mengikut siri buku Dr. MRAR!
+                </p>
+
+                <!-- REKA BENTUK KULIT BUKU PENYELIDIKAN DR. MRAR (REALISTIK 3D) -->
+                <div class="flex flex-col sm:flex-row justify-center items-center gap-8 w-full max-w-2xl my-6">
+                    
+                    <!-- KULIT BUKU 1.4: TEORI BARAT & KONSEP DIN -->
+                    <div class="book-container flex flex-col items-center">
+                        <div onclick="startQuizSet(4)" class="book-cover cursor-pointer w-44 h-60 bg-gradient-to-br from-emerald-700 via-teal-800 to-cyan-950 rounded-r-2xl p-4 relative flex flex-col justify-between text-white border-l-[10px] border-emerald-950 select-none transform transition-transform">
+                            <!-- Gloss overlay -->
+                            <div class="absolute inset-0 book-gloss rounded-r-2xl"></div>
+                            <!-- Spine shade line -->
+                            <div class="absolute top-0 bottom-0 left-0 w-3 book-spine-line"></div>
+                            <!-- Bookmark ribbon -->
+                            <div class="absolute top-0 right-4 w-4 h-10 bg-amber-400 rounded-b-md shadow-md z-10"></div>
+                            
+                            <span class="text-xs font-bold text-amber-300 tracking-widest uppercase z-10">BUKU 1.4</span>
+                            <div class="my-auto text-left z-10">
+                                <h3 class="text-xs md:text-sm font-extrabold title-font leading-tight text-white mb-1 drop-shadow-sm">UNDERSTANDING RELIGION</h3>
+                                <p class="text-[8px] font-bold text-emerald-200 uppercase tracking-wide">Western Theories & Din</p>
+                            </div>
+                            <!-- Compass decoration to match Book 1.4 page 1 -->
+                            <div class="absolute bottom-12 right-4 w-12 h-12 opacity-30 text-white text-3xl font-bold">🧭</div>
+                            <div class="border-t border-emerald-500/50 pt-2 flex justify-between items-center z-10">
+                                <span class="text-[9px] font-bold tracking-wider text-emerald-100">DR. MRAR</span>
+                                <span class="text-lg">🧠</span>
+                            </div>
+                        </div>
+                        <p class="text-xs font-bold text-emerald-700 mt-3" id="book4Label">Buku 1.4: Teori & Din</p>
+                    </div>
+
+                    <!-- KULIT BUKU 1.5: PENGELASAN AGAMA-AGAMA DUNIA -->
+                    <div class="book-container flex flex-col items-center">
+                        <div onclick="startQuizSet(5)" class="book-cover cursor-pointer w-44 h-60 bg-gradient-to-br from-purple-700 via-indigo-800 to-indigo-950 rounded-r-2xl p-4 relative flex flex-col justify-between text-white border-l-[10px] border-indigo-950 select-none transform transition-transform">
+                            <!-- Gloss overlay -->
+                            <div class="absolute inset-0 book-gloss rounded-r-2xl"></div>
+                            <!-- Spine shade line -->
+                            <div class="absolute top-0 bottom-0 left-0 w-3 book-spine-line"></div>
+                            <!-- Bookmark ribbon -->
+                            <div class="absolute top-0 right-4 w-4 h-10 bg-amber-400 rounded-b-md shadow-md z-10"></div>
+                            
+                            <span class="text-xs font-bold text-amber-300 tracking-widest uppercase z-10">BUKU 1.5</span>
+                            <div class="my-auto text-left z-10">
+                                <h3 class="text-xs md:text-sm font-extrabold title-font leading-tight text-white mb-1 drop-shadow-sm">CATEGORIZATIONS</h3>
+                                <p class="text-[8px] font-bold text-indigo-200 uppercase tracking-wide">of World Religions</p>
+                            </div>
+                            <!-- Stars decoration to match Book 1.5 page 2 -->
+                            <div class="absolute bottom-12 right-4 w-12 h-12 opacity-35 text-white text-3xl font-bold">🌌</div>
+                            <div class="border-t border-indigo-500/50 pt-2 flex justify-between items-center z-10">
+                                <span class="text-[9px] font-bold tracking-wider text-indigo-100">DR. MRAR</span>
+                                <span class="text-lg">🗂️</span>
+                            </div>
+                        </div>
+                        <p class="text-xs font-bold text-indigo-700 mt-3" id="book5Label">Buku 1.5: Pengelasan Agama</p>
+                    </div>
+
+                </div>
+
+                <!-- INPUT NAMA & BUTANG MULA -->
+                <div class="bg-emerald-50 border-2 border-emerald-200 p-5 rounded-2xl max-w-md w-full">
+                    <p class="text-xs font-bold text-emerald-700 mb-2" id="welcomeIntro">Sila masukkan nama anda untuk memulakan cabaran:</p>
+                    <input type="text" id="playerNameInput" placeholder="Nama Anda / Your Name" class="w-full px-4 py-3 border-3 border-emerald-300 rounded-xl text-center font-bold text-emerald-800 focus:outline-none focus:ring-4 focus:ring-emerald-200 transition-all text-lg bubbly-shadow mb-4">
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button onclick="startQuizSet(4)" class="bg-blue-100 hover:bg-blue-200 text-blue-800 border-4 border-blue-400 p-3 rounded-2xl bubbly-btn flex flex-col items-center gap-1">
+                            <span class="text-2xl">🧠</span>
+                            <span class="font-bold text-xs title-font" id="btnLabel4">SET 4: THEORIES & DIN</span>
+                        </button>
+
+                        <button onclick="startQuizSet(5)" class="bg-purple-100 hover:bg-purple-200 text-purple-800 border-4 border-purple-400 p-3 rounded-2xl bubbly-btn flex flex-col items-center gap-1">
+                            <span class="text-2xl">🗂️</span>
+                            <span class="font-bold text-xs title-font" id="btnLabel5">SET 5: CATEGORIES</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SKRIN KAWASAN KUIZ (QUIZ SCREEN) -->
+            <div id="quizScreen" class="hidden flex flex-col items-center gap-4">
+                <div class="w-full flex justify-between items-center text-xs font-bold text-emerald-700 uppercase">
+                    <span id="questionCountText">SOALAN 1/10</span>
+                    <span id="setNameLabel" class="bg-emerald-100 px-3 py-1 rounded-full">SET 4</span>
+                </div>
+                <div class="w-full bg-emerald-100 h-3 rounded-full overflow-hidden border">
+                    <div id="progressBarFill" class="bg-emerald-500 h-full transition-all duration-300" style="width: 10%;"></div>
+                </div>
+
+                <!-- Gelembung Guru / Maskot -->
+                <div class="flex items-start gap-4 w-full bg-white border-2 border-emerald-200 rounded-3xl p-4 shadow-sm">
+                    <div class="text-5xl shrink-0" id="mascotIcon">👨‍🏫</div>
+                    <div class="flex-grow">
+                        <h4 class="text-xs font-bold text-emerald-500 uppercase" id="speakerLabel">Dr. MRAR</h4>
+                        <p class="text-base md:text-lg font-bold text-slate-800 leading-tight" id="qBM">Soalan...</p>
+                        <p class="text-sm text-slate-500 italic mt-1" id="qEN">Question...</p>
+                    </div>
+                </div>
+
+                <!-- KAWASAN TARGET DRAG & DROP -->
+                <div id="dropZone" class="w-full max-w-md bg-amber-50 border-4 border-dashed border-amber-300 rounded-3xl p-6 flex flex-col items-center gap-3 relative transition-all duration-200">
+                    <div class="absolute -top-3 -right-3 text-4xl">🎁</div>
+                    <p class="text-sm font-bold text-amber-700" id="dropPrompt">Tarik dan lepaskan jawapan betul di sini!</p>
+                    <div id="dropTargetSlot" class="w-full min-h-[60px] bg-white rounded-2xl border-4 border-amber-200 flex items-center justify-center text-emerald-700 font-extrabold px-4 text-center">
+                        <span class="text-slate-300 text-xs uppercase" id="slotPlaceholder">KOTAK ILMU</span>
+                    </div>
+                </div>
+
+                <!-- PILIHAN JAWAPAN -->
+                <div class="w-full grid grid-cols-1 md:grid-cols-3 gap-3" id="optionsContainer"></div>
+                
+                <!-- Tip Tip Permainan -->
+                <p class="text-xs font-bold text-emerald-400 mt-2 text-center" id="directClickTip">💡 Tip: Anda boleh menyeret kad jawapan atau mengetik terus pilihan tersebut!</p>
+                <button onclick="resetToMenu()" class="mt-4 text-emerald-600 font-bold text-sm hover:underline">🏠 Kembali ke Menu Utama / Back to Menu</button>
+            </div>
+
+            <!-- SKRIN KEPUTUSAN KESELURUHAN (SUMMARY SCREEN) -->
+            <div id="summaryScreen" class="hidden text-center py-6 flex flex-col items-center gap-5">
+                <div class="text-7xl">🎉</div>
+                <h2 class="text-3xl title-font text-emerald-700">Kembara Selesai!</h2>
+                <div class="bg-white border-4 border-emerald-200 p-6 rounded-3xl shadow-lg w-full max-w-sm">
+                    <p class="text-lg font-bold text-slate-600" id="finalPlayerName">Syabas, Ali!</p>
+                    <div class="flex justify-around mt-4">
+                        <div>
+                            <span class="block text-xs text-slate-400" id="totalScoreLabel">SKOR</span>
+                            <span class="text-3xl font-bold text-emerald-600" id="finalScoreVal">0</span>
+                        </div>
+                        <div>
+                            <span class="block text-xs text-slate-400" id="accuracyLabel">KETEPATAN</span>
+                            <span class="text-3xl font-bold text-blue-600">100%</span>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="resetToMenu()" class="bg-emerald-600 text-white border-4 border-emerald-800 bubbly-btn py-3 px-8 rounded-2xl font-bold text-lg">🏠 MENU UTAMA</button>
+            </div>
+
+        </div>
+
+        <!-- POPUP JAWAPAN BETUL / SALAH -->
+        <!-- Betul -->
+        <div id="correctPopup" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl border-8 border-emerald-400 p-6 max-w-sm w-full text-center bubbly-shadow">
+                <span class="text-6xl animate-bounce block mb-2">🎁</span>
+                <h2 class="text-2xl title-font text-emerald-600">TAHNIAH!</h2>
+                <p class="text-sm font-bold text-slate-600 my-4 leading-relaxed" id="explanationText">Fakta Buku...</p>
+                <button onclick="nextQuestion()" class="w-full bg-emerald-500 text-white bubbly-btn py-3 rounded-2xl font-bold">TERUSKAN ➡️</button>
+            </div>
+        </div>
+
+        <!-- Salah -->
+        <div id="wrongPopup" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-3xl border-8 border-rose-400 p-6 max-w-sm w-full text-center">
+                <span class="text-5xl block mb-2">💡</span>
+                <h2 class="text-2xl title-font text-rose-600">CUBA LAGI!</h2>
+                <p class="text-sm font-bold text-slate-700 bg-amber-50 p-4 rounded-xl border border-amber-200 my-4 text-left" id="hintText">Pembayang...</p>
+                <button onclick="retryQuestion()" class="w-full bg-rose-500 text-white bubbly-btn py-3 rounded-2xl font-bold">CUBA SEMULA</button>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- NOTIFIKASI TOAST -->
+    <div id="toastNotification" class="fixed bottom-4 left-1/2 -translate-x-1/2 bg-emerald-900/90 text-white font-bold text-xs px-4 py-2 rounded-full shadow-lg z-50 pointer-events-none transition-all opacity-0 scale-90">
+        Notification message
+    </div>
+
+    <script>
+        // --- DATASET KUIZ SET 2 (Berdasarkan Buku 1.4 & Buku 1.5) ---
+        const quizData = {
+            4: [ // Buku 1.4: Understanding Religion; Western Theories and the Concept of Din
+                {
+                    qBM: "Apakah asal perkataan Latin bagi 'religion' (daripada imbuhan re- dan lig-) yang bermaksud 'menyambung semula'?",
+                    qEN: "What is the Latin root of 'religion' (from re- and lig-) which means 'to join again'?",
+                    optionsBM: ["Re-ligre / Re-lig", "Deos / Divine", "Religio / Ritual"],
+                    optionsEN: ["Re-ligre / Re-lig", "Deos / Divine", "Religio / Ritual"],
+                    correctIdx: 0,
+                    hintBM: "Ia membawa maksud menyambung semula dunia fizikal manusia dengan sesuatu yang suci.",
+                    hintEN: "It refers to joining the natural world back with the sacred.",
+                    explanationBM: "Buku 1.4 menjelaskan kata Latin 're-' bermaksud 'semula' dan 'lig-' bermaksud 'sambung', menghasilkan takrifan 'menyambung semula'.",
+                    explanationEN: "The word comes from Latin root 're-' (again) and 'lig-' (join) to form 'to join again'."
+                },
+                {
+                    qBM: "Siapakah ahli antropologi yang mendefinisikan agama sebagai 'kepercayaan kepada makhluk spiritual' dalam buku Primitive Culture?",
+                    qEN: "Which anthropologist defined religion as 'the belief in spiritual beings' in Primitive Culture?",
+                    optionsBM: ["E.B. Tylor", "Sigmund Freud", "Rudolf Otto"],
+                    optionsEN: ["E.B. Tylor", "Sigmund Freud", "Rudolf Otto"],
+                    correctIdx: 0,
+                    hintBM: "Beliau memberikan takrifan minimum ini untuk mengkaji kebudayaan primitif manusia.",
+                    hintEN: "He claimed this was the minimum definition of religion.",
+                    explanationBM: "E.B. Tylor mendakwa dalam karyanya 'Primitive Culture' bahawa takrifan minimum agama ialah kepercayaan kepada makhluk spiritual.",
+                    explanationEN: "E.B. Tylor, in his 'Primitive Culture', claimed that the minimum definition of religion is the belief in spiritual beings."
+                },
+                {
+                    qBM: "Apakah takrifan Rudolf Otto bagi agama dalam karyanya 'The Idea of the Holy'?",
+                    qEN: "How did Rudolf Otto describe religion in 'The Idea of the Holy'?",
+                    optionsBM: ["Misteri yang menggerunkan & mempesonakan / Mysterium tremendum et fascinans", "Unjuran Oedipus Complex / Projection of Oedipus Complex", "Sistem nilai moral masyarakat / Unified moral community"],
+                    optionsEN: ["Mysterium tremendum et fascinans / A mystery causing trembling & fascination", "Oedipus Complex projection", "Unified moral community"],
+                    correctIdx: 0,
+                    hintBM: "Misteri ini membangkitkan rasa takut (trembling) sekaligus rasa ingin tahu yang mendalam (fascination).",
+                    hintEN: "It evokes a sense of fear as well as deep curiosity.",
+                    explanationBM: "Rudolf Otto mendefinisikan agama sebagai 'mysterium tremendum et fascinans' iaitu misteri suci yang menggerunkan tetapi memikat jiwa.",
+                    explanationEN: "Rudolf Otto described religion as a 'mystery that causes both trembling and fascination'."
+                },
+                {
+                    qBM: "Menurut Carl Gustav Jung, bilakah agama menjadi benar-benar bermakna kepada kehidupan manusia?",
+                    qEN: "According to Carl Gustav Jung, when does religion become truly meaningful?",
+                    optionsBM: ["Apabila dialami secara peribadi dalam jiwa / Personally experienced", "Apabila kekal sebagai ritual luaran sahaja / External form only", "Apabila mengikut tradisi nenek moyang / Ancestral tradition only"],
+                    optionsEN: ["When personally experienced within the soul", "When remaining merely as external belief", "When following ancestral tradition only"],
+                    correctIdx: 0,
+                    hintBM: "Beliau menekankan kepentingan mencapai kedamaian dalaman (individuation).",
+                    hintEN: "He emphasized inner peace and self-realization.",
+                    explanationBM: "Jung percaya agama murni lahir daripada keperluan perkembangan individu (individuation) dan hanya bermakna apabila dialami secara peribadi.",
+                    explanationEN: "Carl Jung viewed religion as meaningful when personally experienced, helping individuals achieve inner peace."
+                },
+                {
+                    qBM: "Sarjana manakah yang mengaitkan imej Tuhan dengan 'Oedipus complex' dan unjuran bapa semasa zaman kanak-kanak?",
+                    qEN: "Which scholar associated the image of God with the 'Oedipus complex' and childhood parental authority?",
+                    optionsBM: ["Sigmund Freud", "Carl Jung", "William James"],
+                    optionsEN: ["Sigmund Freud", "Carl Jung", "William James"],
+                    correctIdx: 0,
+                    hintBM: "Beliau seorang pakar psikoanalisis yang menulis buku 'Totem and Taboo'.",
+                    hintEN: "He is a famous psychoanalyst who wrote 'Totem and Taboo'.",
+                    explanationBM: "Freud mendakwa dalam 'Totem and Taboo' bahawa agama lahir daripada Oedipus complex di mana manusia mengunjurkan imej bapa sebagai Tuhan.",
+                    explanationEN: "Sigmund Freud posits that religion is born from the Oedipus complex, projecting parental authority."
+                },
+                {
+                    qBM: "Apakah pandangan William James tentang sumbangan agama terhadap kesihatan mental manusia?",
+                    qEN: "What was William James's view on religion's contribution to human mental health?",
+                    optionsBM: ["Membawa kegembiraan & jaminan keselamatan / Zest & safety", "Menyebabkan kekeliruan jiwa / Causes confusion", "Hanya khayalan tidak berguna / Just a useless illusion"],
+                    optionsEN: ["Brings a new zest to living & assurance of safety", "Causes psychological confusion", "Just a useless illusion"],
+                    correctIdx: 0,
+                    hintBM: "Beliau percaya agama memenuhi keperluan psikologi yang mendalam untuk ketenangan minda.",
+                    hintEN: "He believed it fosters a harmonious relationship with the universe.",
+                    explanationBM: "William James berpendapat agama memberi jaminan keselamatan (assurance of safety) dan semangat baru (new zest) untuk hidup ceria.",
+                    explanationEN: "William James viewed religion as a positive force bringing a 'new zest' and 'assurance of safety'."
+                },
+                {
+                    qBM: "Siapakah ahli sosiologi yang mendakwa bahawa masyarakat (bukan pengasas) yang mencipta agama untuk mengukuhkan nilai bersama?",
+                    qEN: "Which sociologist argued that societies, rather than founders, created religion to reinforce shared values?",
+                    optionsBM: ["Emile Durkheim", "J.G. Frazer", "Paul Tillich"],
+                    optionsEN: ["Emile Durkheim", "J.G. Frazer", "Paul Tillich"],
+                    correctIdx: 0,
+                    hintBM: "Beliau menulis buku bertajuk 'The Elementary Forms of Religious Life'.",
+                    hintEN: "He wrote 'The Elementary Forms of Religious Life'.",
+                    explanationBM: "Durkheim menyimpulkan bahawa agama adalah produk ciptaan masyarakat itu sendiri untuk menyatukan mereka dalam komuniti moral.",
+                    explanationEN: "Emile Durkheim argued that religion is a unified system and a product of society itself."
+                },
+                {
+                    qBM: "Menurut J.G. Frazer dalam 'The Golden Bough', amalan agama ialah fasa peralihan antara:",
+                    qEN: "According to J.G. Frazer in 'The Golden Bough', religion is a transition stage between:",
+                    optionsBM: ["Sihir & Sains / Magic & Science", "Seni & Muzik / Art & Music", "Perang & Keamanan / War & Peace"],
+                    optionsEN: ["Magic & Science", "Art & Music", "War & Peace"],
+                    correctIdx: 0,
+                    hintBM: "Ia adalah usaha awal manusia untuk mempengaruhi alam sebelum munculnya pembuktian empirikal.",
+                    hintEN: "It represents an early human attempt to influence nature before modern methods.",
+                    explanationBM: "Frazer mendakwa sejarah evolusi pemikiran manusia bermula daripada sihir (magic), beralih kepada agama, dan akhirnya sains.",
+                    explanationEN: "J.G. Frazer posited that religion serves as a transition from magic toward science."
+                },
+                {
+                    qBM: "Apakah perbezaan utama konsep 'Din' dalam Islam berbanding takrifan 'religion' Barat mengikut Al-Attas?",
+                    qEN: "What is the key difference of 'Din' in Islam compared to Western 'religion' according to Al-Attas?",
+                    optionsBM: ["Din adalah cara hidup bersepadu & lengkap / Unified way of life", "Din hanya tertumpu pada ibadat / Focused on ritual only", "Din tiada kaitan dengan etika / No connection to ethics"],
+                    optionsEN: ["Din is a unique, unified way of life and morality", "Din is focused on ritual and prayers only", "Din has no connection to ethics"],
+                    correctIdx: 0,
+                    hintBM: "Din merangkumi segenap aspek moral, kehidupan dan perundangan berteraskan Al-Quran.",
+                    hintEN: "It represents a complete concept of life rooted in the Holy Quran.",
+                    explanationBM: "Al-Attas menegaskan istilah 'Din' kerap disalah terjemah sebagai agama dalam erti kata Barat, sedangkan ia merangkumi keseluruhan cara hidup murni.",
+                    explanationEN: "Al-Attas argues that 'din' represents a unique, unified concept of life and morality."
+                },
+                {
+                    qBM: "Antara berikut, yang manakah BUKAN salah satu daripada hang empat pengertian utama 'Din' mengikut Al-Attas?",
+                    qEN: "Which of the following is NOT one of the four primary significations of 'din' by Al-Attas?",
+                    optionsBM: ["Kebebasan mengumpul harta duniawi / Gathering worldly wealth", "Rasa terhutang budi kepada Pencipta / Indebtedness", "Kecenderungan semula jadi rohani / Fitrah"],
+                    optionsEN: ["Freedom to gather worldly wealth", "Profound sense of indebtedness", "Return to natural inclination (fitrah)"],
+                    correctIdx: 0,
+                    hintBM: "Tiga pengertian lain ialah Indebtedness, Submissiveness, Judicious Power, dan Fitrah.",
+                    hintEN: "The four include indebtedness, submissiveness, judicious power, and fitrah.",
+                    explanationBM: "Empat pengertian Din ialah: 1. Terhutang budi (indebtedness), 2. Tunduk patuh (submissiveness), 3. Kuasa pengadilan (judicious power), dan 4. Kembali kepada fitrah.",
+                    explanationEN: "The four significations are indebtedness to Creator, submissiveness to His will, judicious power, and fitrah."
+                }
+            ],
+            5: [ // Buku 1.5: Categorizations of Major World Religions
+                {
+                    qBM: "Mengikut pengelasan masa (Time-Based), agama yang percaya hayat manusia mempunyai permulaan dan pengakhiran yang jelas (Hari Kiamat, Syurga, Neraka) dipanggil:",
+                    qEN: "Under time-based categorization, religions believing life has a clear beginning and end (Judgment, Heaven, Hell) are called:",
+                    optionsBM: ["Agama Garis Lurus / Lineal-Time-Based", "Agama Kitaran / Cyclical-Time-Based", "Agama Alam / Natural Religions"],
+                    optionsEN: ["Lineal-Time-Based Religions", "Cyclical-Time-Based Religions", "Natural Religions"],
+                    correctIdx: 0,
+                    hintBM: "Contoh agama jenis ini termasuklah Islam, Kristian, Yahudi, dan Zoroastrianisme.",
+                    hintEN: "Examples include Islam, Judaism, Christianity, and Zoroastrianism.",
+                    explanationBM: "Agama Garis Lurus (Lineal-Time) mengajar sejarah manusia bergerak sehala dari penciptaan sehingga hari pembalasan.",
+                    explanationEN: "Lineal-Time-Based religions believe life has a clear beginning and end, following concepts like Judgement Day."
+                },
+                {
+                    qBM: "Agama kitaran masa (Cyclical-Time-Based) seperti Hindu dan Buddha mempercayai konsep utama:",
+                    qEN: "Cyclical-Time-Based religions like Hinduism and Buddhism typically focus on which concept?",
+                    optionsBM: ["Kelahiran semula / Rebirth & reincarnation", "Hari Kiamat fizikal / Physical Judgement Day", "Tiada kehidupan selepas mati / No afterlife"],
+                    optionsEN: ["Rebirth and reincarnation", "Physical Judgement Day", "No afterlife"],
+                    correctIdx: 0,
+                    hintBM: "Konsep ini menerangkan jiwa yang berpindah-pindah dalam kitaran samsara.",
+                    hintEN: "It refers to time and life moving in a repeating cycle.",
+                    explanationBM: "Agama kitaran mempercayai masa bergerak bulat tanpa henti melalui penjelmaan atau kelahiran semula jiwa (reincarnation).",
+                    explanationEN: "Cyclical religions believe time and life move in a continuous cycle, focusing on reincarnation."
+                },
+                {
+                    qBM: "Mengikut pengelasan geografi (Geographical-Based), manakah kumpulan agama yang dikelaskan sebagai 'Eastern Religions' (Agama Timur)?",
+                    qEN: "Under geographical-based categorization, which religions are grouped as 'Eastern Religions'?",
+                    optionsBM: ["Islam, Hindu, Buddha, & Sikh / Islam, Hindu, Buddha, & Sikh", "Kristian & Yahudi / Christianity & Judaism", "Zoroastrianism sahaja / Zoroastrianism only"],
+                    optionsEN: ["Islam, Hinduism, Buddhism, and Sikhism", "Christianity and Judaism", "Zoroastrianism only"],
+                    correctIdx: 0,
+                    hintBM: "Walaupun berkembang ke Barat, agama-agama murni ini bertapak dan bermula di benua Asia Timur dan Tengah.",
+                    hintEN: "These religions originated in Eastern and Asian contexts.",
+                    explanationBM: "Geografi membahagikan agama Barat (Kristian, Yahudi) dan agama Timur (Islam, Hindu, Buddha, Sikh).",
+                    explanationEN: "Eastern Religions include Islam, Hinduism, Buddhism, and Sikhism based on geography."
+                },
+                {
+                    qBM: "Apakah itu Agama Semitik (Semitic Religions) di bawah pengelasan etnik?",
+                    qEN: "What are Semitic Religions under ethnicity-based categorization?",
+                    optionsBM: ["Agama yang bermula dalam kalangan bangsa Yahudi & Arab / Jews & Arabs", "Agama masyarakat Jepun kuno / Japanese religions", "Agama kaum peribumi Amerika / Native American faiths"],
+                    optionsEN: ["Faiths originating among Semitic peoples like Jews and Arabs", "Ancient Japanese religions", "Native American faiths"],
+                    correctIdx: 0,
+                    hintBM: "Tiga agama utama kumpulan ini ialah Judaism, Kristian, dan Islam.",
+                    hintEN: "Key examples include Judaism, Christianity, and Islam.",
+                    explanationBM: "Agama Semitik merujuk kepada agama samawi yang diturunkan dalam kalangan rumpun bangsa Semitik (Jews & Arabs).",
+                    explanationEN: "Semitic Religions originated among Semitic peoples, such as the Jews and Arabs."
+                },
+                {
+                    qBM: "Apakah perbezaan utama antara Agama Wahyu (Revealed) dengan Agama Bukan Wahyu (Unrevealed) mengikut Buku 1.5?",
+                    qEN: "What is the primary difference between Revealed and Unrevealed religions in Book 1.5?",
+                    optionsBM: ["Agama Wahyu menerima mesej langsung daripada Tuhan melalui para Nabi / Revelation through Prophets", "Agama Wahyu tidak mempunyai kitab / No scriptures", "Agama Bukan Wahyu menyembah satu tuhan / Worship one god only"],
+                    optionsEN: ["Revealed religions receive direct message from God through Prophets", "Revealed religions have no scriptures", "Unrevealed religions worship one god only"],
+                    correctIdx: 0,
+                    hintBM: "Agama Bukan Wahyu (Unrevealed) umumnya berfungsi sebagai sistem etika moral manusia.",
+                    hintEN: "Unrevealed religions are often non-Prophetic and function as ethical systems.",
+                    explanationBM: "Agama Wahyu mempercayai bimbingan langsung daripada Pencipta (Tuhan) kepada para rasul pilihan, berbeza dengan agama falsafah/etika.",
+                    explanationEN: "Revealed Religions believe in direct revelation from God through Prophets (e.g. Islam, Judaism, Christianity)."
+                },
+                {
+                    qBM: "Apakah takrifan teologi bagi 'Monoteisme' (Monotheism)?",
+                    qEN: "How is 'Monotheism' defined in theological categorization?",
+                    optionsBM: ["Kepercayaan kepada hanya satu Tuhan / Belief in only one God", "Kepercayaan kepada dewa-dewi yang banyak / Worship of many gods", "Kepercayaan bahawa alam semesta ialah Tuhan / Everything is God"],
+                    optionsEN: ["The belief in only one God", "The worship of many different gods", "The belief that everything in existence is God"],
+                    correctIdx: 0,
+                    hintBM: "Perkataan ini berasal daripada bahasa Yunani: 'mono' (satu) dan 'theos' (Tuhan).",
+                    hintEN: "Derived from Greek words mono (one) and theos (God).",
+                    explanationBM: "Monoteisme ialah keimanan murni kepada ketunggalan Tuhan Pencipta, yang menjadi paksi utama agama Wahyu.",
+                    explanationEN: "Monotheism is defined as the belief in only one God, a core characteristic of Revealed Religions."
+                },
+                {
+                    qBM: "Apakah istilah teologi bagi kepercayaan Panteisme (Pantheism)?",
+                    qEN: "What is the theological concept of 'Pantheism'?",
+                    optionsBM: ["Kepercayaan bahawa segala sesuatu yang wujud ialah Tuhan / Everything is God", "Kepercayaan bahawa Tuhan tidak lagi aktif / Inactive Creator", "Kepercayaan menolak kewujudan Tuhan / No God"],
+                    optionsEN: ["The belief that everything in existence is God", "The belief in an inactive Creator", "The belief that there is no God at all"],
+                    correctIdx: 0,
+                    hintBM: "Berasal daripada perkataan 'pan' yang bermaksud 'semua' dan 'theos' yang bermaksud 'Tuhan'.",
+                    hintEN: "Synonymous with nature itself, from 'pan' (all) and 'theos' (God).",
+                    explanationBM: "Panteisme menyamakan Tuhan dengan alam fizikal, bermaksud tiada perbezaan antara Pencipta dengan makhluk ciptaan-Nya.",
+                    explanationEN: "Pantheism is the belief that everything in existence is God, with no separation between Creator and universe."
+                },
+                {
+                    qBM: "Kepercayaan Dualisme (Dualism) dalam teologi menekankan tentang:",
+                    qEN: "What does 'Dualism' focus on in theological beliefs?",
+                    optionsBM: ["Dua tuhan sebagai kuasa yang saling bertentangan / Two opposing forces", "Tuhan yang menyerap dalam alam / God synonymous with nature", "Satu tuhan yang mempunyai tiga peribadi / Trinity"],
+                    optionsEN: ["The existence of two gods as equal and opposing forces", "God synonymous with nature", "One God with three persons"],
+                    correctIdx: 0,
+                    hintBM: "Ia menggambarkan pertarungan atau keseimbangan mutlak antara dua kuasa kosmik gergasi.",
+                    hintEN: "It represents a balance or struggle between two fundamental powers.",
+                    explanationBM: "Dualisme ialah kepercayaan teologi kepada dua tuhan atau entiti agung yang setara tetapi saling bertentangan sifatnya.",
+                    explanationEN: "Dualism is the belief in the existence of two gods, often characterized as equal and opposing forces."
+                },
+                {
+                    qBM: "Mengapakah pegangan Deisme (Deism) menyamakan Tuhan dengan imej 'Tukang Jam' (Clockmaker)?",
+                    qEN: "Why does Deism view God as a master 'Clockmaker'?",
+                    optionsBM: ["Mencipta dunia tetapi membiarkannya berjalan sendiri / God created but remains inactive", "Mengatur waktu solat manusia / Controls prayer times", "Sentiasa mengubah reka bentuk dunia / Constantly changes nature"],
+                    optionsEN: ["God created the world but remains inactive and lets it run on its own", "God controls prayer times", "God constantly changes nature's design"],
+                    correctIdx: 0,
+                    hintBM: "Tuhan Deisme ialah 'Tuhan Falsafah' yang tidak masuk campur urusan harian manusia.",
+                    hintEN: "A Creator who made the world but does not interfere with its workings.",
+                    explanationBM: "Deisme mempercayai Tuhan sebagai pencipta mekanis alam yang menetapkan hukum fizik asal lalu membiarkan alam bergerak sendiri.",
+                    explanationEN: "Deism views God as a master clockmaker who started the universe but now lets it run on its own without interfering."
+                },
+                {
+                    qBM: "Mengikut halaman akhir buku Categorizations of Major World Religions, apakah faedah utama mempelajari pelbagai kategori agama dunia ini?",
+                    qEN: "According to the final page of the book Categorizations of Major World Religions, what is the main benefit of studying these categorizations?",
+                    optionsBM: ["Membina masyarakat yang harmoni & saling menghormati / Building a harmonious society", "Untuk berdebat bagi membuktikan kejuaraan / To win debates", "Sekadar memenuhi kredit pembelajaran / To pass exams only"],
+                    optionsEN: ["To build a harmonious, respectful society", "To win theological debates", "Just to pass exams"],
+                    correctIdx: 0,
+                    hintBM: "Ia adalah alat penting untuk menyemai sikap toleransi dalam masyarakat majmuk.",
+                    hintEN: "It is a vital tool for building peaceful coexistence and mutual respect.",
+                    explanationBM: "Mempelajari pengelasan agama membantu kita memahami cara manusia mencari makna hidup, sekali gus memupuk toleransi murni di Malaysia.",
+                    explanationEN: "Studying the various categorizations of world religions is a vital tool for building a harmonious society and mutual respect."
+                }
+            ]
+        };
+
+        // --- ENJIN UTAMA PERMAINAN ---
+        let currentLang = 'BM';
+        let currentSet = 4;
+        let qIdx = 0;
+        let score = 0;
+        let playerName = "";
+        let soundOn = true;
+
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (!soundOn) return;
+            try {
+                if (audioCtx.state === 'suspended') {
+                    audioCtx.resume();
+                }
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                if (type === 'correct') {
+                    osc.frequency.setValueAtTime(523, audioCtx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.2);
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+                } else if (type === 'wrong') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(220, audioCtx.currentTime);
+                    osc.frequency.linearRampToValueAtTime(110, audioCtx.currentTime + 0.3);
+                    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                    osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+                }
+            } catch (e) {
+                console.log("Audio contexts not active.");
+            }
+        }
+
+        function toggleLanguage() {
+            currentLang = currentLang === 'BM' ? 'EN' : 'BM';
+            document.getElementById('langBtnText').innerText = currentLang === 'BM' ? 'English' : 'Malay';
+            updateUIStrings();
+            if (document.getElementById('quizScreen').classList.contains('hidden') === false) {
+                renderQuestion();
+            }
+        }
+
+        function updateUIStrings() {
+            const strings = {
+                BM: {
+                    sub: "Siri Kembara Buku Dr. MRAR",
+                    title: "Selamat Datang ke Kembara Teori & Kategori!",
+                    subTitle: "Terokai teori Barat tentang agama, konsep Din dalam Islam, dan pengelasan agama-agama dunia berdasarkan siri buku Dr. MRAR!",
+                    drop: "Tarik dan lepaskan jawapan betul di sini!",
+                    placeholder: "KOTAK ILMU",
+                    intro: "Sila masukkan nama anda untuk memulakan cabaran:",
+                    book4: "Buku 1.4: Teori & Din",
+                    book5: "Buku 1.5: Pengelasan Agama",
+                    btnLabel4: "SET 4: TEORI & DIN",
+                    btnLabel5: "SET 5: KATEGORI",
+                    scoreLabel: "SKOR",
+                    accLabel: "KETEPATAN",
+                    tip: "💡 Tip: Anda boleh menyeret kad jawapan atau mengetik terus pilihan tersebut!"
+                },
+                EN: {
+                    sub: "Book Series by Dr. MRAR",
+                    title: "Welcome to the Quest of Theories & Categories!",
+                    subTitle: "Explore Western theories of religion, the concept of Din in Islam, and classification of world religions based on Dr. MRAR's book series!",
+                    drop: "Drag the correct answer here!",
+                    placeholder: "KNOWLEDGE SLOT",
+                    intro: "Please enter your name to start the quest:",
+                    book4: "Book 1.4: Theories & Din",
+                    book5: "Book 1.5: Categories",
+                    btnLabel4: "SET 4: THEORIES",
+                    btnLabel5: "SET 5: CATEGORIES",
+                    scoreLabel: "SCORE",
+                    accLabel: "ACCURACY",
+                    tip: "💡 Tip: You can either drag the card or directly click on your answer!"
+                }
+            };
+            document.getElementById('welcomeTitle').innerText = strings[currentLang].title;
+            document.getElementById('welcomeSubtitle').innerText = strings[currentLang].subTitle;
+            document.getElementById('subtitleText').innerText = strings[currentLang].sub;
+            document.getElementById('dropPrompt').innerText = strings[currentLang].drop;
+            document.getElementById('slotPlaceholder').innerText = strings[currentLang].placeholder;
+            document.getElementById('welcomeIntro').innerText = strings[currentLang].intro;
+            document.getElementById('book4Label').innerText = strings[currentLang].book4;
+            document.getElementById('book5Label').innerText = strings[currentLang].book5;
+            document.getElementById('btnLabel4').innerText = strings[currentLang].btnLabel4;
+            document.getElementById('btnLabel5').innerText = strings[currentLang].btnLabel5;
+            document.getElementById('totalScoreLabel').innerText = strings[currentLang].scoreLabel;
+            document.getElementById('accuracyLabel').innerText = strings[currentLang].accLabel;
+            document.getElementById('directClickTip').innerText = strings[currentLang].tip;
+        }
+
+        function startQuizSet(setNo) {
+            const inputName = document.getElementById('playerNameInput').value.trim();
+            playerName = inputName || (currentLang === 'BM' ? "Pengembara" : "Adventurer");
+            currentSet = setNo;
+            qIdx = 0;
+            score = 0;
+            document.getElementById('scoreVal').innerText = score;
+            document.getElementById('setNameLabel').innerText = `SET ${setNo}`;
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('quizScreen').classList.remove('hidden');
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const data = quizData[currentSet][qIdx];
+            document.getElementById('questionCountText').innerText = `SOALAN ${qIdx + 1}/10`;
+            document.getElementById('progressBarFill').style.width = `${(qIdx + 1) * 10}%`;
+            document.getElementById('qBM').innerText = data.qBM;
+            document.getElementById('qEN').innerText = data.qEN;
+            
+            const placeholderText = currentLang === 'BM' ? 'KOTAK ILMU' : 'KNOWLEDGE SLOT';
+            document.getElementById('dropTargetSlot').innerHTML = `<span class="text-slate-300 text-xs uppercase" id="slotPlaceholder">${placeholderText}</span>`;
+
+            const container = document.getElementById('optionsContainer');
+            container.innerHTML = '';
+            
+            // Create shuffled indexes (Fisher-Yates Shuffle)
+            let indices = [0, 1, 2];
+            for (let i = indices.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [indices[i], indices[j]] = [indices[j], indices[i]];
+            }
+            
+            // Render options based on shuffled indices
+            indices.forEach(idx => {
+                const optBM = data.optionsBM[idx];
+                const optEN = data.optionsEN[idx];
+                
+                const card = document.createElement('div');
+                card.className = "bg-white border-4 border-emerald-200 hover:border-emerald-400 rounded-2xl p-4 text-center cursor-pointer transition-all duration-200 transform hover:scale-105 active:scale-95 shadow-md flex flex-col justify-center items-center gap-1 min-h-[90px] draggable select-none";
+                card.setAttribute('draggable', 'true');
+                card.setAttribute('data-index', idx);
+                
+                const star = document.createElement('div');
+                star.className = "text-amber-400 text-xs mb-1";
+                star.innerHTML = "⭐";
+                card.appendChild(star);
+
+                const labelBM = document.createElement('p');
+                labelBM.className = "font-extrabold text-emerald-900 text-sm md:text-base leading-tight";
+                labelBM.innerText = optBM;
+                card.appendChild(labelBM);
+
+                const labelEN = document.createElement('p');
+                labelEN.className = "text-xs text-emerald-500 italic font-bold";
+                labelEN.innerText = optEN;
+                card.appendChild(labelEN);
+
+                card.onclick = () => checkAnswer(idx);
+                card.ondragstart = (e) => e.dataTransfer.setData('idx', idx);
+                container.appendChild(card);
+            });
+        }
+
+        const dropTarget = document.getElementById('dropZone');
+        dropTarget.ondragover = (e) => e.preventDefault();
+        dropTarget.ondrop = (e) => {
+            const idx = e.dataTransfer.getData('idx');
+            checkAnswer(parseInt(idx));
+        };
+
+        function checkAnswer(i) {
+            const data = quizData[currentSet][qIdx];
+            if (i === data.correctIdx) {
+                playSound('correct');
+                score += 100;
+                document.getElementById('scoreVal').innerText = score;
+                document.getElementById('explanationText').innerText = currentLang === 'BM' ? data.explanationBM : data.explanationEN;
+                
+                // Show chosen answer inside drop target
+                document.getElementById('dropTargetSlot').innerHTML = `<span class="text-emerald-600 font-extrabold">🎉 ${data.optionsBM[i]}</span>`;
+                
+                setTimeout(() => {
+                    document.getElementById('correctPopup').classList.remove('hidden');
+                }, 300);
+                triggerFireworks();
+            } else {
+                playSound('wrong');
+                document.getElementById('hintText').innerText = currentLang === 'BM' ? data.hintBM : data.hintEN;
+                document.getElementById('wrongPopup').classList.remove('hidden');
+                document.getElementById('optionsContainer').classList.add('shake-effect');
+                setTimeout(() => document.getElementById('optionsContainer').classList.remove('shake-effect'), 500);
+            }
+        }
+
+        // Global variables/functions to keep it consistent
+        function nextQuestion() {
+            document.getElementById('correctPopup').classList.add('hidden');
+            if (qIdx < 9) {
+                qIdx++;
+                renderQuestion();
+            } else {
+                showSummary();
+            }
+        }
+
+        function retryQuestion() {
+            document.getElementById('wrongPopup').classList.add('hidden');
+        }
+
+        function showSummary() {
+            document.getElementById('quizScreen').classList.add('hidden');
+            document.getElementById('summaryScreen').classList.remove('hidden');
+            document.getElementById('finalPlayerName').innerText = `Syabas, ${playerName}!`;
+            document.getElementById('finalScoreVal').innerText = score;
+        }
+
+        function resetToMenu() {
+            document.getElementById('quizScreen').classList.add('hidden');
+            document.getElementById('summaryScreen').classList.add('hidden');
+            document.getElementById('welcomeScreen').classList.remove('hidden');
+            currentSet = null;
+        }
+
+        function toggleSound() {
+            soundOn = !soundOn;
+            document.getElementById('soundBtn').innerText = soundOn ? '🔊' : '🔇';
+        }
+
+        // --- SISTEM BUNGA API KANVAS ---
+        const canvas = document.getElementById('fireworksCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.onresize = resize; resize();
+        class P {
+            constructor(x,y) {
+                this.x=x; this.y=y;
+                this.v={x:(Math.random()-0.5)*10, y:(Math.random()-0.5)*10};
+                this.a=1; this.c=`hsl(${Math.random()*360},100%,50%)`;
+            }
+            draw() { ctx.globalAlpha=this.a; ctx.fillStyle=this.c; ctx.beginPath(); ctx.arc(this.x,this.y,3,0,Math.PI*2); ctx.fill(); }
+            up() { this.x+=this.v.x; this.y+=this.v.y; this.a-=0.02; }
+        }
+        function triggerFireworks() {
+            for(let i=0;i<50;i++) particles.push(new P(canvas.width/2, canvas.height/2));
+        }
+        function anim() {
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            particles = particles.filter(p => p.a > 0);
+            particles.forEach(p => { p.up(); p.draw(); });
+            requestAnimationFrame(anim);
+        }
+        anim();
+        
+        window.onload = function() {
+            updateUIStrings();
+        }
+    </script>
+</body>
+</html>

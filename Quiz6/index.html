@@ -1,0 +1,1246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Islamic Quiz Challenge</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Playful and legible fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Lexend:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Lexend', sans-serif;
+            background: radial-gradient(circle, #f0fdf4 0%, #dcfce7 100%);
+            overflow-x: hidden;
+        }
+        .font-kids {
+            font-family: 'Fredoka One', 'Lexend', sans-serif;
+        }
+        /* Custom Keyframe Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(2deg); }
+        }
+        @keyframes pulse-slow {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        @keyframes slide-in {
+            0% { transform: translateY(30px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes pop-up {
+            0% { transform: scale(0.8); opacity: 0; }
+            90% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes ribbon-unfurl {
+            0% { transform: scaleX(0); opacity: 0; }
+            100% { transform: scaleX(1); opacity: 1; }
+        }
+        @keyframes star-spin {
+            0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+        .animate-float { animation: float 6s ease-in-out infinite; }
+        .animate-pulse-slow { animation: pulse-slow 3s ease-in-out infinite; }
+        .animate-slide-in { animation: slide-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        .animate-pop-up { animation: pop-up 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        .animate-ribbon { animation: ribbon-unfurl 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        .animate-star-1 { animation: star-spin 0.5s 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; opacity: 0; }
+        .animate-star-2 { animation: star-spin 0.5s 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; opacity: 0; }
+        .animate-star-3 { animation: star-spin 0.5s 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; opacity: 0; }
+
+        /* Custom scrollbar for leaderboard */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 9999px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-between p-4 md:p-6 text-slate-800 selection:bg-emerald-200">
+
+    <!-- Sparkle Canvas Overlay for Fireworks -->
+    <canvas id="fireworksCanvas" class="fixed top-0 left-0 w-full h-full pointer-events-none z-50"></canvas>
+
+    <!-- Header Section (Always Visible Back/Exit and Sound Settings) -->
+    <header class="w-full max-w-4xl flex items-center justify-between mb-4 z-10 bg-white/75 backdrop-blur-md p-3 rounded-2xl shadow-sm border border-emerald-100">
+        <button id="globalBackBtn" onclick="backToMenu()" class="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 active:scale-95 text-white font-bold px-4 py-2 rounded-xl shadow-md transition-all duration-150 flex items-center gap-1.5 text-xs sm:text-sm">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+            <span>Exit / Keluan <span class="hidden sm:inline">(Menu)</span></span>
+        </button>
+
+        <!-- Centered branding in header -->
+        <div class="text-center">
+            <span class="font-kids text-emerald-700 text-sm sm:text-lg block tracking-wide">Islamic Quiz Challenge</span>
+        </div>
+
+        <!-- Sound Quick Toggle -->
+        <div class="flex items-center gap-2">
+            <button onclick="toggleSound()" id="soundToggle" class="bg-white hover:bg-slate-50 active:scale-95 text-emerald-600 p-2 rounded-xl shadow-sm border border-slate-200 transition-all duration-150 flex items-center justify-center">
+                <svg id="soundOnIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+                <svg id="soundOffIcon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/></svg>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Dynamic Content Wrapper -->
+    <main class="w-full max-w-4xl flex-grow flex flex-col items-center justify-center relative z-10 py-2">
+        
+        <!-- ================= MAIN MENU SCREEN ================= -->
+        <div id="mainMenu" class="w-full flex flex-col items-center justify-center animate-slide-in text-center">
+            <div class="relative mb-6">
+                <!-- Floating playful props -->
+                <div class="absolute -top-12 -left-12 text-5xl animate-float">🌙</div>
+                <div class="absolute -bottom-6 -right-12 text-5xl animate-float" style="animation-delay: 2s;">📖</div>
+                
+                <h1 class="text-4xl sm:text-6xl font-kids text-emerald-600 drop-shadow-md leading-tight">
+                    Islamic Quiz Challenge
+                </h1>
+                <p class="text-emerald-700/80 font-medium text-lg mt-2 italic flex justify-center items-center gap-1">
+                    🌟 <span class="text-emerald-800">Kuiz Game Interaktif Pintar</span> 🌟
+                </p>
+            </div>
+
+            <!-- Avatar / Player Name Entry Panel -->
+            <div class="bg-white/80 backdrop-blur-md rounded-3xl p-6 shadow-xl border-4 border-emerald-200 w-full max-w-md mb-8">
+                <h3 class="text-emerald-700 font-bold mb-3 text-lg">Enter Your Name / Masukkan Nama:</h3>
+                <input type="text" id="playerName" value="Ali" class="w-full px-4 py-3 rounded-2xl border-2 border-emerald-300 text-center font-bold text-lg text-emerald-800 focus:outline-none focus:border-emerald-500 shadow-inner mb-4 transition-all">
+                
+                <h4 class="text-slate-600 font-bold text-sm mb-3">Choose Your Avatar / Pilih Avatar:</h4>
+                <div class="grid grid-cols-4 gap-3">
+                    <button onclick="selectAvatar('🧕')" id="avatar-🧕" class="avatar-opt text-4xl p-2 rounded-2xl bg-emerald-50 border-4 border-emerald-400 hover:scale-110 active:scale-95 transition-all" title="Aisha (Hijab)">🧕</button>
+                    <button onclick="selectAvatar('🧑')" id="avatar-🧑" class="avatar-opt text-4xl p-2 rounded-2xl bg-slate-50 border-4 border-transparent hover:scale-110 active:scale-95 transition-all" title="Ali (Kopiah)">🧑</button>
+                    <button onclick="selectAvatar('🧕🏻')" id="avatar-🧕🏻" class="avatar-opt text-4xl p-2 rounded-2xl bg-slate-50 border-4 border-transparent hover:scale-110 active:scale-95 transition-all" title="Siti (Hijab)">🧕🏻</button>
+                    <button onclick="selectAvatar('🧑🏻')" id="avatar-🧑🏻" class="avatar-opt text-4xl p-2 rounded-2xl bg-slate-50 border-4 border-transparent hover:scale-110 active:scale-95 transition-all" title="Ahmad">🧑🏻</button>
+                </div>
+            </div>
+
+            <!-- Quiz Set Selectors -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl px-4">
+                
+                <!-- Set 1 Card -->
+                <button onclick="startQuiz(1)" class="group bg-white hover:bg-emerald-50 hover:-translate-y-2 active:translate-y-0 text-left p-6 rounded-3xl shadow-xl border-b-8 border-emerald-500 border-x border-t transition-all duration-300 flex flex-col justify-between h-64 relative overflow-hidden">
+                    <div class="absolute -right-8 -bottom-8 opacity-10 group-hover:opacity-20 transition-all group-hover:scale-125 duration-300">
+                        <svg class="w-40 h-40" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="bg-emerald-100 text-emerald-800 font-bold px-3 py-1 rounded-full text-xs">BOOK 1 / BUKU 1</span>
+                            <span class="text-3xl">🕌</span>
+                        </div>
+                        <h2 class="text-2xl font-kids text-emerald-800 leading-snug">History & the Prophet</h2>
+                        <p class="text-slate-500 text-xs mt-1 italic">Sejarah & Kenabian</p>
+                    </div>
+                    <div class="mt-4 flex items-center justify-between w-full">
+                        <span class="text-slate-600 font-semibold text-xs flex items-center gap-1">📋 10 Questions</span>
+                        <span class="bg-emerald-500 group-hover:bg-emerald-600 text-white p-2 rounded-xl text-xs font-bold transition-colors">START 🎉</span>
+                    </div>
+                </button>
+
+                <!-- Set 2 Card -->
+                <button onclick="startQuiz(2)" class="group bg-white hover:bg-teal-50 hover:-translate-y-2 active:translate-y-0 text-left p-6 rounded-3xl shadow-xl border-b-8 border-teal-500 border-x border-t transition-all duration-300 flex flex-col justify-between h-64 relative overflow-hidden">
+                    <div class="absolute -right-8 -bottom-8 opacity-10 group-hover:opacity-20 transition-all group-hover:scale-125 duration-300">
+                        <svg class="w-40 h-40" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="bg-teal-100 text-teal-800 font-bold px-3 py-1 rounded-full text-xs">BOOK 2 / BUKU 2</span>
+                            <span class="text-3xl">🌱</span>
+                        </div>
+                        <h2 class="text-2xl font-kids text-teal-800 leading-snug">Teachings & Beliefs</h2>
+                        <p class="text-slate-500 text-xs mt-1 italic">Ajaran, Akidah & Amalan</p>
+                    </div>
+                    <div class="mt-4 flex items-center justify-between w-full">
+                        <span class="text-slate-600 font-semibold text-xs flex items-center gap-1">📋 10 Questions</span>
+                        <span class="bg-teal-500 group-hover:bg-teal-600 text-white p-2 rounded-xl text-xs font-bold transition-colors">START 🎉</span>
+                    </div>
+                </button>
+
+                <!-- Set 3 Card (Combined Grand Master) -->
+                <button onclick="startQuiz(3)" class="group bg-white hover:bg-amber-50 hover:-translate-y-2 active:translate-y-0 text-left p-6 rounded-3xl shadow-xl border-b-8 border-amber-500 border-x border-t transition-all duration-300 flex flex-col justify-between h-64 relative overflow-hidden">
+                    <div class="absolute -right-8 -bottom-8 opacity-10 group-hover:opacity-20 transition-all group-hover:scale-125 duration-300">
+                        <svg class="w-40 h-40" fill="currentColor" viewBox="0 0 24 24"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/></svg>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-4">
+                            <span class="bg-amber-100 text-amber-800 font-bold px-3 py-1 rounded-full text-xs">CHALLENGE / CABARAN</span>
+                            <span class="text-3xl">👑</span>
+                        </div>
+                        <h2 class="text-2xl font-kids text-amber-800 leading-snug">Grand Quiz Master</h2>
+                        <p class="text-slate-500 text-xs mt-1 italic">Kuiz Pintar Gemilang</p>
+                    </div>
+                    <div class="mt-4 flex items-center justify-between w-full">
+                        <span class="text-slate-600 font-semibold text-xs flex items-center gap-1">🏆 Mixed / Campuran</span>
+                        <span class="bg-amber-500 group-hover:bg-amber-600 text-white p-2 rounded-xl text-xs font-bold transition-colors">START 🎉</span>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Main Menu Leaderboard Display -->
+            <div class="w-full max-w-2xl mt-12 bg-white/90 backdrop-blur-md rounded-3xl p-6 shadow-xl border-4 border-emerald-300">
+                <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-2">
+                    <h3 class="text-xl font-kids text-emerald-800 flex items-center gap-2">
+                        <span>🏆</span> Leaderboard / Papan Pendahulu
+                    </h3>
+                    <span class="text-xs text-slate-500 italic">Pintar Juara Malaysia</span>
+                </div>
+                <div id="leaderboardList" class="max-h-48 overflow-y-auto space-y-2">
+                    <!-- Dynamic score lines render here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= QUIZ PLAY GAMEPLAY SCREEN ================= -->
+        <div id="gameplayScreen" class="w-full hidden flex-col items-center justify-center animate-slide-in">
+            <!-- Game HUD / Info Bar -->
+            <div class="w-full max-w-2xl flex flex-wrap gap-4 items-center justify-between mb-4 bg-white/90 backdrop-blur-md p-4 rounded-3xl shadow-md border-b-4 border-emerald-200">
+                <!-- Question Number with circular design -->
+                <div class="flex items-center gap-2">
+                    <div class="w-10 h-10 rounded-full bg-emerald-500 text-white flex items-center justify-center font-kids text-lg">
+                        <span id="questionNumIndex">1</span>
+                    </div>
+                    <div>
+                        <span class="text-slate-400 text-[10px] uppercase font-bold block leading-none">Question / Soalan</span>
+                        <span class="text-slate-700 font-bold text-sm" id="progressInfo">1 of 10</span>
+                    </div>
+                </div>
+
+                <!-- Live Timer Bar -->
+                <div class="flex-grow max-w-xs mx-4 bg-slate-100 h-4 rounded-full overflow-hidden relative border border-slate-200">
+                    <div id="timerBar" class="bg-gradient-to-r from-emerald-400 to-emerald-600 h-full w-full rounded-full transition-all duration-100"></div>
+                </div>
+
+                <!-- Star Scores container -->
+                <div class="flex items-center gap-1.5 bg-amber-50 px-3 py-1.5 rounded-full border border-amber-200">
+                    <span class="text-xl">⭐</span>
+                    <span id="scoreTracker" class="text-amber-800 font-kids text-lg leading-none">0</span>
+                </div>
+            </div>
+
+            <!-- Quiz Main Card Container -->
+            <div id="quizCard" class="w-full max-w-2xl bg-white rounded-3xl p-6 sm:p-8 shadow-2xl border-x-4 border-t-4 border-b-8 border-emerald-100 relative min-h-[380px] flex flex-col justify-between">
+                
+                <!-- Inside Card: Progress indicators & stars -->
+                <div class="absolute -top-3 right-8 flex gap-1">
+                    <div class="star-badge text-2xl transition-all duration-300 transform scale-75 opacity-30">⭐</div>
+                    <div class="star-badge text-2xl transition-all duration-300 transform scale-75 opacity-30">⭐</div>
+                    <div class="star-badge text-2xl transition-all duration-300 transform scale-75 opacity-30">⭐</div>
+                </div>
+
+                <!-- The Bilingual Question Block -->
+                <div class="mb-6 mt-2">
+                    <h2 id="questionTextEN" class="text-xl sm:text-2xl md:text-3xl font-kids text-emerald-900 leading-snug font-extrabold">
+                        Loading Question...
+                    </h2>
+                    <p id="questionTextMY" class="text-sm sm:text-base md:text-lg text-emerald-700 font-semibold italic mt-2 opacity-90 border-t border-emerald-50 pt-2 leading-relaxed">
+                        Memuatkan soalan...
+                    </p>
+                </div>
+
+                <!-- The 4 MCQ Options Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4" id="optionsGrid">
+                    <!-- Buttons will be rendered here dynamically -->
+                </div>
+            </div>
+
+            <!-- Mascot Guidance Tip -->
+            <div class="mt-4 flex items-center gap-3 bg-white/80 p-3 rounded-2xl max-w-md shadow-md border-l-4 border-emerald-500 animate-float">
+                <span class="text-2xl">💡</span>
+                <p class="text-xs text-slate-600 leading-tight">
+                    <strong>Tip:</strong> Read carefully! Double stars are given for quick correct answers! <br>
+                    <span class="italic text-emerald-600">Baca dengan teliti! Bintang ekstra untuk jawapan cepat!</span>
+                </p>
+            </div>
+        </div>
+
+        <!-- ================= CELEBRATION MODAL (CORRECT ANSWER) ================= -->
+        <div id="correctPopup" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50 animate-pop-up">
+            <div class="bg-white rounded-[40px] p-8 max-w-md w-full text-center shadow-3xl border-t-8 border-emerald-500 relative overflow-hidden">
+                
+                <!-- Ribbon & Banner Animation -->
+                <div class="flex justify-center mb-6">
+                    <div class="bg-gradient-to-r from-emerald-500 via-green-400 to-emerald-600 text-white font-kids text-xl py-2 px-10 rounded-full shadow-lg border-2 border-white animate-ribbon relative">
+                        ✨ CORRECT! / BETUL! ✨
+                        <div class="absolute -top-3 -left-3 text-2xl">🎉</div>
+                        <div class="absolute -bottom-3 -right-3 text-2xl">🌸</div>
+                    </div>
+                </div>
+
+                <!-- Animated Stars Badge -->
+                <div class="flex justify-center gap-3 mb-6">
+                    <span class="text-4xl animate-star-1">⭐</span>
+                    <span class="text-5xl animate-star-2" style="transform: translateY(-8px);">⭐</span>
+                    <span class="text-4xl animate-star-3">⭐</span>
+                </div>
+
+                <!-- Celebration Message -->
+                <h3 class="text-2xl sm:text-3xl font-kids text-slate-800 leading-tight mb-2">Awesome Job!</h3>
+                <p class="text-slate-500 italic text-sm mb-6">Hebat dan Pintar sekali! Teruskan usaha gemilang anda!</p>
+
+                <!-- Indicator of Auto Transition -->
+                <div class="text-xs text-emerald-600 italic font-medium mt-4 flex items-center justify-center gap-1.5 animate-pulse">
+                    <span>🔄</span> Moving to next question... / Seterusnya...
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= TRY AGAIN MODAL (INCORRECT ANSWER) ================= -->
+        <div id="incorrectPopup" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center p-4 z-50 animate-pop-up">
+            <div class="bg-white rounded-[40px] p-8 max-w-md w-full text-center shadow-3xl border-t-8 border-rose-500 relative">
+                
+                <!-- Cry/Sad Mascot Emoji -->
+                <div class="text-6xl mb-4 animate-float">🥺</div>
+
+                <div class="flex justify-center mb-4">
+                    <span class="bg-rose-100 text-rose-800 font-kids text-sm py-1.5 px-6 rounded-full border border-rose-300">
+                        OH NO! / SALAH!
+                    </span>
+                </div>
+
+                <h3 class="text-2xl sm:text-3xl font-kids text-slate-800 leading-tight mb-2">Oops, Try Again!</h3>
+                <p class="text-slate-500 text-sm mb-2 italic">Jangan menyerah kalah. Pembelajaran adalah satu perjalanan yang indah!</p>
+                <div class="bg-slate-50 border border-slate-100 p-4 rounded-2xl mb-4 text-left">
+                    <span class="text-xs text-rose-500 font-bold block mb-1">🔍 Correct Explanation / Penerangan Betul:</span>
+                    <p id="explanationText" class="text-xs sm:text-sm text-slate-700 font-medium">Loading correct path info...</p>
+                </div>
+
+                <!-- Indicator of Auto Transition -->
+                <div class="text-xs text-rose-500 italic font-medium mt-2 flex items-center justify-center gap-1.5 animate-pulse">
+                    <span>🔄</span> Auto-transitioning soon... / Memuatkan soalan baru...
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= END GAME/CONGRATULATIONS SCREEN ================= -->
+        <div id="endScreen" class="w-full hidden flex-col items-center justify-center animate-slide-in text-center max-w-2xl bg-white rounded-3xl p-8 shadow-2xl border-4 border-emerald-300 relative overflow-hidden">
+            
+            <!-- Floating balloons or particles -->
+            <div class="absolute top-4 left-4 text-4xl animate-float">🎉</div>
+            <div class="absolute bottom-4 right-4 text-4xl animate-float" style="animation-delay: 3s">⭐</div>
+
+            <div class="bg-amber-100 text-amber-900 border-2 border-amber-300 font-kids px-6 py-2 rounded-full inline-block text-sm mb-4">
+                👑 COMPLETED! / SELESAI! 👑
+            </div>
+
+            <!-- Dynamic Ribbon / Title based on Stars -->
+            <div class="w-full flex justify-center mb-4">
+                <div class="bg-gradient-to-r from-amber-500 via-yellow-400 to-amber-600 text-white font-kids text-2xl py-2 px-10 rounded-full shadow-lg border-2 border-white animate-ribbon">
+                    🎉 OUTSTANDING PERFORMANCE! 🎉
+                </div>
+            </div>
+
+            <!-- Big Interactive Trophies -->
+            <div class="text-7xl mb-4 animate-pulse-slow">🏆</div>
+
+            <!-- Stars breakdown -->
+            <div id="finalStarsContainer" class="flex justify-center gap-3 mb-6">
+                <!-- Stars rendered via script -->
+            </div>
+
+            <h2 id="finalScoreTitle" class="text-3xl font-kids text-emerald-800 leading-snug">Excellent Work, Pintar!</h2>
+            <p id="finalScoreText" class="text-slate-600 text-sm mt-1">You got 8 out of 10 questions correct with high scores!</p>
+
+            <!-- Detailed Score Stats Cards -->
+            <div class="grid grid-cols-2 gap-4 w-full my-6">
+                <div class="bg-emerald-50 p-4 rounded-2xl border-b-4 border-emerald-400">
+                    <span class="text-xs text-slate-400 block uppercase font-bold">Total Points</span>
+                    <span id="statScore" class="text-2xl font-kids text-emerald-800">180</span>
+                </div>
+                <div class="bg-teal-50 p-4 rounded-2xl border-b-4 border-teal-400">
+                    <span class="text-xs text-slate-400 block uppercase font-bold">Accuracy</span>
+                    <span id="statAccuracy" class="text-2xl font-kids text-teal-800">90%</span>
+                </div>
+            </div>
+
+            <!-- Restart & Back Options -->
+            <div class="flex flex-col sm:flex-row gap-4 w-full mt-2">
+                <button onclick="restartCurrentQuiz()" class="flex-1 bg-emerald-500 hover:bg-emerald-600 active:scale-95 text-white font-kids text-base py-3.5 rounded-2xl shadow-md border-b-4 border-emerald-700 transition-all">
+                    REPLAY / MAIN SEMULA 🔁
+                </button>
+                <button onclick="backToMenu()" class="flex-grow bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 font-kids text-base py-3.5 rounded-2xl shadow-md border-b-4 border-slate-300 transition-all">
+                    MAIN MENU / MENU UTAMA 🏠
+                </button>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Footer Disclaimer & Credits -->
+    <footer class="w-full max-w-4xl text-center text-[10px] sm:text-xs text-emerald-800/60 font-medium py-4 border-t border-emerald-100/30">
+        <p>Interactive Book Companion Game based on publications by <strong>DR. MRAR (Mohd Rosmizi bin Abd Rahman)</strong> © 2026</p>
+        <p class="mt-0.5 italic">Permainan Pendidikan Interaktif untuk Kanak-kanak Malaysia</p>
+    </footer>
+
+    <!-- Interactive Logic Block -->
+    <script>
+        // Synthesizer Audio Engine using Web Audio API (to avoid broken remote URLs in frames)
+        class GameSynthAudio {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+                this.bgmNode = null;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+
+            playBgm() {
+                if (!this.enabled) return;
+                this.init();
+                try {
+                    // Prevent overlapping loops
+                    if (this.bgmNode) {
+                        this.bgmNode.stop();
+                    }
+
+                    // Gentle synth Lullaby BGM loop
+                    const bufferSize = this.ctx.sampleRate * 4; // 4 seconds loop
+                    const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                    const data = buffer.getChannelData(0);
+                    
+                    // Simple synthesized arpeggio melody
+                    const notes = [261.63, 329.63, 392.00, 523.25, 440.00, 392.00, 349.23, 329.63]; // C Pentatonic-ish
+                    const length = bufferSize;
+                    for (let i = 0; i < length; i++) {
+                        const t = i / this.ctx.sampleRate;
+                        const noteIndex = Math.floor(t * 2) % notes.length; // 2 notes per second
+                        const freq = notes[noteIndex];
+                        data[i] = Math.sin(2 * Math.PI * freq * t) * 0.05 * Math.sin(Math.PI * (t * 2 % 1)); // Pulse sine
+                    }
+
+                    this.bgmNode = this.ctx.createBufferSource();
+                    this.bgmNode.buffer = buffer;
+                    this.bgmNode.loop = true;
+                    
+                    const gain = this.ctx.createGain();
+                    gain.gain.setValueAtTime(0.04, this.ctx.currentTime); // Low volume
+                    
+                    this.bgmNode.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    this.bgmNode.start();
+                } catch(e) {
+                    console.log("Audio issues: ", e);
+                }
+            }
+
+            stopBgm() {
+                if (this.bgmNode) {
+                    try {
+                        this.bgmNode.stop();
+                    } catch(e) {}
+                    this.bgmNode = null;
+                }
+            }
+
+            playCorrect() {
+                if (!this.enabled) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                
+                // Arpeggio chime
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                notes.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+                    
+                    gain.gain.setValueAtTime(0.12, now + idx * 0.08);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.08 + 0.3);
+                    
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    
+                    osc.start(now + idx * 0.08);
+                    osc.stop(now + idx * 0.08 + 0.35);
+                });
+            }
+
+            playIncorrect() {
+                if (!this.enabled) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.linearRampToValueAtTime(100, now + 0.4);
+                
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
+                
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                
+                osc.start(now);
+                osc.stop(now + 0.4);
+            }
+
+            playClick() {
+                if (!this.enabled) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, now);
+                gain.gain.setValueAtTime(0.08, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+                
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start(now);
+                osc.stop(now + 0.06);
+            }
+
+            playVictory() {
+                if (!this.enabled) return;
+                this.init();
+                const now = this.ctx.currentTime;
+                // A joyous synth progression
+                const chord = [329.63, 392.00, 523.25, 659.25]; // C major notes
+                chord.forEach((freq, idx) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, now);
+                    osc.frequency.setValueAtTime(freq * 1.5, now + 0.2); // Fifth
+                    
+                    gain.gain.setValueAtTime(0.1, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.8);
+                    
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.8);
+                });
+            }
+        }
+
+        const audio = new GameSynthAudio();
+
+        // 3 Distinct Interactive Sets based on PDFs
+        const questionsSet1 = [
+            {
+                en: "In which year did Prophet Muhammad received the first revelation in the Cave of Hira?",
+                my: "Pada tahun berapakah Nabi Muhammad (SAW) menerima wahyu pertama di Gua Hira?",
+                opts: ["610 CE / Masihi", "570 CE / Masihi", "622 CE / Masihi", "632 CE / Masihi"],
+                ans: "610 CE / Masihi",
+                exp: "The first revelation descended in the Cave of Hira in 610 CE, marking the start of the final message. (Wahyu pertama turun di Gua Hira pada tahun 610 M, menandakan bermulanya risalah terakhir)."
+            },
+            {
+                en: "According to the divine board written by Professor Idris, which Quranic verse states: 'Surely the (true) religion with Allah is Islam'?",
+                my: "Menurut ayat Al-Quran yang ditulis oleh Profesor Idris di papan tulis, ayat manakah yang menyatakan: 'Sesungguhnya agama yang diridhai di sisi Allah ialah Islam'?",
+                opts: ["Ali 'Imran, 3:19", "Ali 'Imran, 3:85", "Ar-Rum, 30:30", "Al-Baqarah, 2:256"],
+                ans: "Ali 'Imran, 3:19",
+                exp: "Surah Ali 'Imran verse 19 confirms that Islam is the only religion accepted by Allah since the dawn of time. (Surah Ali 'Imran ayat 19 mengesahkan bahawa Islam adalah satu-satunya agama yang diterima Allah)."
+            },
+            {
+                en: "We are the heirs of a long, golden divine thread containing how many prophets from Adam to Isa?",
+                my: "Kita adalah pewaris rantaian kenabian yang panjang dan mulia, merangkumi berapakah jumlah nabi dari Nabi Adam ke Nabi Isa?",
+                opts: ["124,000 Prophets / Nabi", "25 Prophets / Nabi", "313 Messengers / Rasul", "1,400 Prophets / Nabi"],
+                ans: "124,000 Prophets / Nabi",
+                exp: "Islam teaches that we are heirs to a chain of 124,000 prophets carrying the universal divine message of submission. (Islam mengajar kita mewarisi rantaian 124,000 nabi yang membawa risalah keesaan yang sama)."
+            },
+            {
+                en: "What is 'Fitrah' as explained by Professor Idris beside the campus lake?",
+                my: "Apakah maksud 'Fitrah' seperti yang dijelaskan oleh Profesor Idris di tepi tasik kampus?",
+                opts: ["An innate nature to recognize Allah / Sifat semula jadi mengenali Allah", "The rules of daily practices / Peraturan amalan harian", "The physical law of the trees / Undang-undang fizikal tumbuh-tumbuhan", "The language of the holy texts / Bahasa kitab suci"],
+                ans: "An innate nature to recognize Allah / Sifat semula jadi mengenali Allah",
+                exp: "Fitrah is the natural, built-in inclination of the human soul to recognize and submit to the Creator. (Fitrah ialah kecenderungan semula jadi jiwa manusia untuk mengenali dan tunduk kepada Pencipta)."
+            },
+            {
+                en: "Prophet Muhammad (PBUH) did not invent a new faith but finalized the truth as the...",
+                my: "Nabi Muhammad (SAW) tidak mencipta agama baharu tetapi menyempurnakan kebenaran sebagai...",
+                opts: ["Seal of the Prophets / Penutup para Nabi", "Heir of 1,400 years / Pewaris 1,400 tahun", "First man / Manusia pertama", "Intermediary of Rome / Perantara Rom"],
+                ans: "Seal of the Prophets / Penutup para Nabi",
+                exp: "He is known as the Khatam an-Nabiyyin (Seal of the Prophets), finalising the Golden Thread of guidance. (Baginda dikenali sebagai Khatamul Anbiya', yang memeterai rantaian hidayah daripada langit)."
+            },
+            {
+                en: "Before receiving the revelation, the Prophet rejected the ignorance of his times and was widely trusted as:",
+                my: "Sebelum menerima wahyu, Baginda menolak kejahilan zamannya dan sangat dipercayai sehingga digelar:",
+                opts: ["Al-Amin (The Trustworthy) / Al-Amin", "Professor / Profesor", "Sultan of Mecca / Sultan Mekah", "The Guardian / Penjaga"],
+                ans: "Al-Amin (The Trustworthy) / Al-Amin",
+                exp: "He was universally praised for his honesty and integrity, earning the title Al-Amin. (Baginda sangat terkenal dengan kejujuran dan amanah, sehingga diberi gelaran mulia Al-Amin)."
+            },
+            {
+                en: "How many years did the Prophet conduct secret Da'wah (secret propagation) before going public?",
+                my: "Berapakah tahun lamanya Nabi menjalankan Da'wah secara rahsia sebelum berdakwah secara terbuka?",
+                opts: ["3 years / 3 tahun", "5 years / 5 tahun", "10 years / 10 tahun", "23 years / 23 tahun"],
+                ans: "3 years / 3 tahun",
+                exp: "His mission consisted of 3 years of secret propagation followed by 20 years of public mission in Mecca and Medina. (Misi Baginda merangkumi 3 tahun dakwah rahsia, dan 20 tahun dakwah umum di Mekah dan Madinah)."
+            },
+            {
+                en: "Who were the four key companions that supported the Prophet's public mission?",
+                my: "Siapakah empat sahabat utama yang menyokong kuat misi dakwah terbuka Baginda?",
+                opts: ["Abu Bakr, 'Umar, 'Uthman, and 'Ali", "Yusuf, Bilal, Ahmad, and Hassan", "Idris, Zaid, Hamid, and Zaid", "Zaid, Hassan, Bilal, and Abu Bakr"],
+                ans: "Abu Bakr, 'Umar, 'Uthman, and 'Ali",
+                exp: "The major close companions who stood by him were Abu Bakr, 'Umar, 'Uthman, and 'Ali. (Sahabat-sahabat utama yang sentiasa menyokong perjuangan Baginda ialah Abu Bakar, Umar, Uthman, dan Ali)."
+            },
+            {
+                en: "In which year did the Prophet Muhammad (PBUH) pass away?",
+                my: "Pada tahun berapakah Nabi Muhammad (SAW) wafat?",
+                opts: ["632 CE / Masihi", "610 CE / Masihi", "570 CE / Masihi", "650 CE / Masihi"],
+                ans: "632 CE / Masihi",
+                exp: "Prophet Muhammad (PBUH) returned to his Creator in 632 CE. (Nabi Muhammad SAW wafat pada tahun 632 Masihi setelah menyempurnakan seluruh amanah risalah)."
+            },
+            {
+                en: "What are the 'Two Anchors' left by the Prophet to guide humanity in a verifiable way of life?",
+                my: "Apakah 'Dua Penambat' yang ditinggalkan oleh Nabi untuk memandu manusia dalam cara hidup yang sahih?",
+                opts: ["The Qur'an and the Sunnah / Al-Quran dan Sunnah", "History and Universities / Sejarah dan Universiti", "The Mosque and the Lake / Masjid dan Tasik", "Gold and Silver / Emas dan Perak"],
+                ans: "The Qur'an and the Sunnah / Al-Quran dan Sunnah",
+                exp: "The holy Qur'an (word of Allah) and Sunnah (Prophetic traditions) are the absolute guidance anchors. (Al-Quran yang merupakan firman Allah dan Sunnah sebagai tradisi Nabi adalah penambat utama iman kita)."
+            }
+        ];
+
+        const questionsSet2 = [
+            {
+                en: "What do the 'roots' of the garden represent in the educational metaphor used by Dr. Hamid?",
+                my: "Apakah yang diwakili oleh 'akar' taman dalam metafora pendidikan yang digunakan oleh Dr. Hamid?",
+                opts: ["Creed (Aqidah) / Akidah", "Law (Shari'ah) / Syariah", "Spiritual Excellence (Ihsan) / Ihsan", "The Campus Lake / Tasik Kampus"],
+                ans: "Creed (Aqidah) / Akidah",
+                exp: "The roots are Creed (Aqidah) because they ground and hold a believer's faith firm. (Akar mewakili Akidah kerana ia meneguhkan dan mengukuhkan asas keimanan seseorang mukmin)."
+            },
+            {
+                en: "What do the 'branches' that grow and spread represent in the garden of Islam?",
+                my: "Apakah pula yang diwakili oleh 'dahan-dahan' yang tumbuh dan merimbun di taman Islam?",
+                opts: ["Law (Shari'ah) / Syariah", "Creed (Aqidah) / Akidah", "Character (Akhlak) / Akhlak", "Wealth (Zakat) / Zakat"],
+                ans: "Law (Shari'ah) / Syariah",
+                exp: "The branches represent Law (Shari'ah), guiding active daily life, rules, and actions. (Dahan-dahan melambangkan Syariah yang membimbing aktiviti hidup harian dan tindakan fizikal kita)."
+            },
+            {
+                en: "What do the sweet, beneficial 'fruits' of the garden represent?",
+                my: "Apakah yang dilambangkan oleh 'buah-buahan' manis yang memberi manfaat di dalam taman tersebut?",
+                opts: ["Akhlak or Ihsan (Spiritual Excellence)", "Fasting in Ramadan / Puasa", "Five Daily Prayers / Solat", "History classes / Kelas sejarah"],
+                ans: "Akhlak or Ihsan (Spiritual Excellence)",
+                exp: "The fruits represent Akhlak and Ihsan (Spiritual Excellence)—the beauty of sincerity and good character. (Buah-buahan melambangkan kecantikan akhlak mulia dan Ihsan iaitu kesempurnaan rohani)."
+            },
+            {
+                en: "Which famous Hadith shows the three levels: Islam, Iman, and Ihsan?",
+                my: "Hadis masyhur manakah yang menerangkan tiga tingkatan agama: Islam, Iman, dan Ihsan?",
+                opts: ["Hadith of Jibril / Hadis Jibril", "Hadith of Makkah / Hadis Makkah", "Hadith of Medina / Hadis Madinah", "Hadith of Aqidah / Hadis Akidah"],
+                ans: "Hadith of Jibril / Hadis Jibril",
+                exp: "The Hadith of Jibril is a foundational narration detailing Islam (actions), Iman (belief), and Ihsan (excellence). (Hadis Jibril ialah asas penting yang menghuraikan maksud Islam, Iman, dan Ihsan secara terperinci)."
+            },
+            {
+                en: "What is the purpose of Zakah (charity) according to Dr. Hamid's explanation outside the street shop?",
+                my: "Apakah tujuan Zakat (sedekah) menurut penjelasan Dr. Hamid di luar kedai jalanan?",
+                opts: ["To purify wealth & remove greed / Menyucikan harta & membuang tamak", "To pay taxes to the king / Membayar cukai kepada raja", "To purchase goods in bulk / Membeli barang secara borong", "To win a medal / Memenangi pingat emas"],
+                ans: "To purify wealth & remove greed / Menyucikan harta & membuang tamak",
+                exp: "Giving sincerely removes greed from our hearts and reminds us that everything belongs to Allah. (Memberi dengan ikhlas membersihkan jiwa daripada penyakit bakhil dan tamak, serta menyucikan harta)."
+            },
+            {
+                en: "How many obligatory daily prayers are performed by Muslims?",
+                my: "Berapakah solat fardhu (wajib) harian yang perlu didirikan oleh seorang Muslim?",
+                opts: ["5 daily prayers / 5 solat sehari", "3 daily prayers / 3 solat sehari", "10 daily prayers / 10 solat sehari", "6 daily prayers / 6 solat sehari"],
+                ans: "5 daily prayers / 5 solat sehari",
+                exp: "Muslims perform five daily obligatory prayers: Fajr, Dhuhr, Asr, Maghrib, and Isha'. (Solat fardhu didirikan lima kali sehari bagi memelihara hubungan berterusan hamba dengan Pencipta)."
+            },
+            {
+                en: "Why do Muslims fast during the holy month of Ramadan?",
+                my: "Mengapakah umat Islam berpuasa sepanjang bulan suci Ramadan?",
+                opts: ["Develop self-control, empathy, and awareness of Allah", "To save money on meals / Untuk jimat belanja makanan", "Because sleeping is forbidden / Kerana dilarang tidur", "To show off strength / Menunjuk-nunjuk kekuatan"],
+                ans: "Develop self-control, empathy, and awareness of Allah",
+                exp: "Fasting cultivates self-control, empathy for the poor, and increases consciousness of Allah. (Puasa membentuk kawalan nafsu, menumbuhkan empati terhadap golongan miskin, dan mendekatkan diri kepada Allah)."
+            },
+            {
+                en: "What does the 5th pillar, Hajj, represent for Muslims around the world?",
+                my: "Apakah yang diwakili oleh rukun kelima iaitu ibadah Haji bagi umat Islam di seluruh dunia?",
+                opts: ["A journey of faith and Islamic unity in Makkah", "A tour of the world / Lawatan pelancongan dunia", "A standard graduation ceremony / Majlis konvokesyen biasa", "An ancient trade agreement / Perjanjian perdagangan kuno"],
+                ans: "A journey of faith and Islamic unity in Makkah",
+                exp: "Hajj brings millions of pilgrims together as one body circling the holy Kaaba, showcasing supreme unity. (Ibadah Haji menghimpunkan jutaan umat Islam tanpa mengira warna kulit atau pangkat untuk menyembah Allah di Kaabah)."
+            },
+            {
+                en: "How many Pillars of Iman (Faith) exist in Islamic theology?",
+                my: "Berapakah rukun Iman yang wujud dalam teologi akidah Islam?",
+                opts: ["6 pillars / 6 rukun", "5 pillars / 5 rukun", "10 pillars / 10 rukun", "3 pillars / 3 rukun"],
+                ans: "6 pillars / 6 rukun",
+                exp: "There are six pillars of Iman: belief in God, Angels, Books, Messengers, the Hereafter, and Destiny. (Rukun Iman yang menjadi pasak kepercayaan hati umat Islam ada enam perkara)."
+            },
+            {
+                en: "What is the absolute theological meaning of 'Tawhid' as explained in class?",
+                my: "Apakah maksud mutlak 'Tauhid' dari segi teologi seperti yang diterangkan di dalam kelas?",
+                opts: ["That Allah is absolutely One without partners / Allah Maha Esa tanpa sekutu", "The physical shape of the stars / Bentuk fizikal bintang-bintang", "The historical study of cities / Kajian sejarah bandar purba", "The study of visual plant biology / Kajian biologi tumbuhan"],
+                ans: "That Allah is absolutely One without partners / Allah Maha Esa tanpa sekutu",
+                exp: "Tawhid emphasizes that Allah is One, absolutely having no partners or equals. (Tauhid menetapkan keesaan mutlak bagi Allah, tiada yang setara dan tiada yang berhak disembah melainkan Dia)."
+            }
+        ];
+
+        // Set 3: Grand Master Challenge (Mixed & Advanced from both books)
+        const questionsSet3 = [
+            {
+                en: "Who was the very first prophet in the historical chain of Islamic guidance?",
+                my: "Siapakah nabi yang paling pertama dalam rantaian sejarah bimbingan ketuhanan Islam?",
+                opts: ["Adam (AS)", "Muhammad (PBUH)", "Nuh (AS)", "Isa (AS)"],
+                ans: "Adam (AS)",
+                exp: "The golden thread of 124,000 prophets started directly with Prophet Adam, the first man. (Mata rantai emas kenabian bermula dengan Nabi Adam, manusia pertama yang diutuskan sebagai khalifah)."
+            },
+            {
+                en: "What happens when Faith (Iman), Action (Islam), and Sincerity (Ihsan) come together?",
+                my: "Apakah yang akan terhasil apabila Iman, Islam, dan Ihsan disatukan dalam hidup seorang hamba?",
+                opts: ["It becomes Light / Ia menjadi Cahaya yang bersinar", "It becomes a trade secret / Menjadi rahsia perdagangan", "It causes conflict / Menimbulkan konflik", "It remains hidden / Ia kekal tersembunyi"],
+                ans: "It becomes Light / Ia menjadi Cahaya yang bersinar",
+                exp: "Dr. Hamid smiles and says that when they come together, they become light illuminating every corner of the world. (Penyatuan ketiga-tiganya menghasilkan cahaya kehidupan yang menerangi setiap sudut rohani manusia)."
+            },
+            {
+                en: "What is the definition of 'Ihsan' as reflected by Ahmad in the flower garden?",
+                my: "Apakah definisi 'Ihsan' seperti yang direnungkan oleh Ahmad di taman bunga?",
+                opts: ["To worship Allah as if you see Him / Menyembah Allah seolah-olah kamu melihat-Nya", "To read history books quickly / Membaca buku sejarah dengan laju", "To travel to five different countries / Mengembara ke lima buah negara", "To build a high wooden wall / Membina dinding kayu yang tinggi"],
+                ans: "To worship Allah as if you see Him / Menyembah Allah seolah-olah kamu melihat-Nya",
+                exp: "Ihsan means worshipping Allah as if you see Him; and if you do not, knowing that He sees you. (Ihsan ialah kemuncak kesedaran bahawa Allah sentiasa mengawasi kita walau di mana kita berada)."
+            },
+            {
+                en: "How many Surahs (chapters) are there in the Holy Qur'an, representing the verbatim word of God?",
+                my: "Berapakah jumlah Surah yang terkandung di dalam kitab suci Al-Quran?",
+                opts: ["114 Surahs / Surah", "110 Surahs / Surah", "124 Surahs / Surah", "30 Surahs / Surah"],
+                ans: "114 Surahs / Surah",
+                exp: "The Holy Qur'an is the complete, unaltered word of God contained in exactly 114 Surahs. (Al-Quran yang mulia mengandungi 114 Surah sebagai panduan lengkap sepanjang zaman)."
+            },
+            {
+                en: "Despite historical and legal differences, which two traditions share the same spiritual core of Tawhid?",
+                my: "Walaupun terdapat perbezaan sejarah dan hukum, dua tradisi manakah yang berkongsi teras rohani Tauhid yang sama?",
+                opts: ["Sunni and Shi'a / Sunni dan Syiah", "East and West / Timur dan Barat", "Ancient and Modern / Purba dan Moden", "Mecca and Hira / Mekah dan Hira"],
+                ans: "Sunni and Shi'a / Sunni dan Syiah",
+                exp: "Dr. Hamid clarifies that despite diverse schools, the fundamental belief in Tawhid (Oneness) unites them. (Dr. Hamid menegaskan bahawa persamaan aqidah Tauhid menyatukan umat Islam melangkaui perbezaan fekah)."
+            },
+            {
+                en: "Which specific Quranic chapter (Surah) did the Professor cite to explain the innate human nature (Fitrah)?",
+                my: "Surah Al-Quran manakah yang dipetik oleh Profesor Idris bagi menjelaskan sifat semula jadi manusia (Fitrah)?",
+                opts: ["Ar-Rum (30:30)", "Ali 'Imran (3:19)", "Al-Baqarah (2:256)", "Al-Ma'idah (5:3)"],
+                ans: "Ar-Rum (30:30)",
+                exp: "Professor Idris cited Ar-Rum (30:30) to show that mankind's soul is natively designed for Islam. (Surah Ar-Rum ayat 30 menjelaskan bahawa Allah telah mencipta jiwa manusia serasi dengan Islam)."
+            },
+            {
+                en: "The word 'Sunnah' refers to:",
+                my: "Perkataan 'Sunnah' merujuk kepada:",
+                opts: ["The Prophetic traditions, sayings, and actions / Tradisi, perkataan, dan perbuatan Nabi", "The ancient history of Mecca / Sejarah purba kota Mekah", "The physical water of the lake / Air fizikal di dalam tasik", "The private opinions of scholars / Pendapat peribadi para ulama"],
+                ans: "The Prophetic traditions, sayings, and actions / Tradisi, perkataan, dan perbuatan Nabi",
+                exp: "The Sunnah is the verified tradition of the Prophet Muhammad, outlining his verbal sayings and live actions. (Sunnah ialah apa-apa yang disandarkan kepada Nabi dari segi perkataan, perbuatan, atau ketetapan Baginda)."
+            },
+            {
+                en: "The concept of Tawhid removes all ________, allowing every single soul direct connection to the Divine.",
+                my: "Konsep Tauhid menyingkirkan semua ________, membolehkan setiap jiwa mempunyai hubungan langsung dengan Pencipta.",
+                opts: ["intermediaries / perantara", "knowledge / ilmu", "good character / akhlak mulia", "historical records / rekod sejarah"],
+                ans: "intermediaries / perantara",
+                exp: "Pure Tawhid allows direct communion with Allah, without priests, divided powers, or human hierarchies. (Tauhid yang tulen membebaskan jiwa untuk terus memohon dan berhubung dengan Allah tanpa sebarang perantara)."
+            },
+            {
+                en: "Prophet Muhammad (PBUH) lived from ________ to ________ CE.",
+                my: "Nabi Muhammad (SAW) hidup dari tahun ________ hingga ________ Masihi.",
+                opts: ["570 - 632 CE / Masihi", "610 - 650 CE / Masihi", "500 - 580 CE / Masihi", "600 - 660 CE / Masihi"],
+                ans: "570 - 632 CE / Masihi",
+                exp: "The Prophet was born in 570 CE (Year of Elephant) and passed away at 63 years of age in 632 CE. (Nabi Muhammad SAW lahir pada tahun Gajah iaitu 570 Masihi, dan wafat pada 632 Masihi)."
+            },
+            {
+                en: "By practicing Islam, a believer is restored to their divine purpose, living in perfect balance with the Creator and the...",
+                my: "Dengan mengamalkan Islam, seseorang mukmin dikembalikan kepada tujuan asal penciptaan mereka, hidup seimbang dengan Pencipta dan...",
+                opts: ["natural laws of the universe / hukum alam semesta", "wealth of the campus / kekayaan harta benda", "opinions of ancient kings / pendapat raja-raja purba", "modern internet structures / struktur internet moden"],
+                ans: "natural laws of the universe / hukum alam semesta",
+                exp: "Islam aligns the human soul with the cosmic submission of trees, water, and physical laws to Allah. (Islam menyelaraskan kehidupan rohani manusia agar selari dengan kepatuhan seluruh cakerawala dan alam semula jadi)."
+            }
+        ];
+
+        // Game State Variables
+        let currentSet = 1;
+        let currentQuestions = [];
+        let currentQuestionIdx = 0;
+        let score = 0;
+        let selectedAvatar = '🧕';
+        let timer = null;
+        let timeLeft = 100;
+        let answeredThisQuestion = false;
+        const totalDuration = 15; // 15 seconds per question
+        let correctAnswersCount = 0;
+        let transitionTimeout = null;
+
+        // Initialize App & Leaderboards on Load
+        window.onload = function() {
+            renderLeaderboard();
+            selectAvatar('🧕'); // default selection
+            // Play gentle intro sound on body interaction
+            document.body.addEventListener('click', function initCtx() {
+                audio.init();
+                document.body.removeEventListener('click', initCtx);
+            });
+        };
+
+        // Leaderboard Persistent Storage
+        function getLeaderboard() {
+            const data = localStorage.getItem('islamic_quiz_leaderboard');
+            if (data) {
+                return JSON.parse(data);
+            }
+            // Mock Top Malaysian Players
+            const defaults = [
+                { name: "Ali", avatar: "🧑", score: 210, date: "10/06/2026", set: "Grand Master" },
+                { name: "Aishah Zara", avatar: "🧕", score: 190, date: "10/06/2026", set: "History & Prophet" },
+                { name: "Sarah Firdaus", avatar: "🧕", score: 170, date: "10/06/2026", set: "Teachings & Beliefs" }
+            ];
+            localStorage.setItem('islamic_quiz_leaderboard', JSON.stringify(defaults));
+            return defaults;
+        }
+
+        function saveScore(name, avatar, finalScore, setLabel) {
+            const list = getLeaderboard();
+            const dateStr = new Date().toLocaleDateString('en-GB');
+            list.push({ name, avatar, score: finalScore, date: dateStr, set: setLabel });
+            // Sort highest first
+            list.sort((a, b) => b.score - a.score);
+            // Limit to top 10
+            localStorage.setItem('islamic_quiz_leaderboard', JSON.stringify(list.slice(0, 10)));
+        }
+
+        function renderLeaderboard() {
+            const list = getLeaderboard();
+            const container = document.getElementById('leaderboardList');
+            container.innerHTML = '';
+            
+            list.forEach((item, index) => {
+                let medal = '🎖️';
+                if (index === 0) medal = '🥇';
+                else if (index === 1) medal = '🥈';
+                else if (index === 2) medal = '🥉';
+
+                const div = document.createElement('div');
+                div.className = "flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-emerald-50/50 transition-colors duration-150 shadow-sm";
+                div.innerHTML = `
+                    <div class="flex items-center gap-3">
+                        <span class="text-xl font-kids text-emerald-700 w-6">${medal}</span>
+                        <span class="text-3xl">${item.avatar}</span>
+                        <div>
+                            <span class="font-bold text-slate-700 block text-sm sm:text-base">${item.name}</span>
+                            <span class="text-[10px] text-slate-400 block">${item.set} • ${item.date}</span>
+                        </div>
+                    </div>
+                    <div class="bg-amber-100 text-amber-800 font-kids text-sm px-3 py-1.5 rounded-full border border-amber-200">
+                        ⭐ ${item.score}
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        // Avatar selector helper
+        function selectAvatar(emoji) {
+            audio.playClick();
+            selectedAvatar = emoji;
+            document.querySelectorAll('.avatar-opt').forEach(btn => {
+                btn.classList.remove('border-emerald-400', 'bg-emerald-50');
+                btn.classList.add('border-transparent', 'bg-slate-50');
+            });
+            // Escape special skin tone characters for query Selector id matching
+            const cleanId = `avatar-${emoji}`;
+            const selectedBtn = document.getElementById(cleanId);
+            if (selectedBtn) {
+                selectedBtn.classList.remove('border-transparent', 'bg-slate-50');
+                selectedBtn.classList.add('border-emerald-400', 'bg-emerald-50');
+            }
+        }
+
+        // Start Quiz Trigger
+        function startQuiz(setNum) {
+            audio.playClick();
+            audio.playBgm();
+            currentSet = setNum;
+            currentQuestionIdx = 0;
+            score = 0;
+            correctAnswersCount = 0;
+            answeredThisQuestion = false;
+
+            if (setNum === 1) {
+                currentQuestions = shuffleArray([...questionsSet1]);
+            } else if (setNum === 2) {
+                currentQuestions = shuffleArray([...questionsSet2]);
+            } else {
+                currentQuestions = shuffleArray([...questionsSet3]);
+            }
+
+            // Hide main menu, show gameplay
+            document.getElementById('mainMenu').classList.add('hidden');
+            document.getElementById('gameplayScreen').classList.remove('hidden');
+
+            loadQuestion();
+        }
+
+        // Shuffle questions or options
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // Load Single Question View
+        function loadQuestion() {
+            answeredThisQuestion = false;
+            clearInterval(timer);
+            if (transitionTimeout) clearTimeout(transitionTimeout);
+            timeLeft = 100;
+            document.getElementById('timerBar').style.width = '100%';
+            document.getElementById('timerBar').className = "bg-gradient-to-r from-emerald-400 to-emerald-600 h-full w-full rounded-full transition-all duration-100";
+
+            const q = currentQuestions[currentQuestionIdx];
+            
+            // Set text values
+            document.getElementById('questionNumIndex').textContent = (currentQuestionIdx + 1);
+            document.getElementById('progressInfo').textContent = `${currentQuestionIdx + 1} of ${currentQuestions.length}`;
+            document.getElementById('scoreTracker').textContent = score;
+            document.getElementById('questionTextEN').textContent = q.en;
+            document.getElementById('questionTextMY').textContent = q.my;
+
+            // Reset correct stars visibility
+            document.querySelectorAll('.star-badge').forEach(star => {
+                star.classList.add('opacity-30', 'scale-75');
+            });
+
+            // Populate options grid
+            const grid = document.getElementById('optionsGrid');
+            grid.innerHTML = '';
+
+            // Copy and shuffle options
+            const shuffledOpts = shuffleArray([...q.opts]);
+
+            shuffledOpts.forEach(opt => {
+                const btn = document.createElement('button');
+                btn.onclick = () => selectOption(btn, opt);
+                btn.className = "group text-left p-4 rounded-2xl bg-slate-50 hover:bg-emerald-50 border-2 border-slate-200 hover:border-emerald-400 transition-all active:scale-98 duration-150 flex items-center justify-between shadow-sm min-h-[70px]";
+                btn.innerHTML = `
+                    <div class="flex-grow">
+                        <span class="text-sm sm:text-base font-bold text-slate-700 group-hover:text-emerald-900 block leading-snug">${opt}</span>
+                    </div>
+                    <div class="w-6 h-6 rounded-full border-2 border-slate-300 group-hover:border-emerald-500 flex items-center justify-center shrink-0 ml-2">
+                        <span class="text-xs text-white"></span>
+                    </div>
+                `;
+                grid.appendChild(btn);
+            });
+
+            // Start countdown timer bar
+            let elapsed = 0;
+            const totalSteps = totalDuration * 10; // 10 steps per second
+            timer = setInterval(() => {
+                elapsed++;
+                timeLeft = 100 - (elapsed / totalSteps) * 100;
+                
+                const bar = document.getElementById('timerBar');
+                if (bar) {
+                    bar.style.width = `${timeLeft}%`;
+                    if (timeLeft < 30) {
+                        bar.className = "bg-gradient-to-r from-rose-400 to-red-600 h-full w-full rounded-full transition-all duration-100";
+                    } else if (timeLeft < 60) {
+                        bar.className = "bg-gradient-to-r from-amber-400 to-amber-600 h-full w-full rounded-full transition-all duration-100";
+                    }
+                }
+
+                if (elapsed >= totalSteps) {
+                    clearInterval(timer);
+                    // Time's up! Treat as incorrect
+                    triggerTimeUp();
+                }
+            }, 100);
+        }
+
+        // Action when user clicks option
+        function selectOption(btn, choice) {
+            if (answeredThisQuestion) return;
+            answeredThisQuestion = true;
+            clearInterval(timer);
+
+            const q = currentQuestions[currentQuestionIdx];
+            const isCorrect = (choice === q.ans);
+
+            // Visually highlight options
+            const grid = document.getElementById('optionsGrid');
+            const buttons = grid.querySelectorAll('button');
+
+            buttons.forEach(b => {
+                const optText = b.querySelector('span').textContent;
+                const circle = b.querySelector('.w-6');
+                b.classList.remove('hover:bg-emerald-50', 'hover:border-emerald-400');
+                
+                if (optText === q.ans) {
+                    // Mark correct
+                    b.classList.add('bg-emerald-100', 'border-emerald-500');
+                    b.classList.remove('bg-slate-50', 'border-slate-200');
+                    circle.className = "w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center shrink-0 ml-2 text-white font-bold";
+                    circle.innerHTML = "✓";
+                } else if (optText === choice && !isCorrect) {
+                    // Mark incorrect chosen
+                    b.classList.add('bg-rose-100', 'border-rose-500');
+                    b.classList.remove('bg-slate-50', 'border-slate-200');
+                    circle.className = "w-6 h-6 rounded-full bg-rose-500 flex items-center justify-center shrink-0 ml-2 text-white font-bold";
+                    circle.innerHTML = "✗";
+                }
+            });
+
+            if (isCorrect) {
+                correctAnswersCount++;
+                // Score calculation: Base 10 points + time bonus
+                let pointsGained = 10;
+                let starsActive = 1;
+                
+                if (timeLeft > 60) {
+                    pointsGained = 20; // Fast response bonus
+                    starsActive = 3;
+                } else if (timeLeft > 30) {
+                    pointsGained = 15;
+                    starsActive = 2;
+                }
+
+                score += pointsGained;
+                document.getElementById('scoreTracker').textContent = score;
+
+                // Animate top HUD stars
+                const starBadges = document.querySelectorAll('.star-badge');
+                for (let i = 0; i < starsActive; i++) {
+                    if (starBadges[i]) {
+                        starBadges[i].classList.remove('opacity-30', 'scale-75');
+                        starBadges[i].classList.add('opacity-100', 'scale-110');
+                    }
+                }
+
+                // Audio and fireworks effect
+                audio.playCorrect();
+                triggerFireworks();
+
+                // Show Celebratory Popup
+                document.getElementById('correctPopup').style.display = 'flex';
+
+                // AUTOTRANSITION: Automatically move to next question in 2 seconds
+                transitionTimeout = setTimeout(() => {
+                    document.getElementById('correctPopup').style.display = 'none';
+                    nextQuestion();
+                }, 2000);
+
+            } else {
+                // Audio and explanations modal
+                audio.playIncorrect();
+                document.getElementById('explanationText').textContent = q.exp;
+                document.getElementById('incorrectPopup').style.display = 'flex';
+
+                // AUTOTRANSITION: Automatically close incorrect popup and go to next question after 4.5 seconds
+                transitionTimeout = setTimeout(() => {
+                    document.getElementById('incorrectPopup').style.display = 'none';
+                    nextQuestion();
+                }, 4500);
+            }
+        }
+
+        // Automatic failure if time finishes
+        function triggerTimeUp() {
+            answeredThisQuestion = true;
+            audio.playIncorrect();
+            const q = currentQuestions[currentQuestionIdx];
+            document.getElementById('explanationText').textContent = "Time limit exceeded! (Had masa tamat!). " + q.exp;
+            
+            // Highlight actual correct
+            const grid = document.getElementById('optionsGrid');
+            const buttons = grid.querySelectorAll('button');
+            buttons.forEach(b => {
+                const optText = b.querySelector('span').textContent;
+                if (optText === q.ans) {
+                    b.classList.add('bg-emerald-100', 'border-emerald-500');
+                    b.querySelector('.w-6').className = "w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center shrink-0 ml-2 text-white font-bold";
+                    b.querySelector('.w-6').innerHTML = "✓";
+                }
+            });
+
+            document.getElementById('incorrectPopup').style.display = 'flex';
+
+            // AUTOTRANSITION: Automatically close incorrect popup and go to next question after 4.5 seconds
+            transitionTimeout = setTimeout(() => {
+                document.getElementById('incorrectPopup').style.display = 'none';
+                nextQuestion();
+            }, 4500);
+        }
+
+        function nextQuestion() {
+            if (transitionTimeout) clearTimeout(transitionTimeout);
+            document.getElementById('correctPopup').style.display = 'none';
+            document.getElementById('incorrectPopup').style.display = 'none';
+            currentQuestionIdx++;
+            
+            if (currentQuestionIdx < currentQuestions.length) {
+                loadQuestion();
+            } else {
+                endGame();
+            }
+        }
+
+        // Finalize stats & store results
+        function endGame() {
+            audio.stopBgm();
+            audio.playVictory();
+            
+            // Get active category tag name
+            let catName = "History & Prophet";
+            if (currentSet === 2) catName = "Teachings & Beliefs";
+            if (currentSet === 3) catName = "Grand Master";
+
+            // Save player score
+            const pName = document.getElementById('playerName').value.trim() || "Ali";
+            saveScore(pName, selectedAvatar, score, catName);
+            renderLeaderboard();
+
+            // Set up End Screen Elements
+            document.getElementById('gameplayScreen').classList.add('hidden');
+            document.getElementById('endScreen').classList.remove('hidden');
+
+            const finalStarsContainer = document.getElementById('finalStarsContainer');
+            finalStarsContainer.innerHTML = '';
+            
+            // Dynamic stars feedback
+            let totalStarsAwarded = 1;
+            let feedbackTitle = "Keep trying, Pintar! / Teruskan Usaha!";
+            if (correctAnswersCount >= 9) {
+                totalStarsAwarded = 3;
+                feedbackTitle = "Masya-Allah, Absolute Genius! / Genius Pintar Gemilang!";
+            } else if (correctAnswersCount >= 6) {
+                totalStarsAwarded = 2;
+                feedbackTitle = "Excellent Performance! / Prestasi Cemerlang!";
+            }
+
+            for (let i = 0; i < 3; i++) {
+                const s = document.createElement('span');
+                s.className = `text-5xl ${i < totalStarsAwarded ? 'text-amber-400' : 'text-slate-200'}`;
+                s.textContent = '⭐';
+                finalStarsContainer.appendChild(s);
+            }
+
+            document.getElementById('finalScoreTitle').textContent = feedbackTitle;
+            document.getElementById('finalScoreText').textContent = `Tahniah ${pName}! Anda menjawab ${correctAnswersCount} daripada 10 soalan dengan betul!`;
+            
+            document.getElementById('statScore').textContent = score;
+            document.getElementById('statAccuracy').textContent = `${(correctAnswersCount / currentQuestions.length) * 100}%`;
+        }
+
+        // Restarting or Back helpers
+        function restartCurrentQuiz() {
+            audio.playClick();
+            document.getElementById('endScreen').classList.add('hidden');
+            startQuiz(currentSet);
+        }
+
+        function backToMenu() {
+            audio.playClick();
+            audio.stopBgm();
+            clearInterval(timer);
+            if (transitionTimeout) clearTimeout(transitionTimeout);
+            
+            document.getElementById('gameplayScreen').classList.add('hidden');
+            document.getElementById('endScreen').classList.add('hidden');
+            document.getElementById('correctPopup').style.display = 'none';
+            document.getElementById('incorrectPopup').style.display = 'none';
+            
+            document.getElementById('mainMenu').classList.remove('hidden');
+            renderLeaderboard();
+        }
+
+        function toggleSound() {
+            audio.enabled = !audio.enabled;
+            if (audio.enabled) {
+                document.getElementById('soundOnIcon').classList.remove('hidden');
+                document.getElementById('soundOffIcon').classList.add('hidden');
+                audio.playBgm();
+            } else {
+                document.getElementById('soundOnIcon').classList.add('hidden');
+                document.getElementById('soundOffIcon').classList.remove('hidden');
+                audio.stopBgm();
+            }
+        }
+
+
+        // ================= CONVEX-FIREWORKS ANIMATION ENGINE =================
+        const canvas = document.getElementById('fireworksCanvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.radius = Math.random() * 3 + 2;
+                this.velocity = {
+                    x: (Math.random() - 0.5) * 8,
+                    y: (Math.random() - 0.5) * 8
+                };
+                this.alpha = 1;
+                this.decay = Math.random() * 0.015 + 0.015;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2, false);
+                ctx.fillStyle = this.color;
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color;
+                ctx.fill();
+                ctx.restore();
+            }
+
+            update() {
+                this.velocity.y += 0.05; // gravity
+                this.x += this.velocity.x;
+                this.y += this.velocity.y;
+                this.alpha -= this.decay;
+            }
+        }
+
+        function triggerFireworks() {
+            const colors = ['#10b981', '#34d399', '#f59e0b', '#fbbf24', '#f43f5e', '#60a5fa'];
+            // Create explosions at multiple random positions in the upper viewport
+            for (let i = 0; i < 3; i++) {
+                const burstX = Math.random() * (canvas.width * 0.6) + (canvas.width * 0.2);
+                const burstY = Math.random() * (canvas.height * 0.4) + (canvas.height * 0.1);
+                const color = colors[Math.floor(Math.random() * colors.length)];
+                
+                for (let j = 0; j < 35; j++) {
+                    particles.push(new Particle(burstX, burstY, color));
+                }
+            }
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            particles = particles.filter(p => p.alpha > 0);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+        }
+        animate();
+    </script>
+</body>
+</html>

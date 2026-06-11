@@ -1,0 +1,1626 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yahudi: Kuiz Game Interaktif dwi-Bahasa</title>
+    <!-- Tailwind CSS untuk Rekabentuk Premium -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts untuk Tipografi yang Menarik -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background: radial-gradient(circle, #fefae0 0%, #dda15e 100%);
+            overflow-x: hidden;
+        }
+        .title-font {
+            font-family: 'Fredoka One', cursive;
+        }
+        /* Animasi Belon / Kad Terapung */
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        .floating {
+            animation: float 4s ease-in-out infinite;
+        }
+        /* Custom scrollbar untuk Leaderboard */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #dda15e;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-between p-4 relative">
+
+    <!-- Canvas Utama untuk Efek Bunga Api (Fireworks) -->
+    <canvas id="fireworksCanvas" class="absolute top-0 left-0 w-full h-full pointer-events-none z-50"></canvas>
+
+    <!-- Header Atas (Status & Kawalan Muzik) -->
+    <header class="w-full max-w-4xl flex justify-between items-center bg-white/80 backdrop-blur-md p-3 rounded-2xl shadow-lg border-2 border-[#bc6c25] z-10 mb-4">
+        <div class="flex items-center gap-3">
+            <!-- Icon Rumah/Home -->
+            <button onclick="goHome()" class="bg-[#606c38] hover:bg-[#283618] text-white p-2.5 rounded-xl transition duration-300 shadow-md">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+            </button>
+            <div class="text-[#283618] font-bold text-sm md:text-base">
+                <span id="playerLabel" class="title-font block text-xs md:text-sm text-[#bc6c25]">Pemain / Player:</span>
+                <span id="headerPlayerName">Maya</span>
+            </div>
+        </div>
+
+        <div id="headerTitle" class="title-font text-base md:text-2xl text-[#283618] hidden sm:block tracking-wide">
+            🕌 KEMBARA SEJARAH YAHUDI / JUDAISM HISTORY JOURNEY
+        </div>
+
+        <!-- Tetapan Bunyi & Bahasa -->
+        <div class="flex items-center gap-2">
+            <!-- Bunyi ON/OFF -->
+            <button onclick="toggleSound()" id="soundBtn" class="bg-[#dda15e] hover:bg-[#bc6c25] text-white p-2.5 rounded-xl transition duration-300 shadow-md">
+                <svg id="soundOnIcon" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+                <svg id="soundOffIcon" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15zM17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/></svg>
+            </button>
+            <!-- Pilihan Bahasa Tetap -->
+            <select id="langSelect" onchange="changeLanguage()" class="bg-[#606c38] text-white py-2 px-3 rounded-xl border-2 border-[#bc6c25] font-bold text-sm cursor-pointer focus:outline-none">
+                <option value="dual">Bilingual (BM + EN)</option>
+                <option value="bm">Bahasa Melayu Piawai</option>
+                <option value="en">Standard English</option>
+            </select>
+        </div>
+    </header>
+
+    <!-- KANDUNGAN UTAMA PERMAINAN -->
+    <main class="w-full max-w-4xl bg-white/90 backdrop-blur-sm rounded-3xl p-6 shadow-2xl border-4 border-[#bc6c25] flex-grow flex flex-col justify-between relative z-10 min-h-[450px]">
+
+        <!-- ================= SCREEN 1: KEMASUKAN NAMA & AVATAR ================= -->
+        <section id="screenNameInput" class="flex flex-col items-center justify-center py-6 text-center space-y-6">
+            <div class="floating">
+                <!-- Cover Cartoon Design -->
+                <div class="relative inline-block bg-gradient-to-br from-[#bc6c25] to-[#dda15e] p-4 rounded-3xl shadow-xl border-4 border-[#606c38]">
+                    <!-- Vector Rabbi Cartoon Mascot SVG -->
+                    <svg class="w-32 h-32 mx-auto" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Skin and Head -->
+                        <circle cx="50" cy="45" r="22" fill="#ffdbac"/>
+                        <!-- Beard -->
+                        <path d="M28 45C28 65 40 78 50 78C60 78 72 65 72 45H28Z" fill="#e0e0e0"/>
+                        <!-- Cheeks -->
+                        <circle cx="38" cy="46" r="3" fill="#ff9999" opacity="0.6"/>
+                        <circle cx="62" cy="46" r="3" fill="#ff9999" opacity="0.6"/>
+                        <!-- Nose (Cute & Rounded) -->
+                        <ellipse cx="50" cy="45" rx="6" ry="8" fill="#f1c0e8"/>
+                        <!-- Eyes and Eyebrows -->
+                        <circle cx="42" cy="38" r="3" fill="#333"/>
+                        <circle cx="58" cy="38" r="3" fill="#333"/>
+                        <path d="M36 32C40 30 44 33 44 33" stroke="#4f4f4f" stroke-width="2" stroke-linecap="round"/>
+                        <path d="M64 32C60 30 56 33 56 33" stroke="#4f4f4f" stroke-width="2" stroke-linecap="round"/>
+                        <!-- Kippah (Jewish Cap) -->
+                        <path d="M32 30C32 18 68 18 68 30H32Z" fill="#1d3557"/>
+                        <!-- Glasses -->
+                        <circle cx="42" cy="40" r="7" stroke="#000" stroke-width="1.5" fill="none"/>
+                        <circle cx="58" cy="40" r="7" stroke="#000" stroke-width="1.5" fill="none"/>
+                        <line x1="49" y1="40" x2="51" y2="40" stroke="#000" stroke-width="2"/>
+                        <!-- Smile -->
+                        <path d="M46 54C48 56 52 56 54 54" stroke="#ff3333" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    <!-- Floating Star of David Decor -->
+                    <span class="absolute -top-3 -right-3 text-4xl">⭐</span>
+                    <span class="absolute -bottom-2 -left-3 text-4xl">📚</span>
+                </div>
+            </div>
+
+            <div class="space-y-2">
+                <h1 id="gameTitle" class="title-font text-3xl md:text-4xl text-[#283618] tracking-wider">KEMBARA ILMU AGAMA YAHUDI</h1>
+                <p id="gameSubtitle" class="text-sm md:text-base text-[#606c38] font-bold">Interaktif 3-dalam-1 Berdasarkan Karya DR. MRAR</p>
+            </div>
+
+            <!-- Nama Input Box -->
+            <div class="w-full max-w-sm space-y-3">
+                <label id="nameLabel" class="block text-left text-sm font-bold text-[#bc6c25]">Masukkan Nama Anda / Enter Your Name:</label>
+                <input type="text" id="playerNameInput" placeholder="Cth: Maya, Liam, Sarah..." class="w-full px-5 py-3 rounded-2xl border-2 border-[#bc6c25] focus:outline-none focus:ring-2 focus:ring-[#606c38] text-center text-lg font-bold shadow-inner">
+            </div>
+
+            <!-- Avatar Selection -->
+            <div class="space-y-2">
+                <span id="selectCharLabel" class="block text-sm font-bold text-[#bc6c25]">Pilih Watak / Select Character:</span>
+                <div class="flex justify-center gap-4 flex-wrap">
+                    <!-- Avatar 1 -->
+                    <button onclick="selectAvatar('rabbi_ari')" class="avatar-option p-2 bg-white rounded-2xl border-4 border-transparent hover:border-[#606c38] transition focus:outline-none" id="avatar_rabbi_ari">
+                        <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='50' height='50'><circle cx='50' cy='50' r='45' fill='%23ffdbac'/><circle cx='40' cy='45' r='5' fill='%23111'/><circle cx='60' cy='45' r='5' fill='%23111'/><path d='M35 25 Q50 15 65 25' fill='%231d3557'/><path d='M35 70 Q50 85 65 70' stroke='%23111' stroke-width='4' fill='none'/></svg>" class="w-14 h-14" alt="Rabbi Ari">
+                        <span class="text-xs block font-bold mt-1 text-[#283618]">Rabbi Ari</span>
+                    </button>
+                    <!-- Avatar 2 -->
+                    <button onclick="selectAvatar('maya')" class="avatar-option p-2 bg-white rounded-2xl border-4 border-[#606c38] transition focus:outline-none" id="avatar_maya">
+                        <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='50' height='50'><circle cx='50' cy='50' r='45' fill='%23ffdbac'/><circle cx='40' cy='45' r='5' fill='%23111'/><circle cx='60' cy='45' r='5' fill='%23111'/><path d='M25 45 Q50 10 75 45' fill='%239e2a2b'/><path d='M35 70 Q50 80 65 70' stroke='%23111' stroke-width='4' fill='none'/></svg>" class="w-14 h-14" alt="Maya">
+                        <span class="text-xs block font-bold mt-1 text-[#283618]">Maya</span>
+                    </button>
+                    <!-- Avatar 3 -->
+                    <button onclick="selectAvatar('liam')" class="avatar-option p-2 bg-white rounded-2xl border-4 border-transparent hover:border-[#606c38] transition focus:outline-none" id="avatar_liam">
+                        <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='50' height='50'><circle cx='50' cy='50' r='45' fill='%23ffdbac'/><circle cx='40' cy='45' r='5' fill='%23111'/><circle cx='60' cy='45' r='5' fill='%23111'/><rect x='30' y='38' width='18' height='12' rx='3' stroke='%23000' stroke-width='2' fill='none'/><rect x='52' y='38' width='18' height='12' rx='3' stroke='%23000' stroke-width='2' fill='none'/><path d='M35 70 Q50 80 65 70' stroke='%23111' stroke-width='4' fill='none'/></svg>" class="w-14 h-14" alt="Liam">
+                        <span class="text-xs block font-bold mt-1 text-[#283618]">Liam</span>
+                    </button>
+                    <!-- Avatar 4 -->
+                    <button onclick="selectAvatar('chloe')" class="avatar-option p-2 bg-white rounded-2xl border-4 border-transparent hover:border-[#606c38] transition focus:outline-none" id="avatar_chloe">
+                        <img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100' width='50' height='50'><circle cx='50' cy='50' r='45' fill='%23ffdbac'/><circle cx='40' cy='45' r='5' fill='%23111'/><circle cx='60' cy='45' r='5' fill='%23111'/><path d='M20 50 Q50 0 80 50' fill='%23f26419'/><path d='M35 70 Q50 80 65 70' stroke='%23111' stroke-width='4' fill='none'/></svg>" class="w-14 h-14" alt="Chloe">
+                        <span class="text-xs block font-bold mt-1 text-[#283618]">Chloe</span>
+                    </button>
+                </div>
+            </div>
+
+            <button id="startGameBtn" onclick="startGame()" class="title-font w-full max-w-sm bg-[#606c38] hover:bg-[#283618] hover:scale-105 active:scale-95 text-white py-4 px-8 rounded-2xl text-xl shadow-lg transition duration-300">
+                MULA KEMBARA / START GAME
+            </button>
+        </section>
+
+        <!-- ================= SCREEN 2: PILIHAN SET BUKU / MENU UTAMA ================= -->
+        <section id="screenMenu" class="hidden flex flex-col items-center justify-center space-y-6 py-4">
+            <div class="text-center">
+                <h2 id="menuTitle" class="title-font text-2xl md:text-3xl text-[#283618]">PILIH SET KUIZ KEMBARA ANDA</h2>
+                <p id="menuSubtitle" class="text-sm text-[#606c38] font-bold">Setiap set mengandungi 10 soalan mencabar dwi-bahasa</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 w-full px-2">
+                <!-- Book 1 Card -->
+                <button onclick="selectQuizSet(1)" class="bg-[#fefae0]/50 hover:bg-white hover:scale-105 rounded-2xl p-5 border-4 border-[#606c38] transition shadow-md flex flex-col items-center text-center space-y-3">
+                    <span class="text-4xl">📜</span>
+                    <h3 id="book1Title" class="title-font text-lg text-[#283618]">1. Sejarah & Perkembangan</h3>
+                    <p id="book1Desc" class="text-xs text-gray-600">Terokai Zaman Alkitabiah, Helenik, era Diaspora, dan penubuhan Negara Israel moden.</p>
+                    <span id="book1Meta" class="text-[10px] text-gray-400 block italic">Book 1: History and Development</span>
+                    <div class="w-full bg-gray-200 h-2.5 rounded-full overflow-hidden mt-2">
+                        <div id="set1Progress" class="bg-[#606c38] h-full" style="width: 0%"></div>
+                    </div>
+                </button>
+
+                <!-- Book 2 Card -->
+                <button onclick="selectQuizSet(2)" class="bg-[#fefae0]/50 hover:bg-white hover:scale-105 rounded-2xl p-5 border-4 border-[#bc6c25] transition shadow-md flex flex-col items-center text-center space-y-3">
+                    <span class="text-4xl">📖</span>
+                    <h3 id="book2Title" class="title-font text-lg text-[#bc6c25]">2. Kitab-kitab Suci</h3>
+                    <p id="book2Desc" class="text-xs text-gray-600">Pelajari struktur Tanakh (Torah, Nevi'im, Ketuvim), Talmud, Midrash dan kitab Zohar.</p>
+                    <span id="book2Meta" class="text-[10px] text-gray-400 block italic">Book 2: Journey Through Sacred Books</span>
+                    <div class="w-full bg-gray-200 h-2.5 rounded-full overflow-hidden mt-2">
+                        <div id="set2Progress" class="bg-[#bc6c25] h-full" style="width: 0%"></div>
+                    </div>
+                </button>
+
+                <!-- Book 3 Card -->
+                <button onclick="selectQuizSet(3)" class="bg-[#fefae0]/50 hover:bg-white hover:scale-105 rounded-2xl p-5 border-4 border-[#dda15e] transition shadow-md flex flex-col items-center text-center space-y-3">
+                    <span class="text-4xl">🕎</span>
+                    <h3 id="book3Title" class="title-font text-lg text-[#bc6c25]">3. Perjanjian & Rukun</h3>
+                    <p id="book3Desc" class="text-xs text-gray-600">Fahami 13 Prinsip Maimonides, Tefillah, upacara khatan, upacara perayaan dan hukum Kosher.</p>
+                    <span id="book3Meta" class="text-[10px] text-gray-400 block italic">Book 3: Covenants, Commandments & Continuity</span>
+                    <div class="w-full bg-gray-200 h-2.5 rounded-full overflow-hidden mt-2">
+                        <div id="set3Progress" class="bg-[#dda15e] h-full" style="width: 0%"></div>
+                    </div>
+                </button>
+            </div>
+
+            <!-- View Leaderboard Button -->
+            <button id="viewLeaderboardBtn" onclick="showLeaderboardScreen()" class="bg-[#dda15e] hover:bg-[#bc6c25] text-white py-3 px-6 rounded-xl font-bold transition flex items-center gap-2 shadow-md">
+                <span>🏆</span> LIHAT PAPAN PENDAHULU / VIEW LEADERBOARD
+            </button>
+        </section>
+
+        <!-- ================= SCREEN 3: KAWASAN SOALAN KUIZ ================= -->
+        <section id="screenQuiz" class="hidden flex flex-col justify-between h-full space-y-4">
+            
+            <!-- Bilangan Soalan & Bar Kemajuan -->
+            <div class="flex flex-col space-y-2">
+                <div class="flex justify-between items-center">
+                    <span class="text-sm font-bold text-[#606c38] bg-[#fefae0] py-1 px-3 rounded-full border border-[#bc6c25]">
+                        <span id="quizSetTitle">Buku 1</span> - <span id="questionNumText">Soalan 1/10</span>
+                    </span>
+                    <span class="text-sm font-bold text-[#283618]">
+                        <span id="scoreLabel">Markah / Score:</span> <span id="quizScoreVal">0/100</span>
+                    </span>
+                </div>
+                <!-- Progress Grid Bar -->
+                <div id="quizProgressDots" class="flex gap-1.5 justify-center">
+                    <!-- Dots dynamically injected -->
+                </div>
+            </div>
+
+            <!-- KOTAK KAD SOALAN -->
+            <div class="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-5 border-2 border-[#bc6c25] shadow-inner space-y-3 min-h-[140px] flex flex-col justify-center">
+                <!-- Bahasa Melayu Question (Primary) -->
+                <h3 id="questionTextBm" class="text-lg md:text-xl font-bold text-[#283618] text-center leading-relaxed">
+                    Sila tunggu, memuatkan soalan...
+                </h3>
+                <!-- English Question (Secondary / Italics) -->
+                <h4 id="questionTextEn" class="text-sm md:text-base font-semibold text-gray-500 text-center italic">
+                    Please wait, loading question...
+                </h4>
+            </div>
+
+            <!-- PILIHAN JAWAPAN (4 PILIHAN) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Option A -->
+                <button onclick="checkAnswer(0)" id="optionBtn0" class="option-btn bg-white hover:bg-amber-100 hover:scale-[1.02] active:scale-95 text-[#283618] p-4 rounded-xl border-2 border-gray-300 transition duration-200 text-left flex items-center gap-3 font-bold shadow-sm">
+                    <span class="w-8 h-8 rounded-full bg-[#606c38] text-white flex items-center justify-center font-bold">A</span>
+                    <div class="flex flex-col">
+                        <span class="option-bm text-sm md:text-base">Jawapan A</span>
+                        <span class="option-en text-xs text-gray-500 italic font-normal">Answer A</span>
+                    </div>
+                </button>
+                <!-- Option B -->
+                <button onclick="checkAnswer(1)" id="optionBtn1" class="option-btn bg-white hover:bg-amber-100 hover:scale-[1.02] active:scale-95 text-[#283618] p-4 rounded-xl border-2 border-gray-300 transition duration-200 text-left flex items-center gap-3 font-bold shadow-sm">
+                    <span class="w-8 h-8 rounded-full bg-[#dda15e] text-white flex items-center justify-center font-bold">B</span>
+                    <div class="flex flex-col">
+                        <span class="option-bm text-sm md:text-base">Jawapan B</span>
+                        <span class="option-en text-xs text-gray-500 italic font-normal">Answer B</span>
+                    </div>
+                </button>
+                <!-- Option C -->
+                <button onclick="checkAnswer(2)" id="optionBtn2" class="option-btn bg-white hover:bg-amber-100 hover:scale-[1.02] active:scale-95 text-[#283618] p-4 rounded-xl border-2 border-gray-300 transition duration-200 text-left flex items-center gap-3 font-bold shadow-sm">
+                    <span class="w-8 h-8 rounded-full bg-[#606c38] text-white flex items-center justify-center font-bold">C</span>
+                    <div class="flex flex-col">
+                        <span class="option-bm text-sm md:text-base">Jawapan C</span>
+                        <span class="option-en text-xs text-gray-500 italic font-normal">Answer C</span>
+                    </div>
+                </button>
+                <!-- Option D -->
+                <button onclick="checkAnswer(3)" id="optionBtn3" class="option-btn bg-white hover:bg-amber-100 hover:scale-[1.02] active:scale-95 text-[#283618] p-4 rounded-xl border-2 border-gray-300 transition duration-200 text-left flex items-center gap-3 font-bold shadow-sm">
+                    <span class="w-8 h-8 rounded-full bg-[#dda15e] text-white flex items-center justify-center font-bold">D</span>
+                    <div class="flex flex-col">
+                        <span class="option-bm text-sm md:text-base">Jawapan D</span>
+                        <span class="option-en text-xs text-gray-500 italic font-normal">Answer D</span>
+                    </div>
+                </button>
+            </div>
+
+            <!-- Hint Section -->
+            <div class="text-center">
+                <span id="quizHintText" class="text-xs text-gray-400 italic">Pilih jawapan yang paling tepat berdasarkan teks buku! / Choose the most accurate answer based on the books!</span>
+            </div>
+        </section>
+
+        <!-- ================= SCREEN 4: KEPUTUSAN KUIZ / TAMAT ================= -->
+        <section id="screenResult" class="hidden flex flex-col items-center justify-center text-center space-y-6 py-6">
+            <div class="floating">
+                <span class="text-7xl">🎉</span>
+            </div>
+            
+            <div class="space-y-2">
+                <h2 id="congratsTitle" class="title-font text-3xl text-[#283618]">TAHNIAH, ANDA SELESAI!</h2>
+                <h3 id="congratsSubtitle" class="text-lg text-gray-600 font-bold">Anda telah berjaya menyelesaikan kembara ini! / You've successfully completed the kembara!</h3>
+            </div>
+
+            <div class="bg-[#fefae0] border-4 border-dashed border-[#bc6c25] p-6 rounded-3xl w-full max-w-sm space-y-3">
+                <span id="finalScoreLabel" class="block text-gray-500 text-sm font-bold uppercase tracking-wider">Skor Akhir / Final Score</span>
+                <span id="finalScoreDisplay" class="title-font text-6xl text-[#606c38] block">100/100</span>
+                <span id="performanceLevel" class="block font-bold text-[#dda15e] text-lg">HEBAT / AWESOME!</span>
+            </div>
+
+            <!-- Rekod Score ke Leaderboard -->
+            <div class="w-full max-w-sm space-y-2">
+                <button id="saveScoreBtn" onclick="saveScore()" class="bg-[#606c38] hover:bg-[#283618] text-white font-bold py-3 px-6 rounded-2xl w-full transition shadow-md">
+                    💾 SIMPAN SKOR SAYA / SAVE MY SCORE
+                </button>
+            </div>
+
+            <!-- Butang Navigasi Selepas Selesai -->
+            <div class="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
+                <button id="playOtherBtn" onclick="goMenu()" class="bg-[#bc6c25] hover:bg-[#dda15e] text-white py-3 px-4 rounded-xl font-bold transition flex-1 shadow">
+                    🔄 Main Set Lain / Other Sets
+                </button>
+                <button id="viewLeaderboardBtnResult" onclick="showLeaderboardScreen()" class="bg-gray-700 hover:bg-gray-600 text-white py-3 px-4 rounded-xl font-bold transition flex-1 shadow">
+                    🏆 Lihat Pendahulu / Scores
+                </button>
+            </div>
+        </section>
+
+        <!-- ================= SCREEN 5: PAPAN PENDAHULU (LEADERBOARD) ================= -->
+        <section id="screenLeaderboard" class="hidden flex flex-col items-center space-y-6 py-4">
+            <div class="text-center">
+                <h2 id="leaderboardTitle" class="title-font text-3xl text-[#283618]">🏆 PAPAN PENDAHULU KEMBARA</h2>
+                <p id="leaderboardSubtitle" class="text-xs text-gray-500">Rekod pencapaian terbaik para pengembara pintar</p>
+            </div>
+
+            <!-- Table Container -->
+            <div class="w-full overflow-hidden rounded-2xl border-2 border-[#bc6c25] bg-white shadow-lg max-h-[300px] overflow-y-auto">
+                <table class="w-full text-center">
+                    <thead class="bg-[#606c38] text-white sticky top-0 font-bold">
+                        <tr>
+                            <th id="rankCol" class="py-3 px-4">Kedudukan / Rank</th>
+                            <th id="nameCol" class="py-3 px-4">Nama / Name</th>
+                            <th id="categoryCol" class="py-3 px-4">Kategori Set / Category</th>
+                            <th id="scoreCol" class="py-3 px-4">Skor / Score</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboardBody">
+                        <!-- Dynamic Leaderboard Items -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Controls -->
+            <div class="flex gap-4 w-full max-w-sm">
+                <button id="clearBtn" onclick="clearLeaderboard()" class="bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-xl text-xs transition shadow flex-1">
+                    🗑️ Padam Rekod / Clear Records
+                </button>
+                <button id="backBtn" onclick="goMenu()" class="bg-[#606c38] hover:bg-[#283618] text-white font-bold py-3 px-6 rounded-xl transition shadow flex-1">
+                    🏡 Kembali ke Menu / Home
+                </button>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Kaki Footer -->
+    <footer class="w-full max-w-4xl text-center py-3 text-xs text-[#283618]/70 font-semibold z-10">
+        Hakcipta © 2026. Diinspirasikan dari karya <span class="font-bold text-[#bc6c25]">Mohd Rosmizi bin Abd Rahman (DR. MRAR)</span>. Rekaan Grafik Digital Premium.
+    </footer>
+
+    <!-- ================= MODAL POPUPS (BETUL & SALAH) ================= -->
+    
+    <!-- 1. POPUP BETUL (CORRECT ANSWER EFFECT) -->
+    <div id="modalCorrect" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl border-4 border-[#606c38] p-6 max-w-sm w-full text-center space-y-4 shadow-2xl relative transform transition duration-300 scale-100">
+            <!-- Ribbon decoration SVG -->
+            <div id="correctRibbon" class="absolute -top-10 left-1/2 -translate-x-1/2 bg-yellow-400 text-white font-bold py-2 px-6 rounded-full border-2 border-white shadow-md title-font text-sm uppercase tracking-wider animate-bounce">
+                🎉 SYABAS! EXCELLENT! 🎉
+            </div>
+            
+            <div class="text-6xl pt-4">🏅</div>
+            <div class="space-y-1">
+                <h3 id="correctTitle" class="title-font text-2xl text-[#606c38] uppercase">Jawapan Betul!</h3>
+            </div>
+
+            <!-- Penjelasan Buku Info -->
+            <div class="bg-[#fefae0] p-4 rounded-2xl text-xs text-gray-700 leading-relaxed border border-[#dda15e] max-h-[140px] overflow-y-auto">
+                <strong id="correctDidYouKnow" class="text-[#bc6c25] block mb-1">Tahukah Anda? / Did you know?</strong>
+                <p id="factBm" class="font-bold text-[#283618] mb-1">Fakta BM...</p>
+                <p id="factEn" class="italic text-gray-500 font-medium">Fact EN...</p>
+            </div>
+
+            <button id="nextBtn" onclick="closeCorrectModal()" class="title-font w-full bg-[#606c38] hover:bg-[#283618] text-white py-3 px-6 rounded-xl text-lg shadow transition duration-200">
+                TERUSKAN / NEXT ➡️
+            </button>
+        </div>
+    </div>
+
+    <!-- 2. POPUP SALAH (WRONG RETRY POPUP) -->
+    <div id="modalWrong" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-3xl border-4 border-red-500 p-6 max-w-sm w-full text-center space-y-4 shadow-2xl relative">
+            <div id="wrongRibbon" class="absolute -top-6 left-1/2 -translate-x-1/2 bg-red-500 text-white font-bold py-1 px-6 rounded-full border-2 border-white shadow-md title-font text-xs uppercase tracking-wider">
+                HAMPIR TEPAT! / TRY AGAIN!
+            </div>
+            
+            <div class="text-6xl pt-2">❌</div>
+            <div class="space-y-1">
+                <h3 id="wrongTitle" class="title-font text-2xl text-red-500 uppercase">Aduh, Salah!</h3>
+            </div>
+
+            <p id="wrongText" class="text-sm font-semibold text-gray-600">
+                Jangan putus asa! Cuba baca soalan semula dengan teliti dan pilih lagi sekali.
+                <span class="block text-xs text-gray-400 italic mt-1">Don't give up! Read carefully and choose again.</span>
+            </p>
+
+            <button id="wrongBtn" onclick="closeWrongModal()" class="title-font w-full bg-red-500 hover:bg-red-600 text-white py-3 px-6 rounded-xl text-lg shadow transition duration-200">
+                CUBA LAGI / TRY AGAIN 🔄
+            </button>
+        </div>
+    </div>
+
+    <!-- AUDIO SYNTHESIZER AND GAME LOGIC SCRIPT -->
+    <script>
+        // ================= JANA AUDIO SYNTHESIS (NO EXTERNAL MP3 DEPENDENCY) =================
+        class SoundFX {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+                this.noiseBuffer = null;
+            }
+            init() {
+                try {
+                    if (!this.ctx) {
+                        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                    }
+                    if (this.ctx && this.ctx.state === 'suspended') {
+                        this.ctx.resume();
+                    }
+                } catch (e) {
+                    console.error("Audio Context initialization failed: ", e);
+                }
+            }
+            createNoiseBuffer() {
+                if (this.noiseBuffer) return this.noiseBuffer;
+                this.init();
+                if (!this.ctx) return null;
+                let bufferSize = this.ctx.sampleRate * 2.0; // 2 seconds of white noise
+                this.noiseBuffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+                let data = this.noiseBuffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                return this.noiseBuffer;
+            }
+            playCorrect() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+                let now = this.ctx.currentTime;
+                
+                // 1. Triumphant Brass Chord (Sawtooth & Triangle blend)
+                this.playTone(523.25, 'triangle', now, 0.15, 0.15); // C5
+                this.playTone(659.25, 'triangle', now + 0.08, 0.15, 0.15); // E5
+                this.playTone(783.99, 'triangle', now + 0.16, 0.15, 0.15); // G5
+                this.playTone(1046.50, 'sine', now + 0.24, 0.5, 0.2); // C6
+                
+                // Rich Brass Underlay
+                this.playTone(261.63, 'sawtooth', now + 0.2, 0.4, 0.08); // C4
+                this.playTone(329.63, 'sawtooth', now + 0.2, 0.4, 0.08); // E4
+                this.playTone(392.00, 'sawtooth', now + 0.2, 0.4, 0.08); // G4
+
+                // High Chime Accent
+                this.playTone(1318.51, 'sine', now + 0.28, 0.6, 0.10); // High E6 chime
+
+                // 2. Synthesized Applause Grains & Cheer
+                this.generateApplause(now, 2.0);
+            }
+            generateApplause(startTime, duration) {
+                let buffer = this.createNoiseBuffer();
+                if (!buffer) return;
+                
+                // --- Crowd Cheering Rise ("Wooh!") ---
+                let cheerSource = this.ctx.createBufferSource();
+                cheerSource.buffer = buffer;
+                
+                let cheerFilter = this.ctx.createBiquadFilter();
+                cheerFilter.type = 'bandpass';
+                cheerFilter.Q.value = 1.8;
+                cheerFilter.frequency.setValueAtTime(600, startTime);
+                cheerFilter.frequency.exponentialRampToValueAtTime(1600, startTime + 0.3);
+                cheerFilter.frequency.exponentialRampToValueAtTime(800, startTime + duration);
+                
+                let cheerGain = this.ctx.createGain();
+                cheerGain.gain.setValueAtTime(0, startTime);
+                cheerGain.gain.linearRampToValueAtTime(0.25, startTime + 0.2);
+                cheerGain.gain.exponentialRampToValueAtTime(0.001, startTime + duration);
+                
+                cheerSource.connect(cheerFilter);
+                cheerFilter.connect(cheerGain);
+                cheerGain.connect(this.ctx.destination);
+                
+                cheerSource.start(startTime);
+                cheerSource.stop(startTime + duration);
+
+                // --- 50 Micro-claps ---
+                for (let i = 0; i < 50; i++) {
+                    let clapTime = startTime + Math.random() * duration;
+                    
+                    let source = this.ctx.createBufferSource();
+                    source.buffer = buffer;
+                    
+                    let filter = this.ctx.createBiquadFilter();
+                    filter.type = 'bandpass';
+                    filter.frequency.value = 1000 + Math.random() * 800; // 1000Hz - 1800Hz
+                    filter.Q.value = 3.0;
+                    
+                    let gainNode = this.ctx.createGain();
+                    gainNode.gain.setValueAtTime(0, clapTime);
+                    gainNode.gain.linearRampToValueAtTime(0.15 + Math.random() * 0.1, clapTime + 0.003);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, clapTime + 0.03 + Math.random() * 0.05);
+                    
+                    source.connect(filter);
+                    filter.connect(gainNode);
+                    gainNode.connect(this.ctx.destination);
+                    
+                    source.start(clapTime);
+                    source.stop(clapTime + 0.15);
+                }
+            }
+            playWrong() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+                let now = this.ctx.currentTime;
+                
+                // Sliding sad cartoon buzzer ("Wa-wa-wah")
+                this.playSlidingTone(180, 90, 'sawtooth', now, 0.4, 0.2);
+                this.playSlidingTone(180, 90, 'sawtooth', now + 0.1, 0.4, 0.2);
+                this.playTone(110, 'sawtooth', now + 0.25, 0.5, 0.25);
+            }
+            playSlidingTone(startFreq, endFreq, type, start, duration, maxGain = 0.2) {
+                if (!this.ctx) return;
+                let osc = this.ctx.createOscillator();
+                let gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.type = type;
+                osc.frequency.setValueAtTime(startFreq, start);
+                osc.frequency.exponentialRampToValueAtTime(endFreq, start + duration);
+                gain.gain.setValueAtTime(0, start);
+                gain.gain.linearRampToValueAtTime(maxGain, start + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
+                osc.start(start);
+                osc.stop(start + duration);
+            }
+            playComplete() {
+                if (this.muted) return;
+                this.init();
+                if (!this.ctx) return;
+                let now = this.ctx.currentTime;
+                
+                // Happy celebration melody
+                let tempo = 0.12;
+                let notes = [523.25, 659.25, 783.99, 1046.50, 783.99, 1046.50, 1318.51];
+                notes.forEach((freq, idx) => {
+                    this.playTone(freq, 'sine', now + idx * tempo, idx === 6 ? 0.6 : 0.12, 0.2);
+                    this.playTone(freq / 2, 'triangle', now + idx * tempo, idx === 6 ? 0.6 : 0.12, 0.1);
+                });
+
+                this.generateApplause(now, 2.5); // Sorakan lebih lama di skrin tamat
+            }
+            playClick() {
+                if (this.muted) return;
+                this.init();
+                this.playTone(600, 'sine', this.ctx.currentTime, 0.08, 0.1);
+            }
+            playTone(freq, type, start, duration, maxGain = 0.2) {
+                if (!this.ctx) return;
+                let osc = this.ctx.createOscillator();
+                let gain = this.ctx.createGain();
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, start);
+                gain.gain.setValueAtTime(0, start);
+                gain.gain.linearRampToValueAtTime(maxGain, start + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
+                osc.start(start);
+                osc.stop(start + duration);
+            }
+        }
+
+        const sfx = new SoundFX();
+
+        // Unlock audio context on initial gestures for maximum compatibility on iOS / Safaris / Chrome
+        ['click', 'touchstart', 'mousedown'].forEach(evtType => {
+            window.addEventListener(evtType, () => {
+                sfx.init();
+            }, { once: false, passive: true });
+        });
+
+        function toggleSound() {
+            sfx.init(); // Direct thread unlock
+            sfx.muted = !sfx.muted;
+            sfx.playClick();
+            document.getElementById('soundOnIcon').classList.toggle('hidden', sfx.muted);
+            document.getElementById('soundOffIcon').classList.toggle('hidden', !sfx.muted);
+        }
+
+        // ================= KAMUS TERJEMAHAN DENGAN BAHASA MELAYU PIAWAI (standard) & STANDARD ENGLISH =================
+        const uiTranslations = {
+            bm: {
+                playerLabel: "Pemain:",
+                headerTitle: "🕌 KEMBARA SEJARAH YAHUDI",
+                gameTitle: "KEMBARA ILMU AGAMA YAHUDI",
+                gameSubtitle: "Interaktif 3-dalam-1 Berdasarkan Karya DR. MRAR",
+                nameLabel: "Masukkan Nama Anda:",
+                namePlaceholder: "Cth: Maya, Liam, Sarah...",
+                selectChar: "Pilih Watak:",
+                startBtn: "MULA KEMBARA",
+                menuTitle: "PILIH SET KUIZ KEMBARA ANDA",
+                menuSubtitle: "Setiap set mengandungi 10 soalan mencabar",
+                book1Title: "1. Sejarah & Perkembangan",
+                book1Desc: "Terokai Zaman Alkitabiah, Helenik, era Diaspora, dan penubuhan Negara Israel moden.",
+                book1Meta: "Buku 1: Sejarah dan Perkembangan",
+                book2Title: "2. Kitab-kitab Suci",
+                book2Desc: "Pelajari struktur Tanakh (Torah, Nevi'im, Ketuvim), Talmud, Midrash dan kitab Zohar.",
+                book2Meta: "Buku 2: Perjalanan Menerusi Kitab Suci",
+                book3Title: "3. Perjanjian & Rukun",
+                book3Desc: "Fahami 13 Prinsip Maimonides, Tefillah, upacara khatan, upacara perayaan dan hukum Kosher.",
+                book3Meta: "Buku 3: Perjanjian, Perintah dan Kesinambungan",
+                viewLeaderboardBtn: "🏆 LIHAT PAPAN PENDAHULU",
+                scoreText: "Markah:",
+                hintText: "Pilih jawapan yang paling tepat berdasarkan teks buku!",
+                congratsTitle: "TAHNIAH, ANDA SELESAI!",
+                congratsSubtitle: "Anda telah berjaya menyelesaikan kembara ini!",
+                finalScoreLabel: "Skor Akhir",
+                saveScoreBtn: "💾 SIMPAN SKOR SAYA",
+                playOtherBtn: "🔄 Main Set Lain",
+                viewLeaderboardBtnResult: "🏆 Lihat Pendahulu",
+                leaderboardTitle: "🏆 PAPAN PENDAHULU KEMBARA",
+                leaderboardSubtitle: "Rekod pencapaian terbaik para pengembara pintar",
+                rankCol: "Kedudukan",
+                nameCol: "Nama",
+                categoryCol: "Kategori Set",
+                scoreCol: "Skor",
+                clearBtn: "🗑️ Padam Rekod",
+                backBtn: "🏡 Kembali ke Menu",
+                correctRibbon: "🎉 SYABAS! 🎉",
+                correctTitle: "Jawapan Betul!",
+                correctDidYouKnow: "Tahukah Anda?",
+                nextBtn: "TERUSKAN ➡️",
+                wrongRibbon: "HAMPIR TEPAT!",
+                wrongTitle: "Aduh, Salah!",
+                wrongText: "Jangan putus asa! Cuba baca soalan semula dengan teliti dan pilih lagi sekali. <span class='block text-xs text-gray-400 italic mt-1'>Read carefully and choose again.</span>",
+                wrongBtn: "CUBA LAGI 🔄"
+            },
+            en: {
+                playerLabel: "Player:",
+                headerTitle: "🕌 JUDAISM HISTORY JOURNEY",
+                gameTitle: "JUDAISM KNOWLEDGE JOURNEY",
+                gameSubtitle: "Interactive 3-in-1 Based on the Works of DR. MRAR",
+                nameLabel: "Enter Your Name:",
+                namePlaceholder: "E.g., Maya, Liam, Sarah...",
+                selectChar: "Select Character:",
+                startBtn: "START JOURNEY",
+                menuTitle: "SELECT YOUR JOURNEY QUIZ SET",
+                menuSubtitle: "Each set contains 10 challenging questions",
+                book1Title: "1. History & Development",
+                book1Desc: "Explore the Biblical, Hellenic, Diaspora eras, and the establishment of the modern State of Israel.",
+                book1Meta: "Book 1: History and Development",
+                book2Title: "2. Sacred Books",
+                book2Desc: "Learn the structure of Tanakh (Torah, Nevi'im, Ketuvim), Talmud, Midrash, and the Zohar.",
+                book2Meta: "Book 2: Journey Through Sacred Books",
+                book3Title: "3. Covenants & Continuity",
+                book3Desc: "Understand Maimonides' 13 Principles, Tefillah, circumcision, festivals, and Kosher laws.",
+                book3Meta: "Book 3: Covenants, Commandments & Continuity",
+                viewLeaderboardBtn: "🏆 VIEW LEADERBOARD",
+                scoreText: "Score:",
+                hintText: "Choose the most accurate answer based on the books!",
+                congratsTitle: "CONGRATULATIONS, YOU'RE DONE!",
+                congratsSubtitle: "You have successfully completed this journey!",
+                finalScoreLabel: "Final Score",
+                saveScoreBtn: "💾 SAVE MY SCORE",
+                playOtherBtn: "🔄 Play Other Sets",
+                viewLeaderboardBtnResult: "🏆 View Leaderboard",
+                leaderboardTitle: "🏆 JOURNEY LEADERBOARD",
+                leaderboardSubtitle: "Best achievement records of smart travelers",
+                rankCol: "Rank",
+                nameCol: "Name",
+                categoryCol: "Set Category",
+                scoreCol: "Score",
+                clearBtn: "🗑️ Clear Records",
+                backBtn: "🏡 Back to Menu",
+                correctRibbon: "🎉 EXCELLENT! 🎉",
+                correctTitle: "Correct Answer!",
+                correctDidYouKnow: "Did You Know?",
+                nextBtn: "CONTINUE ➡️",
+                wrongRibbon: "TRY AGAIN!",
+                wrongTitle: "Incorrect!",
+                wrongText: "Don't give up! Read the question carefully and try again. <span class='block text-xs text-gray-400 italic mt-1'>Read carefully and try again.</span>",
+                wrongBtn: "TRY AGAIN 🔄"
+            },
+            dual: {
+                playerLabel: "Pemain / Player:",
+                headerTitle: "🕌 KEMBARA SEJARAH YAHUDI / JUDAISM HISTORY JOURNEY",
+                gameTitle: "KEMBARA ILMU AGAMA YAHUDI / JUDAISM KNOWLEDGE JOURNEY",
+                gameSubtitle: "Interaktif 3-dalam-1 Berdasarkan Karya DR. MRAR / Interactive 3-in-1",
+                nameLabel: "Masukkan Nama Anda / Enter Your Name:",
+                namePlaceholder: "Cth: Maya, Liam, Sarah...",
+                selectChar: "Pilih Watak / Select Character:",
+                startBtn: "MULA KEMBARA / START GAME",
+                menuTitle: "PILIH SET KUIZ KEMBARA / SELECT YOUR QUIZ SET",
+                menuSubtitle: "Setiap set mengandungi 10 soalan mencabar dwi-bahasa / 10 bilingual questions",
+                book1Title: "1. Sejarah & Perkembangan / History & Development",
+                book1Desc: "Terokai Zaman Alkitabiah, Helenik, era Diaspora, & Israel moden / Explore Biblical, Hellenic, Diaspora & modern Israel.",
+                book1Meta: "Buku 1: Sejarah & Perkembangan / Book 1",
+                book2Title: "2. Kitab-kitab Suci / Sacred Books",
+                book2Desc: "Pelajari struktur Tanakh, Talmud, Midrash & kitab Zohar / Learn Tanakh, Talmud, Midrash & Zohar.",
+                book2Meta: "Buku 2: Kitab Suci / Book 2",
+                book3Title: "3. Perjanjian & Rukun / Covenants & Continuity",
+                book3Desc: "Fahami 13 Prinsip, Tefillah, upacara khatan & hukum Kosher / Understand 13 Principles, Tefillah, circumcision & Kosher.",
+                book3Meta: "Buku 3: Perjanjian & Kesinambungan / Book 3",
+                viewLeaderboardBtn: "🏆 PAPAN PENDAHULU / VIEW LEADERBOARD",
+                scoreText: "Markah / Score:",
+                hintText: "Pilih jawapan yang paling tepat berdasarkan teks buku! / Choose the most accurate answer based on the books!",
+                congratsTitle: "TAHNIAH, ANDA SELESAI! / CONGRATULATIONS!",
+                congratsSubtitle: "Anda telah berjaya menyelesaikan kembara ini! / You completed the journey!",
+                finalScoreLabel: "Skor Akhir / Final Score",
+                saveScoreBtn: "💾 SIMPAN SKOR / SAVE MY SCORE",
+                playOtherBtn: "🔄 Main Set Lain / Other Sets",
+                viewLeaderboardBtnResult: "🏆 Lihat Pendahulu / Scores",
+                leaderboardTitle: "🏆 PAPAN PENDAHULU / LEADERBOARD",
+                leaderboardSubtitle: "Rekod pencapaian terbaik para pengembara / Best achievement records",
+                rankCol: "Kedudukan / Rank",
+                nameCol: "Nama / Name",
+                categoryCol: "Kategori Set / Set Category",
+                scoreCol: "Skor / Score",
+                clearBtn: "🗑️ Padam Rekod / Clear Records",
+                backBtn: "🏡 Kembali ke Menu / Home",
+                correctRibbon: "🎉 SYABAS! EXCELLENT! 🎉",
+                correctTitle: "Jawapan Betul! / Correct!",
+                correctDidYouKnow: "Tahukah Anda? / Did you know?",
+                nextBtn: "TERUSKAN / NEXT ➡️",
+                wrongRibbon: "HAMPIR TEPAT! / TRY AGAIN!",
+                wrongTitle: "Aduh, Salah! / Incorrect!",
+                wrongText: "Cuba baca soalan semula dengan teliti dan pilih lagi sekali. <span class='block text-xs text-gray-400 italic mt-1'>Don't give up! Read carefully and choose again.</span>",
+                wrongBtn: "CUBA LAGI / TRY AGAIN 🔄"
+            }
+        };
+
+        // ================= DATABASE SOALAN KUIZ (10 SOALAN SETIAP BUKU) =================
+        const database = {
+            set1: {
+                titleBm: "Judaism: Sejarah & Perkembangan",
+                titleEn: "Judaism: History & Development",
+                questions: [
+                    {
+                        qBm: "Apakah tempoh masa bagi Zaman Alkitabiah (Biblical Age) yang diterangkan oleh Rabbi Ben?",
+                        qEn: "What is the timeframe of the Biblical Age as described by Rabbi Ben?",
+                        options: [
+                            { bm: "2000 - 30 SM (BCE)", en: "2000 - 30 BCE", correct: true },
+                            { bm: "1500 - 100 SM (BCE)", en: "1500 - 100 BCE", correct: false },
+                            { bm: "1000 - 500 SM (BCE)", en: "1000 - 500 BCE", correct: false },
+                            { bm: "3000 - 1000 SM (BCE)", en: "3000 - 1000 BCE", correct: false }
+                        ],
+                        factBm: "Zaman Alkitabiah bermula kira-kira 4000 tahun dahulu, bertarikh dari tahun 2000 hingga 30 SM.",
+                        factEn: "The Biblical Age began 4000 years ago, dated from 2000-30 BCE."
+                    },
+                    {
+                        qBm: "Siapakah patriark pertama yang memimpin para pengikutnya mengembara ke Kanaan?",
+                        qEn: "Who was the first patriarch who led his followers to travel to Canaan?",
+                        options: [
+                            { bm: "Musa", en: "Moses", correct: false },
+                            { bm: "Abraham", en: "Abraham", correct: true },
+                            { bm: "Yusuf", en: "Joseph", correct: false },
+                            { bm: "Daud", en: "David", correct: false }
+                        ],
+                        factBm: "Sejarah ini bermula apabila Abraham and para pengikutnya meninggalkan tanah air untuk mengembara ke Kanaan.",
+                        factEn: "It all began when Abraham and his followers left their homes to travel to Canaan."
+                    },
+                    {
+                        qBm: "Di bawah hayat siapakah gelaran 'Israel' pertama kali diberikan kepada bangsa ini?",
+                        qEn: "During whose life was the nation first called 'Israel'?",
+                        options: [
+                            { bm: "Jacob (cucu Abraham)", en: "Jacob (grandson of Abraham)", correct: true },
+                            { bm: "Isaac", en: "Isaac", correct: false },
+                            { bm: "Joseph", en: "Joseph", correct: false },
+                            { bm: "Moses", en: "Moses", correct: false }
+                        ],
+                        factBm: "Gelaran 'Israel' bermula pada hayat Jacob, dan melalui beliau lahirlah 12 suku bangsa keturunan.",
+                        factEn: "The name 'Israel' started during Jacob's life, and through him came the twelve tribes."
+                    },
+                    {
+                        qBm: "Siapakah anak Jacob yang membawa keluarganya berhijrah ke Mesir semasa kemarau besar?",
+                        qEn: "Which son of Jacob brought the family to Egypt during a great drought?",
+                        options: [
+                            { bm: "Yusuf (Joseph)", en: "Joseph", correct: true },
+                            { bm: "Benjamin", en: "Benjamin", correct: false },
+                            { bm: "Judah", en: "Judah", correct: false },
+                            { bm: "Levi", en: "Levi", correct: false }
+                        ],
+                        factBm: "Yusuf (Joseph) membawa keluarganya ke Mesir untuk menyelamatkan mereka daripada kemarau besar sebelum dijajah.",
+                        factEn: "Joseph brought the family to Egypt where they lived until they were enslaved."
+                    },
+                    {
+                        qBm: "Selepas kematian Musa, siapakah yang memimpin bangsa itu menakluki Kanaan?",
+                        qEn: "After the death of Moses, who led the people to conquer Canaan?",
+                        options: [
+                            { bm: "Yoshua (Joshua)", en: "Joshua", correct: true },
+                            { bm: "Aaron", en: "Aaron", correct: false },
+                            { bm: "Saul", en: "Saul", correct: false },
+                            { bm: "David", en: "David", correct: false }
+                        ],
+                        factBm: "Walaupun Musa wafat, sahabat baiknya Yoshua memimpin mereka menakluki Kanaan.",
+                        factEn: "Though Moses died, his friend Joshua led the people to conquer Canaan."
+                    },
+                    {
+                        qBm: "Siapakah raja yang membina Bait Suci yang megah di Yerusalem, yang merupakan anak Raja Daud?",
+                        qEn: "Who built the magnificent Great Temple in Jerusalem, being the son of King David?",
+                        options: [
+                            { bm: "Solomon", en: "Solomon", correct: true },
+                            { bm: "Saul", en: "Saul", correct: false },
+                            { bm: "Rahu'bam", en: "Rehoboam", correct: false },
+                            { bm: "Cyrus", en: "Cyrus", correct: false }
+                        ],
+                        factBm: "Solomon (anak Daud) membina Bait Suci yang megah dan menyebarkan kegemilangan negara tersebut.",
+                        factEn: "Solomon built the Great Temple, and under him, the country developed further."
+                    },
+                    {
+                        qBm: "Di bawah kepimpinan siapakah berlaku perpecahan kerajaan utara (Israel) dan selatan (Judah)?",
+                        qEn: "Under whose leadership did the nation split into Israel in the north and Judah in the south?",
+                        options: [
+                            { bm: "Rahu'bam (Rehoboam)", en: "Rehoboam", correct: true },
+                            { bm: "Solomon", en: "Solomon", correct: false },
+                            { bm: "Saul", en: "Saul", correct: false },
+                            { bm: "Cyrus", en: "Cyrus", correct: false }
+                        ],
+                        factBm: "Kerajaan berpecah kepada dua (Israel di utara & Judah di selatan) akibat masalah di bawah pimpinan Rahu'bam.",
+                        factEn: "The nation split under Rehoboam's leadership due to emerging problems."
+                    },
+                    {
+                        qBm: "Kumpulan manakah yang TIDAK tergolong selepas kepulangan orang Yahudi ke tanah air di bawah pemerintahan Cyrus?",
+                        qEn: "Which group is NOT listed when the Jewish people divided after returning under Cyrus?",
+                        options: [
+                            { bm: "Zenith", en: "Zenith", correct: true },
+                            { bm: "Pharisees", en: "Pharisees", correct: false },
+                            { bm: "Essenes", en: "Essenes", correct: false },
+                            { bm: "Sadducees", en: "Sadducees", correct: false }
+                        ],
+                        factBm: "Orang Yahudi berpecah kepada empat kelompok utama iaitu Pharisees, Essenes, Sadducees, dan Zealots.",
+                        factEn: "They divided into four groups: Pharisees, Essenes, Sadducees, and Zealots."
+                    },
+                    {
+                        qBm: "Bahasa apakah yang menjadi bahasa kedua penting semasa Zaman Helenik bermula 330 SM (BCE)?",
+                        qEn: "Which language became the second language during the Hellenic Age starting 330 BCE?",
+                        options: [
+                            { bm: "Bahasa Ibrani (Hebrew)", en: "Hebrew", correct: true },
+                            { bm: "Bahasa Arab", en: "Arabic", correct: false },
+                            { bm: "Bahasa Yunani (Greek)", en: "Greek", correct: false },
+                            { bm: "Bahasa Latin", en: "Latin", correct: false }
+                        ],
+                        factBm: "Semasa Zaman Helenik, orang Yahudi membaca Torah dalam bahasa Yunani, menjadikan bahasa Ibrani bahasa kedua.",
+                        factEn: "At this time, they read the Torah in Greek, and Hebrew became their second language."
+                    },
+                    {
+                        qBm: "Tokoh manakah yang mengetuai penubuhan gerakan Zionisme di Persidangan Basle pada 1896?",
+                        qEn: "Who was the leader that led the establishment of Zionism at the Basle Conference in 1896?",
+                        options: [
+                            { bm: "Theodor Herzl", en: "Theodor Herzl", correct: true },
+                            { bm: "Rabbi Ben", en: "Rabbi Ben", correct: false },
+                            { bm: "Cyrus", en: "Cyrus", correct: false },
+                            { bm: "Aaron", en: "Aaron", correct: false }
+                        ],
+                        factBm: "Harapan bermula pada 1896 di Persidangan Basle dengan lahirnya gerakan Zionisme yang diketuai Theodor Herzl.",
+                        factEn: "Zionism was birthed in 1896 at the Basle Conference, led by Theodor Herzl."
+                    }
+                ]
+            },
+            set2: {
+                titleBm: "Judaism: Perjalanan Menerusi Kitab Suci",
+                titleEn: "Judaism: Journey Through Sacred Books",
+                questions: [
+                    {
+                        qBm: "Apakah maksud akronim bagi Kitab 'Tanakh' yang diterangkan oleh Rabbi Ari?",
+                        qEn: "What does the acronym name 'Tanakh' stand for as described by Rabbi Ari?",
+                        options: [
+                            { bm: "Torah, Nevi'im, Ketuvim", en: "Torah, Nevi'im, Ketuvim", correct: true },
+                            { bm: "Talmud, Midrash, Zohar", en: "Talmud, Midrash, Zohar", correct: false },
+                            { bm: "Mishnah, Gemara, Halakha", en: "Mishnah, Gemara, Halakha", correct: false },
+                            { bm: "Taurat, Zabur, Injil", en: "Torah, Psalms, Gospels", correct: false }
+                        ],
+                        factBm: "Tanakh ialah akronim bagi tiga tonggak utama: Torah (Undang-undang), Nevi'im (Nabi), dan Ketuvim (Tulisan).",
+                        factEn: "Tanakh is an acronym for its three pillars: Torah (Law), Nevi'im (Prophets), and Ketuvim (Writings)."
+                    },
+                    {
+                        qBm: "Apakah nama kitab pertama dalam Torah yang mengisahkan penciptaan dunia dalam tempoh enam hari?",
+                        qEn: "What is the first book in the Torah that tells of the creation of the world in six days?",
+                        options: [
+                            { bm: "Kejadian (Genesis)", en: "Genesis", correct: true },
+                            { bm: "Keluaran (Exodus)", en: "Exodus", correct: false },
+                            { bm: "Imamat (Leviticus)", en: "Leviticus", correct: false },
+                            { bm: "Bilangan (Numbers)", en: "Numbers", correct: false }
+                        ],
+                        factBm: "Torah bermula dengan kitab pertama iaitu Genesis (Kejadian), menceritakan tentang Adam dan Hawa di Taman Eden.",
+                        factEn: "The Torah begins with the first book, Genesis, telling of the creation and Adam and Eve."
+                    },
+                    {
+                        qBm: "Dalam kisah banjir Nabi Nuh, pelangi merupakan tanda suci bagi apa mengikut perspektif Yahudi?",
+                        qEn: "In Noah's flood story, what is the rainbow a sacred sign of, from the Jewish perspective?",
+                        options: [
+                            { bm: "Perjanjian abadi Tuhan untuk memelihara kehidupan", en: "God's eternal covenant to sustain life", correct: true },
+                            { bm: "Hukuman dan kemarahan", en: "Punishment and anger", correct: false },
+                            { bm: "Kejatuhan empayar", en: "The fall of empires", correct: false },
+                            { bm: "Awal musim bunga", en: "The start of spring", correct: false }
+                        ],
+                        factBm: "Bagi penganut Yahudi, pelangi ialah tanda fizikal perjanjian (covenant) abadi Tuhan untuk melindungi bumi.",
+                        factEn: "The rainbow is the sign of that covenant, God's promise to protect and sustain life on Earth."
+                    },
+                    {
+                        qBm: "Di manakah Sepuluh Perintah (Ten Commandments) yang merupakan nadi etika Yahudi diberikan oleh Tuhan?",
+                        qEn: "Where were the Ten Commandments, the ethical heart of Judaism, given by God?",
+                        options: [
+                            { bm: "Gunung Sinai", en: "Mount Sinai", correct: true },
+                            { bm: "Gunung Nebo", en: "Mount Nebo", correct: false },
+                            { bm: "Taman Eden", en: "Garden of Eden", correct: false },
+                            { bm: "Lembah Sungai Jordan", en: "Jordan River Valley", correct: false }
+                        ],
+                        factBm: "Undang-undang moral yang agung (Ten Commandments) diturunkan kepada Musa di Gunung Sinai.",
+                        factEn: "The Ten Commandments were given at Mount Sinai, acting as the ethical heart of the faith."
+                    },
+                    {
+                        qBm: "Apakah perkara khusus yang diperincikan dalam Kitab Imamat (Leviticus)?",
+                        qEn: "The book of Leviticus specifically details what matters?",
+                        options: [
+                            { bm: "Undang-undang kesucian, korban dan tugas imam", en: "Laws for holiness, sacrifices, and priestly duties", correct: true },
+                            { bm: "Pengembaraan 40 tahun", en: "40 years of wandering", correct: false },
+                            { bm: "Sejarah penaklukan Jericho", en: "The history of conquering Jericho", correct: false },
+                            { bm: "Puisi cinta dan hikmah", en: "Love poetry and wisdom", correct: false }
+                        ],
+                        factBm: "Kitab Leviticus mengandungi peraturan lengkap tentang kekudusan ritual, korban dan tugasan para imam.",
+                        factEn: "Leviticus details the laws for holiness, sacrifices, and the duties of priests."
+                    },
+                    {
+                        qBm: "Mengapakah umat Israel terpaksa mengembara selama 40 tahun di padang pasir seperti yang terkandung dalam kitab Bilangan (Numbers)?",
+                        qEn: "Why did the Israelites wander for 40 years in the desert in the book of Numbers?",
+                        options: [
+                            { bm: "Akibat ketakutan para pengintip di Tanah Perjanjian", en: "Due to the fear of spies in the Promised Land", correct: true },
+                            { bm: "Kerana mereka kehilangan arah kompas", en: "Because they lost their compass directions", correct: false },
+                            { bm: "Mengikut arahan Firaun", en: "Following Pharaoh's orders", correct: false },
+                            { bm: "Bencana banjir kilat", en: "Flash flood disasters", correct: false }
+                        ],
+                        factBm: "Ketakutan para pengintip untuk menakluki tanah yang dijanjikan menyebabkan hukuman pengembaraan 40 tahun.",
+                        factEn: "In Numbers, spies explore the Promised Land, but their fear leads to 40 years of wandering."
+                    },
+                    {
+                        qBm: "Kitab Ulangan (Deuteronomy) mengandungi ucapan terakhir Musa dan penyerahan pimpinan kepada siapa?",
+                        qEn: "The book of Deuteronomy contains the final speech of Moses and passes leadership to whom?",
+                        options: [
+                            { bm: "Yoshua (Joshua)", en: "Joshua", correct: true },
+                            { bm: "Aaron", en: "Aaron", correct: false },
+                            { bm: "Yusuf", en: "Joseph", correct: false },
+                            { bm: "Ezekiel", en: "Ezekiel", correct: false }
+                        ],
+                        factBm: "Ulangan merekodkan khutbah perpisahan Nabi Musa yang menyemak semula hukum-hakam dan melantik Yoshua sebagai pemimpin.",
+                        factEn: "Deuteronomy is Moses's final speech where he reviews the law and passes leadership to Joshua."
+                    },
+                    {
+                        qBm: "Apakah dua komponen utama yang membentuk kitab 'Talmud' (Torah Lisan) yang mengandungi 63 jilid?",
+                        qEn: "What are the two components that make up the 63-volume Talmud (Oral Torah)?",
+                        options: [
+                            { bm: "Mishnah dan Gemara", en: "Mishnah and Gemara", correct: true },
+                            { bm: "Torah and Nevi'im", en: "Torah and Nevi'im", correct: false },
+                            { bm: "Midrash dan Responsa", en: "Midrash and Responsa", correct: false },
+                            { bm: "Zohar dan Kabbalah", en: "Zohar and Kabbalah", correct: false }
+                        ],
+                        factBm: "Talmud (Torah Lisan) terdiri daripada kitab Mishnah (hukum bertulis) dan Gemara (ulasan terperinci).",
+                        factEn: "The Talmud consists of the Mishnah and the Gemara, providing deep legal and ethical commentary."
+                    },
+                    {
+                        qBm: "Apakah yang dimaksudkan dengan istilah 'Responsa' dalam tradisi keagamaan Yahudi?",
+                        qEn: "What is meant by the term 'Responsa' in Jewish religious tradition?",
+                        options: [
+                            { bm: "Hukum baru untuk menerapkan undang-undang lama dalam kehidupan moden", en: "Rulings that apply old laws to modern life", correct: true },
+                            { bm: "Kitab nyanyian tarian suci", en: "A book of sacred songs and dances", correct: false },
+                            { bm: "Puisi cinta Solomon", en: "Solomon's love poetry", correct: false },
+                            { bm: "Kisah pengembaraan para nabi", en: "Stories of the prophets' travels", correct: false }
+                        ],
+                        factBm: "Responsa adalah keputusan fatwa keagamaan untuk menyesuaikan hukum klasik dengan isu semasa umat.",
+                        factEn: "Responsa are rulings that apply old laws to modern life, keeping traditions alive."
+                    },
+                    {
+                        qBm: "Apakah nama kitab asas mistik Yahudi (Kabbalah) yang dikenali sebagai 'Kitab Cahaya'?",
+                        qEn: "What is the name of the foundational book of Jewish mysticism (Kabbalah), known as the 'Book of Radiance'?",
+                        options: [
+                            { bm: "Zohar", en: "Zohar", correct: true },
+                            { bm: "Talmud", en: "Talmud", correct: false },
+                            { bm: "Tanakh", en: "Tanakh", correct: false },
+                            { bm: "Midrash", en: "Midrash", correct: false }
+                        ],
+                        factBm: "Kitab Zohar menerangkan tafsiran batiniah dan rahsia ketuhanan yang tersembunyi di dalam Torah.",
+                        factEn: "The Zohar, or 'Book of Radiance', is the foundational work of Kabbalah, the Jewish mystical tradition."
+                    }
+                ]
+            },
+            set3: {
+                titleBm: "Judaism: Perjanjian, Perintah & Kesinambungan",
+                titleEn: "Judaism: Covenants, Commandments & Continuity",
+                questions: [
+                    {
+                        qBm: "Berapakah prinsip asas keimanan Yahudi yang terkandung dalam Prinsip Keimanan Maimonides?",
+                        qEn: "How many basic pillars of Jewish faith are contained in Maimonides' Creedal?",
+                        options: [
+                            { bm: "13 Prinsip", en: "13 Principles", correct: true },
+                            { bm: "10 Prinsip", en: "10 Principles", correct: false },
+                            { bm: "5 Prinsip", en: "5 Principles", correct: false },
+                            { bm: "12 Prinsip", en: "12 Principles", correct: false }
+                        ],
+                        factBm: "Akidah Maimonides menetapkan tiga belas prinsip asas sebagai tiang keimanan utama agama Yahudi.",
+                        factEn: "Rabbi Ari explained that the Jewish faith is built on thirteen strong pillars (Maimonides' Creedal)."
+                    },
+                    {
+                        qBm: "Apakah intipati prinsip pertama dalam Prinsip Keimanan Maimonides mengenai Pencipta?",
+                        qEn: "What is the essence of the first pillar of Maimonides' Creedal regarding the Creator?",
+                        options: [
+                            { bm: "Pencipta yang sempurna & punca utama segala kewujudan", en: "The perfect Creator & Primary Cause of all that exists", correct: true },
+                            { bm: "Tuhan yang mempunyai bentuk tubuh manusia", en: "God having a physical human body", correct: false },
+                            { bm: "Tuhan yang memerlukan rehat fizikal", en: "God requiring physical rest", correct: false },
+                            { bm: "Pencipta hanya wujud sementara", en: "The Creator only exists temporarily", correct: false }
+                        ],
+                        factBm: "Prinsip pertama menekankan kewujudan Pencipta yang sempurna sebagai punca utama seluruh alam semesta.",
+                        factEn: "Principle 1 believes in the existence of the Creator, who is perfect and the Primary Cause of all."
+                    },
+                    {
+                        qBm: "Apakah tuntutan mutlak prinsip kelima dalam Prinsip Keimanan Maimonides?",
+                        qEn: "The fifth principle of Maimonides' Creedal emphasizes the absolute requirement to worship whom?",
+                        options: [
+                            { bm: "Menyembah Tuhan sahaja secara eksklusif", en: "Worshipping God exclusively", correct: true },
+                            { bm: "Menyembah malaikat perantara", en: "Worshipping intermediary angels", correct: false },
+                            { bm: "Menyembah para nabi terkemuka", en: "Worshipping prominent prophets", correct: false },
+                            { bm: "Menyembah patung sejarah suci", en: "Worshipping sacred historical statues", correct: false }
+                        ],
+                        factBm: "Agama Yahudi melarang sekeras-kerasnya penyembahan berhala atau sebarang sekutu ketuhanan selain daripada Pencipta.",
+                        factEn: "The 5th principle states the imperative to worship God exclusively and no false gods."
+                    },
+                    {
+                        qBm: "Berapakah waktu sembahyang harian (Tefillah) yang diamalkan secara tradisi oleh penganut agama Yahudi?",
+                        qEn: "How many daily prayer services (Tefillah) are traditionally practiced by Jews?",
+                        options: [
+                            { bm: "Tiga kali sehari (Pagi, Petang, Malam)", en: "Three times daily (Morning, Afternoon, Night)", correct: true },
+                            { bm: "Lima kali sehari", en: "Five times daily", correct: false },
+                            { bm: "Dua kali sehari", en: "Two times daily", correct: false },
+                            { bm: "Tujuh kali sehari", en: "Seven times daily", correct: false }
+                        ],
+                        factBm: "Sembahyang harian dilakukan tiga kali iaitu waktu pagi, petang, dan malam untuk memastikan hubungan berterusan dengan Pencipta.",
+                        factEn: "Three prayer services are recited daily: in the morning, the afternoon, and at night."
+                    },
+                    {
+                        qBm: "Apakah hari puasa paling suci dalam kalendar Yahudi yang menumpukan kepada bertaubat dan memohon keampunan?",
+                        qEn: "What is the holiest fast day in the Jewish calendar focused on repentance and atonement?",
+                        options: [
+                            { bm: "Yom Kippur (Day of Atonement)", en: "Yom Kippur", correct: true },
+                            { bm: "Rosh Hashanah", en: "Rosh Hashanah", correct: false },
+                            { bm: "Hanukkah", en: "Hanukkah", correct: false },
+                            { bm: "Pesach (Passover)", en: "Passover", correct: false }
+                        ],
+                        factBm: "Yom Kippur (Hari Pendamaian) merupakan kemuncak ibadah puasa suci di mana penganut tidak makan dan minum untuk bertaubat.",
+                        factEn: "Yom Kippur is the Day of Atonement and the holiest fast of the year for repentance."
+                    },
+                    {
+                        qBm: "Siapakah pakar terlatih yang melaksanakan upacara khatan (Brit Milah) pada hari kelapan bagi bayi lelaki?",
+                        qEn: "Who is the trained specialist that performs the circumcision (Brit Milah) on the eighth day of a baby's life?",
+                        options: [
+                            { bm: "Mohel", en: "Mohel", correct: true },
+                            { bm: "Rabbi", en: "Rabbi", correct: false },
+                            { bm: "Scribe", en: "Scribe", correct: false },
+                            { bm: "Kohen", en: "Kohen", correct: false }
+                        ],
+                        factBm: "Brit Milah dijalankan oleh Mohel yang bertauliah dari segi perubatan dan memahami undang-undang ritual agama Yahudi.",
+                        factEn: "This sacred ceremony is performed by a Mohel on the eighth day of a male infant's life."
+                    },
+                    {
+                        qBm: "Apakah instrumen tanduk ram (biri-biri jantan) yang ditiup semasa sambutan Tahun Baru Yahudi (Rosh Hashanah)?",
+                        qEn: "What ram's horn instrument is sounded during the Jewish New Year celebration (Rosh Hashanah)?",
+                        options: [
+                            { bm: "Shofar", en: "Shofars", correct: true },
+                            { bm: "Menorah", en: "Menorahs", correct: false },
+                            { bm: "Matzah", en: "Matzahs", correct: false },
+                            { bm: "Tallit", en: "Tallits", correct: false }
+                        ],
+                        factBm: "Tiupan Shofar berfungsi seperti 'loceng penggera' rohani untuk membangkitkan kesedaran jiwa bagi memulakan tahun baru.",
+                        factEn: "At Rosh Hashanah, a Shofar (curved ram's horn) sounds like a wake-up call to celebrate humanity."
+                    },
+                    {
+                        qBm: "Apakah nama roti tanpa ragi (unleavened bread) yang dimakan semasa sambutan perayaan Paskah Yahudi (Passover)?",
+                        qEn: "What is the name of the flat, unleavened bread eaten during the Passover celebration?",
+                        options: [
+                            { bm: "Matzah", en: "Matzah", correct: true },
+                            { bm: "Kosher bread", en: "Kosher bread", correct: false },
+                            { bm: "Challah", en: "Challah", correct: false },
+                            { bm: "Shofar bread", en: "Shofars bread", correct: false }
+                        ],
+                        factBm: "Matzah dimakan untuk mengingati keadaan tergesa-gesa semasa keluar dari perhambaan Mesir, di mana roti tidak sempat mengembang.",
+                        factEn: "Passover features flatbread (Matzah), remembering their freedom from slavery in Egypt."
+                    },
+                    {
+                        qBm: "Apakah maksud harfiah bagi istilah makanan 'Kosher' yang mematuhi peraturan kashrut?",
+                        qEn: "What is the literal meaning of the term 'Kosher' for foods conforming to kashrut rules?",
+                        options: [
+                            { bm: "Layak (Fit) / Sesuai dimakan", en: "Fit / Suitable to consume", correct: true },
+                            { bm: "Suci murni", en: "Holy and pure", correct: false },
+                            { bm: "Diberkati Rabbi", en: "Blessed by a Rabbi", correct: false },
+                            { bm: "Bebas bahan kimia", en: "Chemical free", correct: false }
+                        ],
+                        factBm: "Perkataan 'Kosher' bermaksud 'layak' atau 'sesuai' dari segi undang-undang pemakanan (halakha) Yahudi.",
+                        factEn: "Kosher literally means 'fit', conforming to dietary regulations (kashrut) and halakha."
+                    },
+                    {
+                        qBm: "Berapakah bilangan cabang lilin pada Menorah sempena Hanukkah (Perayaan Cahaya)?",
+                        qEn: "How many candle branches are on the Menorah used during Hanukkah (Festival of Lights)?",
+                        options: [
+                            { bm: "9 cabang lilin", en: "9 candle branches", correct: true },
+                            { bm: "7 cabang lilin", en: "7 candle branches", correct: false },
+                            { bm: "12 cabang lilin", en: "12 candle branches", correct: false },
+                            { bm: "3 cabang lilin", en: "3 candle branches", correct: false }
+                        ],
+                        factBm: "Menorah khas Hanukkah mempunyai 9 cabang (8 untuk hari keajaiban minyak + 1 'lilin pembantu' yang dipanggil Shamash).",
+                        factEn: "They lit a beautiful nine-branched Menorah to celebrate Hanukkah - the Festival of Lights."
+                    }
+                ]
+            }
+        };
+
+        // ================= STATE PERMAINAN =================
+        let currentPlayer = "Maya";
+        let currentAvatar = "maya";
+        let activeSetKey = "set1";
+        let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let questionsAnsweredCorrectly = 0;
+        let selectedLangMode = "dual"; 
+        let hasAnsweredCurrent = false;
+
+        // ================= INISIALISASI APPLIKASI =================
+        window.onload = function() {
+            initLeaderboard();
+            renderProgressBars();
+            setupCanvas();
+            applyLanguage(); // Terap terjemahan asas semasa pemuatan
+        };
+
+        function selectAvatar(id) {
+            sfx.init(); // Explicitly unlock on interaction
+            sfx.playClick();
+            currentAvatar = id;
+            document.querySelectorAll('.avatar-option').forEach(btn => {
+                btn.classList.remove('border-[#606c38]', 'border-transparent');
+                btn.classList.add('border-transparent');
+            });
+            document.getElementById('avatar_' + id).classList.add('border-[#606c38]');
+        }
+
+        function startGame() {
+            sfx.init(); // Explicitly unlock on interaction
+            let nameInput = document.getElementById('playerNameInput').value.trim();
+            if (nameInput === "") {
+                currentPlayer = "Maya";
+            } else {
+                currentPlayer = nameInput;
+            }
+            sfx.playClick();
+            document.getElementById('headerPlayerName').innerText = currentPlayer;
+            showScreen('screenMenu');
+        }
+
+        // ================= FUNGSI SHUFFLE ALGORITMA FISHER-YATES =================
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function selectQuizSet(setNum) {
+            sfx.init(); // Explicitly unlock on interaction
+            sfx.playClick();
+            activeSetKey = "set" + setNum;
+            
+            // 1. Salin soalan dan laksanakan rawakan kedudukan pilihan jawapan (shuffle options) terlebih dahulu
+            let rawQuestions = database[activeSetKey].questions.map(q => {
+                let optionsCopy = q.options.map(opt => ({ ...opt }));
+                // Rawakkan susunan pilihan jawapan
+                shuffleArray(optionsCopy);
+                return {
+                    ...q,
+                    options: optionsCopy
+                };
+            });
+
+            // 2. Rawakkan susunan soalan di dalam set (shuffle questions)
+            currentQuestions = shuffleArray(rawQuestions);
+
+            currentQuestionIndex = 0;
+            score = 0;
+            questionsAnsweredCorrectly = 0;
+            hasAnsweredCurrent = false;
+
+            document.getElementById('quizSetTitle').innerText = setNum === 1 ? (selectedLangMode === 'en' ? "Book 1" : "Buku 1") : setNum === 2 ? (selectedLangMode === 'en' ? "Book 2" : "Buku 2") : (selectedLangMode === 'en' ? "Book 3" : "Buku 3");
+            
+            initProgressDots();
+            loadQuestion();
+            showScreen('screenQuiz');
+        }
+
+        // ================= STRUKTUR MULTI-BAHASA DINAMIK SEPENUHNYA =================
+        function changeLanguage() {
+            sfx.init(); // Explicitly unlock on interaction
+            selectedLangMode = document.getElementById('langSelect').value;
+            sfx.playClick();
+            applyLanguage();
+            if (document.getElementById('screenQuiz').style.display !== 'none' && currentQuestions.length > 0) {
+                loadQuestion();
+            }
+        }
+
+        function applyLanguage() {
+            let lang = selectedLangMode;
+            let trans = uiTranslations[lang];
+            
+            // Header
+            document.getElementById('playerLabel').innerText = trans.playerLabel;
+            document.getElementById('headerTitle').innerText = trans.headerTitle;
+            document.getElementById('scoreLabel').innerText = trans.scoreText;
+            
+            // Screen 1: Cover
+            document.getElementById('gameTitle').innerText = trans.gameTitle;
+            document.getElementById('gameSubtitle').innerText = trans.gameSubtitle;
+            document.getElementById('nameLabel').innerText = trans.nameLabel;
+            document.getElementById('playerNameInput').placeholder = trans.namePlaceholder;
+            document.getElementById('selectCharLabel').innerText = trans.selectChar;
+            document.getElementById('startGameBtn').innerText = trans.startBtn;
+            
+            // Screen 2: Menu
+            document.getElementById('menuTitle').innerText = trans.menuTitle;
+            document.getElementById('menuSubtitle').innerText = trans.menuSubtitle;
+            
+            document.getElementById('book1Title').innerText = trans.book1Title;
+            document.getElementById('book1Desc').innerText = trans.book1Desc;
+            document.getElementById('book1Meta').innerText = trans.book1Meta;
+            
+            document.getElementById('book2Title').innerText = trans.book2Title;
+            document.getElementById('book2Desc').innerText = trans.book2Desc;
+            document.getElementById('book2Meta').innerText = trans.book2Meta;
+            
+            document.getElementById('book3Title').innerText = trans.book3Title;
+            document.getElementById('book3Desc').innerText = trans.book3Desc;
+            document.getElementById('book3Meta').innerText = trans.book3Meta;
+            
+            document.getElementById('viewLeaderboardBtn').innerHTML = `<span>🏆</span> ${trans.viewLeaderboardBtn}`;
+            
+            // Screen 3: Quiz Screen static hints
+            document.getElementById('quizHintText').innerText = trans.hintText;
+            
+            // Screen 4: Result Screen
+            document.getElementById('congratsTitle').innerText = trans.congratsTitle;
+            document.getElementById('congratsSubtitle').innerText = trans.congratsSubtitle;
+            document.getElementById('finalScoreLabel').innerText = trans.finalScoreLabel;
+            document.getElementById('saveScoreBtn').innerText = trans.saveScoreBtn;
+            document.getElementById('playOtherBtn').innerText = trans.playOtherBtn;
+            document.getElementById('viewLeaderboardBtnResult').innerText = trans.viewLeaderboardBtnResult;
+            
+            // Screen 5: Leaderboard
+            document.getElementById('leaderboardTitle').innerText = trans.leaderboardTitle;
+            document.getElementById('leaderboardSubtitle').innerText = trans.leaderboardSubtitle;
+            document.getElementById('rankCol').innerText = trans.rankCol;
+            document.getElementById('nameCol').innerText = trans.nameCol;
+            document.getElementById('categoryCol').innerText = trans.categoryCol;
+            document.getElementById('scoreCol').innerText = trans.scoreCol;
+            document.getElementById('clearBtn').innerText = trans.clearBtn;
+            document.getElementById('backBtn').innerText = trans.backBtn;
+            
+            // Modals
+            document.getElementById('correctRibbon').innerText = trans.correctRibbon;
+            document.getElementById('correctTitle').innerText = trans.correctTitle;
+            document.getElementById('correctDidYouKnow').innerText = trans.correctDidYouKnow;
+            document.getElementById('nextBtn').innerText = trans.nextBtn;
+            
+            document.getElementById('wrongRibbon').innerText = trans.wrongRibbon;
+            document.getElementById('wrongTitle').innerText = trans.wrongTitle;
+            document.getElementById('wrongText').innerHTML = trans.wrongText;
+            document.getElementById('wrongBtn').innerText = trans.wrongBtn;
+        }
+
+        function loadQuestion() {
+            hasAnsweredCurrent = false;
+            let q = currentQuestions[currentQuestionIndex];
+            
+            // Set Text Soalan berdasarkan Pilihan Bahasa
+            if (selectedLangMode === 'bm') {
+                document.getElementById('questionTextBm').innerText = q.qBm;
+                document.getElementById('questionTextBm').style.display = 'block';
+                document.getElementById('questionTextEn').style.display = 'none';
+            } else if (selectedLangMode === 'en') {
+                document.getElementById('questionTextEn').innerText = q.qEn;
+                document.getElementById('questionTextEn').style.display = 'block';
+                document.getElementById('questionTextBm').style.display = 'none';
+            } else {
+                document.getElementById('questionTextBm').innerText = q.qBm;
+                document.getElementById('questionTextEn').innerText = q.qEn;
+                document.getElementById('questionTextBm').style.display = 'block';
+                document.getElementById('questionTextEn').style.display = 'block';
+            }
+
+            // Update Progress Text
+            document.getElementById('questionNumText').innerText = selectedLangMode === 'en' ? `Question ${currentQuestionIndex + 1}/10` : `Soalan ${currentQuestionIndex + 1}/10`;
+            document.getElementById('quizScoreVal').innerText = `${score}/100`;
+
+            // Reset Pilihan Butang Jawapan
+            for (let i = 0; i < 4; i++) {
+                let btn = document.getElementById('optionBtn' + i);
+                let opt = q.options[i];
+                
+                btn.className = "option-btn bg-white hover:bg-amber-100 hover:scale-[1.02] active:scale-95 text-[#283618] p-4 rounded-xl border-2 border-gray-300 transition duration-200 text-left flex items-center gap-3 font-bold shadow-sm w-full";
+                btn.disabled = false;
+
+                let optBmSpan = btn.querySelector('.option-bm');
+                let optEnSpan = btn.querySelector('.option-en');
+
+                if (selectedLangMode === 'bm') {
+                    optBmSpan.innerText = opt.bm;
+                    optBmSpan.style.display = 'block';
+                    optEnSpan.style.display = 'none';
+                } else if (selectedLangMode === 'en') {
+                    optEnSpan.innerText = opt.en;
+                    optEnSpan.style.display = 'block';
+                    optBmSpan.style.display = 'none';
+                } else {
+                    optBmSpan.innerText = opt.bm;
+                    optEnSpan.innerText = opt.en;
+                    optBmSpan.style.display = 'block';
+                    optEnSpan.style.display = 'block';
+                }
+            }
+
+            updateProgressDotsUI();
+        }
+
+        // ================= PENILAIAN JAWAPAN =================
+        function checkAnswer(index) {
+            sfx.init(); // Direct Thread Unlock: Bulletproof audio context activation!
+            if (hasAnsweredCurrent) return;
+
+            let q = currentQuestions[currentQuestionIndex];
+            let isCorrect = q.options[index].correct;
+            let btnSelected = document.getElementById('optionBtn' + index);
+
+            if (isCorrect) {
+                sfx.playCorrect(); // Triggers high quality triumphant brass chimes and crowd applause!
+                btnSelected.classList.remove('bg-white', 'border-gray-300');
+                btnSelected.classList.add('bg-green-100', 'border-green-500', 'ring-4', 'ring-green-300');
+                score += 10;
+                questionsAnsweredCorrectly++;
+                hasAnsweredCurrent = true;
+
+                markDot(currentQuestionIndex, 'correct');
+
+                document.getElementById('factBm').innerText = q.factBm;
+                document.getElementById('factEn').innerText = q.factEn;
+                
+                triggerFireworksEffect();
+
+                setTimeout(() => {
+                    document.getElementById('modalCorrect').classList.remove('hidden');
+                }, 400);
+
+            } else {
+                sfx.playWrong(); // Triggers comical downward slide cartoon buzzer and deep thud!
+                btnSelected.classList.remove('bg-white', 'border-gray-300');
+                btnSelected.classList.add('bg-red-100', 'border-red-500', 'shake-animation');
+                
+                markDot(currentQuestionIndex, 'wrong');
+
+                document.getElementById('modalWrong').classList.remove('hidden');
+            }
+        }
+
+        // ================= CONTROL POPUPS =================
+        function closeCorrectModal() {
+            sfx.init(); // Explicitly unlock on interaction
+            sfx.playClick();
+            document.getElementById('modalCorrect').classList.add('hidden');
+            nextQuestion();
+        }
+
+        function closeWrongModal() {
+            sfx.init(); // Explicitly unlock on interaction
+            sfx.playClick();
+            document.getElementById('modalWrong').classList.add('hidden');
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            if (currentQuestionIndex < 10) {
+                loadQuestion();
+            } else {
+                finishQuiz();
+            }
+        }
+
+        function finishQuiz() {
+            sfx.playComplete();
+            
+            let savedProgress = parseFloat(localStorage.getItem(activeSetKey + "_prog") || 0);
+            if (score > savedProgress) {
+                localStorage.setItem(activeSetKey + "_prog", score);
+            }
+            renderProgressBars();
+
+            document.getElementById('finalScoreDisplay').innerText = score + "/100";
+            
+            let perfText = selectedLangMode === 'en' ? "EXCELLENT!" : "CEMERLANG!";
+            if (score >= 80) perfText = selectedLangMode === 'en' ? "AWESOME!" : "HEBAT!";
+            else if (score >= 50) perfText = selectedLangMode === 'en' ? "GOOD JOB!" : "BAGUS!";
+            else perfText = selectedLangMode === 'en' ? "KEEP PRACTICING!" : "CUBA LAGI!";
+
+            document.getElementById('performanceLevel').innerText = perfText;
+
+            showScreen('screenResult');
+        }
+
+        // ================= LEADERBOARD LOGIK (LOCAL STORAGE) =================
+        function initLeaderboard() {
+            if (!localStorage.getItem('yahudi_leaderboard')) {
+                let mockData = [
+                    { name: 'Sarah', set: 'Set 1', score: 100 },
+                    { name: 'Chloe', set: 'Set 2', score: 90 },
+                    { name: 'Liam', set: 'Set 3', score: 80 },
+                    { name: 'Maya', set: 'Set 1', score: 90 }
+                ];
+                localStorage.setItem('yahudi_leaderboard', JSON.stringify(mockData));
+            }
+            renderLeaderboard();
+        }
+
+        function saveScore() {
+            sfx.init(); // Explicitly unlock on interaction
+            sfx.playClick();
+            let leaderboard = JSON.parse(localStorage.getItem('yahudi_leaderboard') || '[]');
+            let setLabel = activeSetKey === 'set1' ? 'Set 1' : activeSetKey === 'set2' ? 'Set 2' : 'Set 3';
+            
+            leaderboard.push({
+                name: currentPlayer,
+                set: setLabel,
+                score: score
+            });
+
+            leaderboard.sort((a, b) => b.score - a.score);
+            localStorage.setItem('yahudi_leaderboard', JSON.stringify(leaderboard));
+            
+            renderLeaderboard();
+            showScreen('screenLeaderboard');
+        }
+
+        function renderLeaderboard() {
+            let leaderboard = JSON.parse(localStorage.getItem('yahudi_leaderboard') || '[]');
+            let html = "";
+            
+            leaderboard.slice(0, 10).forEach((entry, idx) => {
+                let medal = idx === 0 ? "🥇" : idx === 1 ? "🥈" : idx === 2 ? "🥉" : `${idx + 1}`;
+                html += `
+                    <tr class="border-b border-gray-100 hover:bg-orange-50 transition">
+                        <td class="py-3 px-4 font-bold text-[#bc6c25]">${medal}</td>
+                        <td class="py-3 px-4 font-bold text-gray-700">${entry.name}</td>
+                        <td class="py-3 px-4 text-xs text-gray-500 font-semibold">${entry.set}</td>
+                        <td class="py-3 px-4 font-bold text-[#606c38]">${entry.score}/100</td>
+                    </tr>
+                `;
+            });
+            document.getElementById('leaderboardBody').innerHTML = html;
+        }
+
+        function clearLeaderboard() {
+            sfx.init(); // Explicitly unlock on interaction
+            sfx.playClick();
+            let msg = selectedLangMode === 'en' ? "Delete all records?" : "Adakah anda mahu memadam semua rekod pendahulu?";
+            if (confirm(msg)) {
+                localStorage.setItem('yahudi_leaderboard', JSON.stringify([]));
+                renderLeaderboard();
+            }
+        }
+
+        function showLeaderboardScreen() {
+            sfx.init(); // Explicitly unlock on interaction
+            sfx.playClick();
+            renderLeaderboard();
+            showScreen('screenLeaderboard');
+        }
+
+        // ================= PROGRESS BARS MENU UTAMA =================
+        function renderProgressBars() {
+            document.getElementById('set1Progress').style.width = (localStorage.getItem("set1_prog") || 0) + "%";
+            document.getElementById('set2Progress').style.width = (localStorage.getItem("set2_prog") || 0) + "%";
+            document.getElementById('set3Progress').style.width = (localStorage.getItem("set3_prog") || 0) + "%";
+        }
+
+        // ================= KAWALAN SCREEN UI =================
+        function showScreen(screenId) {
+            document.getElementById('screenNameInput').classList.add('hidden');
+            document.getElementById('screenMenu').classList.add('hidden');
+            document.getElementById('screenQuiz').classList.add('hidden');
+            document.getElementById('screenResult').classList.add('hidden');
+            document.getElementById('screenLeaderboard').classList.add('hidden');
+
+            document.getElementById(screenId).classList.remove('hidden');
+        }
+
+        function goHome() {
+            sfx.init(); // Explicitly unlock on interaction
+            sfx.playClick();
+            showScreen('screenNameInput');
+        }
+
+        function goMenu() {
+            sfx.init(); // Explicitly unlock on interaction
+            sfx.playClick();
+            showScreen('screenMenu');
+        }
+
+        // ================= GRID DOTS PROGRESS SOALAN =================
+        function initProgressDots() {
+            let container = document.getElementById('quizProgressDots');
+            container.innerHTML = "";
+            for (let i = 0; i < 10; i++) {
+                let dot = document.createElement('div');
+                dot.id = `progDot_${i}`;
+                dot.className = "w-4 h-4 rounded-full bg-gray-300 border border-gray-400 transition-all duration-300";
+                container.appendChild(dot);
+            }
+        }
+
+        function markDot(index, status) {
+            let dot = document.getElementById(`progDot_${index}`);
+            if (status === 'correct') {
+                dot.className = "w-4 h-4 rounded-full bg-green-500 border border-green-600 shadow-md scale-110";
+            } else {
+                dot.className = "w-4 h-4 rounded-full bg-red-400 border border-red-500";
+            }
+        }
+
+        function updateProgressDotsUI() {
+            let dot = document.getElementById(`progDot_${currentQuestionIndex}`);
+            if (dot && !dot.className.includes('bg-green') && !dot.className.includes('bg-red')) {
+                dot.className = "w-4 h-4 rounded-full bg-amber-300 border border-amber-500 scale-125 animate-pulse";
+            }
+        }
+
+        // ================= EFEK BUNGA API & CONFETTI CANVAS (ANIMATION LOOP) =================
+        let canvas, ctx;
+        let particles = [];
+        let animationFrameId;
+
+        function setupCanvas() {
+            canvas = document.getElementById('fireworksCanvas');
+            ctx = canvas.getContext('2d');
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+        }
+
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.angle = Math.random() * Math.PI * 2;
+                this.speed = Math.random() * 5 + 2;
+                this.radius = Math.random() * 3 + 2;
+                this.gravity = 0.08;
+                this.alpha = 1;
+                this.decay = Math.random() * 0.015 + 0.015;
+            }
+            update() {
+                this.x += Math.cos(this.angle) * this.speed;
+                this.y += Math.sin(this.angle) * this.speed + this.gravity;
+                this.alpha -= this.decay;
+            }
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+
+        function triggerFireworksEffect() {
+            let colors = ['#bc6c25', '#dda15e', '#606c38', '#283618', '#f4a261', '#e76f51', '#e9c46a'];
+            for (let burst = 0; burst < 3; burst++) {
+                let startX = Math.random() * canvas.width;
+                let startY = Math.random() * (canvas.height * 0.5) + (canvas.height * 0.2);
+                let burstColor = colors[Math.floor(Math.random() * colors.length)];
+                for (let i = 0; i < 40; i++) {
+                    particles.push(new Particle(startX, startY, burstColor));
+                }
+            }
+            if (!animationFrameId) {
+                animate();
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles = particles.filter(p => p.alpha > 0);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+            });
+
+            if (particles.length > 0) {
+                animationFrameId = requestAnimationFrame(animate);
+            } else {
+                cancelAnimationFrame(animationFrameId);
+                animationFrameId = null;
+            }
+        }
+    </script>
+</body>
+</html>

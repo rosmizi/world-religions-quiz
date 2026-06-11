@@ -1,0 +1,1360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Christianity Interactive Quiz Game</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts untuk Tampilan Menarik -->
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@500;700&display=swap" rel="stylesheet">
+  <!-- Ikon FontAwesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Canvas Confetti CDN untuk Efek Kemenangan -->
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Quicksand', sans-serif;
+      background: linear-gradient(135deg, #fef08a, #f472b6, #a78bfa);
+      background-size: 400% 400%;
+      animation: gradientBG 15s ease infinite;
+      overflow-x: hidden;
+    }
+    h1, h2, h3, .font-playful {
+      font-family: 'Fredoka One', cursive;
+    }
+    @keyframes gradientBG {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+    .bounce-hover:hover {
+      transform: scale(1.05) translateY(-4px);
+      transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    /* Reka Bentuk Reben Kejayaan (Ribbon) */
+    .ribbon {
+      position: relative;
+      background: #f43f5e;
+      color: #fff;
+      text-align: center;
+      padding: 1em 2em;
+      margin: 2em auto;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+    }
+    .ribbon:before, .ribbon:after {
+      content: "";
+      position: absolute;
+      display: block;
+      bottom: -1em;
+      border: 1.5em solid #db2777;
+      z-index: -1;
+    }
+    .ribbon:before {
+      left: -2em;
+      border-right-width: 1.5em;
+      border-left-color: transparent;
+      box-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+    }
+    .ribbon:after {
+      right: -2em;
+      border-left-width: 1.5em;
+      border-right-color: transparent;
+      box-shadow: -1px 1px 2px rgba(0,0,0,0.2);
+    }
+    .ribbon-content:before, .ribbon-content:after {
+      content: "";
+      position: absolute;
+      display: block;
+      border-style: solid;
+      border-color: #9f1239 transparent transparent transparent;
+      bottom: -1em;
+    }
+    .ribbon-content:before { left: 0; border-width: 1em 0 0 1em; }
+    .ribbon-content:after { right: 0; border-width: 1em 1em 0 0; }
+  </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-between p-4">
+
+  <!-- HUD KEPALA ATAS (ENGLISH UTAMA, BM KEDUA) -->
+  <header class="w-full max-w-4xl bg-white/90 backdrop-blur-md rounded-2xl shadow-xl p-4 flex flex-wrap justify-between items-center gap-4 border-4 border-yellow-300">
+    <div class="flex items-center gap-3">
+      <div class="bg-gradient-to-r from-pink-500 to-purple-500 text-white p-3 rounded-xl shadow-md">
+        <i class="fa-solid fa-cross text-2xl"></i>
+      </div>
+      <div>
+        <h1 class="text-xl md:text-2xl text-purple-800 leading-none">BIBLIO-QUIZ</h1>
+        <p class="text-xs text-purple-500 font-bold tracking-wider">CHRISTIANITY INTERACTIVE GAME / Game Agama Kristian</p>
+      </div>
+    </div>
+    
+    <!-- Informasi Pemain & Kawalan Bunyi Muzik -->
+    <div class="flex items-center gap-4">
+      <div class="flex items-center bg-yellow-100 px-4 py-2 rounded-full border-2 border-yellow-400">
+        <i class="fa-solid fa-star text-yellow-500 text-lg mr-2 animate-pulse"></i>
+        <span id="global-stars" class="text-yellow-700 font-bold text-lg">0</span>
+      </div>
+      <button id="toggle-bgm" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-full shadow-lg font-bold flex items-center gap-2 transition bounce-hover">
+        <i id="bgm-icon" class="fa-solid fa-volume-xmark"></i>
+        <span id="bgm-text" class="text-sm">Play Music / Pasang Muzik</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- KAWASAN UTAMA PERMAINAN -->
+  <main id="game-container" class="w-full max-w-4xl my-6 flex-grow flex flex-col justify-center">
+    
+    <!-- SKRIN 1: PENDAFTARAN & PEMILIHAN BUKU (ENGLISH UTAMA LEBIH BESAR) -->
+    <section id="screen-setup" class="bg-white/95 rounded-3xl shadow-2xl p-6 md:p-10 border-8 border-purple-400 text-center animate-fade-in">
+      <h2 class="text-3xl md:text-5xl text-purple-800 mb-2">Welcome!</h2>
+      <p class="text-md text-purple-600 font-bold mb-1">Selamat Datang!</p>
+      <p class="text-gray-600 mb-6 text-sm md:text-base">Choose your Quiz Set based on the 4 Books by Dr. MRAR / Pilih Set Kuiz dari 4 Buku Utama Dr. MRAR</p>
+      
+      <!-- Input Nama Pemain -->
+      <div class="max-w-md mx-auto mb-8 bg-purple-50 p-4 rounded-2xl border-4 border-dashed border-purple-300">
+        <label class="block text-purple-700 font-bold mb-2 text-left text-base md:text-lg">
+          Enter Your Name: <span class="text-xs text-purple-500 font-normal block md:inline">/ Masukkan Nama Anda:</span>
+        </label>
+        <div class="relative">
+          <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-purple-400">
+            <i class="fa-solid fa-user-astronaut text-xl"></i>
+          </span>
+          <input type="text" id="player-name" class="w-full pl-10 pr-4 py-3 rounded-xl border-3 border-purple-300 focus:outline-none focus:ring-4 focus:ring-purple-200 font-bold text-purple-800 text-lg shadow-inner" placeholder="Smart Player..." value="Smart Kid">
+        </div>
+      </div>
+
+      <!-- Grid Kad Buku Pilihan -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <!-- Buku 1 -->
+        <button onclick="startGame(1)" class="bg-gradient-to-br from-yellow-50 to-orange-100 hover:from-yellow-100 hover:to-orange-200 border-4 border-orange-400 rounded-2xl p-5 text-left shadow-lg bounce-hover flex gap-4 items-start">
+          <div class="bg-orange-500 text-white p-4 rounded-xl shadow-md"><i class="fa-solid fa-book-open text-2xl"></i></div>
+          <div class="flex-grow">
+            <h3 class="text-lg md:text-xl font-bold text-orange-800 leading-tight">Set 1: History & Development</h3>
+            <p class="text-xs text-orange-600 font-semibold mt-1">Sejarah & Perkembangan Kristian daripada akar Yahudi</p>
+            <div class="mt-3 flex items-center gap-1 bg-orange-200 px-3 py-1 rounded-full w-fit">
+              <i class="fa-solid fa-star text-orange-600 text-xs"></i>
+              <span class="text-xs font-bold text-orange-800" id="book-1-progress">0/10 Stars / Bintang</span>
+            </div>
+          </div>
+        </button>
+
+        <!-- Buku 2 -->
+        <button onclick="startGame(2)" class="bg-gradient-to-br from-blue-50 to-cyan-100 hover:from-blue-100 hover:to-cyan-200 border-4 border-blue-400 rounded-2xl p-5 text-left shadow-lg bounce-hover flex gap-4 items-start">
+          <div class="bg-blue-500 text-white p-4 rounded-xl shadow-md"><i class="fa-solid fa-dove text-2xl"></i></div>
+          <div class="flex-grow">
+            <h3 class="text-lg md:text-xl font-bold text-blue-800 leading-tight">Set 2: Jesus' Teachings Revisited</h3>
+            <p class="text-xs text-blue-600 font-semibold mt-1">Ajaran asal Jesus yang murni & pembawaan reformasi</p>
+            <div class="mt-3 flex items-center gap-1 bg-blue-200 px-3 py-1 rounded-full w-fit">
+              <i class="fa-solid fa-star text-blue-600 text-xs"></i>
+              <span class="text-xs font-bold text-blue-800" id="book-2-progress">0/10 Stars / Bintang</span>
+            </div>
+          </div>
+        </button>
+
+        <!-- Buku 3 -->
+        <button onclick="startGame(3)" class="bg-gradient-to-br from-pink-50 to-rose-100 hover:from-pink-100 hover:to-rose-200 border-4 border-rose-400 rounded-2xl p-5 text-left shadow-lg bounce-hover flex gap-4 items-start">
+          <div class="bg-rose-500 text-white p-4 rounded-xl shadow-md"><i class="fa-solid fa-scale-balanced text-2xl"></i></div>
+          <div class="flex-grow">
+            <h3 class="text-lg md:text-xl font-bold text-rose-800 leading-tight">Set 3: Theology of Paul</h3>
+            <p class="text-xs text-rose-600 font-semibold mt-1">Ajaran teologi Paul: Dosa Warisan, Penyelamatan, Triniti</p>
+            <div class="mt-3 flex items-center gap-1 bg-rose-200 px-3 py-1 rounded-full w-fit">
+              <i class="fa-solid fa-star text-rose-600 text-xs"></i>
+              <span class="text-xs font-bold text-rose-800" id="book-3-progress">0/10 Stars / Bintang</span>
+            </div>
+          </div>
+        </button>
+
+        <!-- Buku 4 -->
+        <button onclick="startGame(4)" class="bg-gradient-to-br from-purple-50 to-violet-100 hover:from-purple-100 hover:to-violet-200 border-4 border-purple-400 rounded-2xl p-5 text-left shadow-lg bounce-hover flex gap-4 items-start">
+          <div class="bg-purple-500 text-white p-4 rounded-xl shadow-md"><i class="fa-solid fa-church text-2xl"></i></div>
+          <div class="flex-grow">
+            <h3 class="text-lg md:text-xl font-bold text-purple-800 leading-tight">Set 4: Books, Rites & Rituals</h3>
+            <p class="text-xs text-purple-600 font-semibold mt-1">Kitab Suci (Bible), Sakramen (Baptis, Ekaristi) & Denominasi</p>
+            <div class="mt-3 flex items-center gap-1 bg-purple-200 px-3 py-1 rounded-full w-fit">
+              <i class="fa-solid fa-star text-purple-600 text-xs"></i>
+              <span class="text-xs font-bold text-purple-800" id="book-4-progress">0/10 Stars / Bintang</span>
+            </div>
+          </div>
+        </button>
+      </div>
+    </section>
+
+    <!-- SKRIN 2: PAPAN PERMAINAN TRIVIA AKTIF -->
+    <section id="screen-game" class="hidden bg-white/95 rounded-3xl shadow-2xl p-6 md:p-8 border-8 border-pink-400">
+      
+      <!-- Bar Status Atas Dalam Game -->
+      <div class="flex justify-between items-center mb-6 bg-pink-100 p-3 rounded-2xl border-2 border-pink-200">
+        <div class="flex items-center gap-2">
+          <span class="bg-pink-500 text-white font-bold px-3 py-1 rounded-full text-sm">Set <span id="game-set-id">1</span></span>
+          <span id="game-set-name" class="text-xs md:text-sm font-bold text-pink-800">History & Development</span>
+        </div>
+        <div class="flex items-center gap-4">
+          <div class="text-right">
+            <span class="text-xs text-pink-700 font-bold block">QUESTION / <span class="text-[10px] text-gray-500">SOALAN</span></span>
+            <span class="text-lg text-pink-800 font-bold"><span id="current-question-num">1</span>/10</span>
+          </div>
+          <!-- Grid Bintang Kemajuan Soalan -->
+          <div class="flex gap-1" id="star-tracker">
+            <!-- Bintang dimuatkan secara dinamik -->
+          </div>
+        </div>
+      </div>
+
+      <!-- BAR JANGKA MASA -->
+      <div class="w-full bg-gray-200 h-4 rounded-full mb-6 overflow-hidden border-2 border-pink-200">
+        <div id="timer-bar" class="bg-gradient-to-r from-red-500 to-yellow-400 h-full w-full transition-all duration-100"></div>
+      </div>
+
+      <!-- KAD UTAMA PAPAN SOALAN (ENGLISH LEBIH BESAR, MALAY KEDUA) -->
+      <div class="bg-gradient-to-b from-purple-50 to-pink-50 rounded-2xl p-6 border-4 border-dashed border-purple-300 mb-6 text-center shadow-inner relative overflow-hidden">
+        
+        <!-- Hiasan Ikon Bintang Latar Belakang -->
+        <i class="fa-solid fa-star absolute -left-10 -top-10 text-yellow-300/20 text-9xl transform -rotate-12"></i>
+        <i class="fa-solid fa-heart absolute -right-10 -bottom-10 text-pink-300/20 text-9xl transform rotate-12"></i>
+
+        <!-- Paparan Soalan Dwi-Bahasa -->
+        <div class="relative z-10">
+          <h3 id="question-en" class="text-xl md:text-3xl text-purple-900 mb-3 font-semibold leading-tight">English question here...</h3>
+          <p id="question-bm" class="text-sm md:text-lg text-gray-500 italic font-bold border-t border-purple-200 pt-3">Soalan Bahasa Melayu di sini...</p>
+        </div>
+      </div>
+
+      <!-- GRID PILIHAN JAWAPAN MCQ (ENGLISH UTAMA, BM KEDUA) -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <button onclick="checkAnswer(0)" class="option-btn bg-white hover:bg-yellow-100 border-4 border-purple-300 hover:border-yellow-400 text-left p-4 rounded-2xl shadow-md transition bounce-hover flex items-center gap-3">
+          <span class="option-badge bg-purple-500 text-white font-playful w-8 h-8 rounded-full flex items-center justify-center text-lg flex-shrink-0">A</span>
+          <div class="flex-grow">
+            <span class="option-en font-bold text-purple-900 text-base md:text-lg block leading-tight">English Option</span>
+            <span class="option-bm italic text-xs md:text-sm text-gray-500 font-semibold">Opsyen BM</span>
+          </div>
+        </button>
+
+        <button onclick="checkAnswer(1)" class="option-btn bg-white hover:bg-yellow-100 border-4 border-purple-300 hover:border-yellow-400 text-left p-4 rounded-2xl shadow-md transition bounce-hover flex items-center gap-3">
+          <span class="option-badge bg-purple-50 text-purple-700 font-playful w-8 h-8 rounded-full flex items-center justify-center text-lg flex-shrink-0">B</span>
+          <div class="flex-grow">
+            <span class="option-en font-bold text-purple-900 text-base md:text-lg block leading-tight">English Option</span>
+            <span class="option-bm italic text-xs md:text-sm text-gray-500 font-semibold">Opsyen BM</span>
+          </div>
+        </button>
+
+        <button onclick="checkAnswer(2)" class="option-btn bg-white hover:bg-yellow-100 border-4 border-purple-300 hover:border-yellow-400 text-left p-4 rounded-2xl shadow-md transition bounce-hover flex items-center gap-3">
+          <span class="option-badge bg-purple-50 text-purple-700 font-playful w-8 h-8 rounded-full flex items-center justify-center text-lg flex-shrink-0">C</span>
+          <div class="flex-grow">
+            <span class="option-en font-bold text-purple-900 text-base md:text-lg block leading-tight">English Option</span>
+            <span class="option-bm italic text-xs md:text-sm text-gray-500 font-semibold">Opsyen BM</span>
+          </div>
+        </button>
+
+        <button onclick="checkAnswer(3)" class="option-btn bg-white hover:bg-yellow-100 border-4 border-purple-300 hover:border-yellow-400 text-left p-4 rounded-2xl shadow-md transition bounce-hover flex items-center gap-3">
+          <span class="option-badge bg-purple-50 text-purple-700 font-playful w-8 h-8 rounded-full flex items-center justify-center text-lg flex-shrink-0">D</span>
+          <div class="flex-grow">
+            <span class="option-en font-bold text-purple-900 text-base md:text-lg block leading-tight">English Option</span>
+            <span class="option-bm italic text-xs md:text-sm text-gray-500 font-semibold">Opsyen BM</span>
+          </div>
+        </button>
+      </div>
+
+    </section>
+
+    <!-- SKRIN 3: PAPAN PENDAHULU & PEMENANG (ENGLISH UTAMA, BM KEDUA) -->
+    <section id="screen-score" class="hidden bg-white/95 rounded-3xl shadow-2xl p-6 md:p-10 border-8 border-yellow-400 text-center animate-fade-in">
+      <div id="victory-crown" class="inline-block bg-yellow-400 text-white p-6 rounded-full shadow-lg mb-4 animate-bounce">
+        <i class="fa-solid fa-trophy text-4xl"></i>
+      </div>
+      <h2 class="text-3xl md:text-5xl text-purple-800 mb-1">Quiz Completed!</h2>
+      <p class="text-md text-purple-600 font-bold mb-2">Set Kuiz Selesai!</p>
+      <p class="text-gray-600 mb-6 text-sm">Here is your final performance / Berikut adalah markah anda</p>
+
+      <!-- Kemuncak Keputusan Pemain -->
+      <div class="bg-purple-100 rounded-3xl p-6 border-4 border-purple-300 max-w-md mx-auto mb-8 flex flex-col items-center">
+        <span class="text-lg text-purple-700 font-bold" id="final-player-name">Player Name</span>
+        <div class="flex items-center gap-2 my-3">
+          <i class="fa-solid fa-star text-yellow-500 text-4xl animate-spin"></i>
+          <span class="text-5xl text-purple-900 font-playful" id="final-score">0/10</span>
+        </div>
+        <p class="text-base font-bold text-purple-600 tracking-wide" id="praise-message">Well done! Try another set!</p>
+      </div>
+
+      <!-- PAPAN PENDAHULU TEMPATAN (LOCAL LEADERBOARD) -->
+      <div class="max-w-lg mx-auto mb-8">
+        <h3 class="text-xl md:text-2xl text-purple-800 mb-4 flex flex-col items-center justify-center gap-1">
+          <span class="flex items-center gap-2"><i class="fa-solid fa-ranking-star"></i> Leaderboard</span>
+          <span class="text-xs text-purple-500 font-bold">Papan Pendahulu</span>
+        </h3>
+        <div class="bg-gray-50 rounded-2xl border-2 border-gray-200 overflow-hidden text-left" id="leaderboard-list">
+          <!-- Senarai pemain terbaik dimuatkan di sini -->
+        </div>
+      </div>
+
+      <div class="flex flex-wrap justify-center gap-4">
+        <button onclick="showScreen('screen-setup')" class="bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white px-8 py-3 rounded-2xl shadow-xl font-bold text-lg bounce-hover">
+          <i class="fa-solid fa-circle-arrow-left mr-2"></i> Back to Menu / Kembali ke Menu
+        </button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- POPUP: JAWAPAN BETUL - REBEN KEJAYAAN & BUNGA API (ENGLISH UTAMA, BM KEDUA) -->
+  <div id="modal-correct" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-3xl border-8 border-green-400 p-6 md:p-8 shadow-2xl max-w-xl w-full text-center transform scale-95 transition-all relative overflow-hidden">
+      
+      <!-- Hiasan Confetti belakang -->
+      <div class="absolute inset-0 bg-gradient-to-tr from-green-50 to-emerald-100 pointer-events-none -z-10"></div>
+      
+      <!-- REBEN KEJAYAAN UTAMA -->
+      <div class="ribbon font-playful text-xl md:text-3xl tracking-wide uppercase shadow-lg">
+        <span class="ribbon-content">EXCELLENT! / TAHNIAH!</span>
+      </div>
+
+      <!-- Ikon Kejutan -->
+      <div class="w-20 h-20 bg-yellow-400 text-white rounded-full flex items-center justify-center mx-auto text-4xl shadow-lg mb-6 animate-spin">
+        <i class="fa-solid fa-gift"></i>
+      </div>
+
+      <!-- Penjelasan Fakta Pendidikan / Penerangan Ringkas -->
+      <div class="bg-emerald-50 rounded-2xl p-4 border-2 border-emerald-200 mb-6 text-left shadow-inner">
+        <h4 class="text-sm font-bold text-emerald-800 flex items-center gap-2 mb-1">
+          <i class="fa-solid fa-circle-info"></i> Quick Fact: <span class="text-xs text-emerald-600 font-semibold">/ Fakta Ringkas</span>
+        </h4>
+        <p id="correct-fact-en" class="text-sm md:text-base text-purple-950 font-bold leading-snug">English fact...</p>
+        <p id="correct-fact-bm" class="text-xs md:text-sm text-gray-500 italic mt-2 border-t border-emerald-100 pt-2 font-semibold">Fakta BM...</p>
+      </div>
+
+      <!-- Butang Seterusnya -->
+      <button onclick="nextQuestion()" class="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white py-4 rounded-2xl font-bold text-lg shadow-xl bounce-hover flex items-center justify-center gap-2">
+        Next Question / Seterusnya <i class="fa-solid fa-circle-chevron-right"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- POPUP: JAWAPAN SALAH - "OH NO! TRY AGAIN!" (ENGLISH UTAMA, BM KEDUA) -->
+  <div id="modal-wrong" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-3xl border-8 border-rose-500 p-6 md:p-8 shadow-2xl max-w-md w-full text-center transform scale-95 transition-all relative overflow-hidden">
+      
+      <div class="absolute inset-0 bg-gradient-to-br from-rose-50 to-red-100 pointer-events-none -z-10"></div>
+
+      <!-- Ikon Sedih Animasi -->
+      <div class="w-20 h-20 bg-rose-500 text-white rounded-full flex items-center justify-center mx-auto text-4xl shadow-lg mb-4 animate-bounce">
+        <i class="fa-solid fa-face-frown"></i>
+      </div>
+
+      <h3 class="text-2xl text-rose-800 font-playful mb-1">Oh No! Try Again!</h3>
+      <p class="text-xs text-rose-600 font-bold mb-2">Aduh! Cuba Lagi!</p>
+      <p class="text-gray-600 text-sm mb-6 font-medium">Don't give up, learn from your mistake! / Jangan putus asa, belajar dari kesilapan anda!</p>
+
+      <!-- Pembayang Pintar -->
+      <div class="bg-white rounded-2xl p-4 border-2 border-rose-200 mb-6 text-left shadow-inner">
+        <h4 class="text-xs font-bold text-rose-700 uppercase tracking-wider mb-1">Hint / Pembayang:</h4>
+        <p id="wrong-hint-en" class="text-sm font-bold text-purple-950">English hint...</p>
+        <p id="wrong-hint-bm" class="text-xs text-gray-500 italic mt-2 border-t border-rose-100 pt-2 font-semibold">Pembayang jawapan betul BM...</p>
+      </div>
+
+      <!-- Butang Tindakan -->
+      <div class="flex flex-col gap-3">
+        <button onclick="retryQuestion()" class="bg-gradient-to-r from-rose-500 to-pink-600 hover:from-rose-600 hover:to-pink-700 text-white py-3 rounded-2xl font-bold text-base shadow-lg bounce-hover">
+          <i class="fa-solid fa-rotate-right mr-2"></i> Retry Question / Cuba Semula Soalan
+        </button>
+        <button onclick="nextQuestion(true)" class="bg-gray-100 hover:bg-gray-200 text-gray-600 py-2.5 rounded-2xl font-bold text-sm">
+          Skip & Continue / Langkau
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER HIASAN -->
+  <footer class="w-full text-center text-xs text-white/80 py-4 font-bold drop-shadow-md">
+    &copy; 2026 DR. MRAR & Mohd Rosmizi bin Abd Rahman. All Rights Reserved. Layout by Rajawali Digital.
+  </footer>
+
+  <!-- LOGIK PERMAINAN JAVASCRIPT UTAMA -->
+  <script>
+    // Sistem Bunyi Retro 8-Bit (Web Audio API)
+    class RetroSoundEngine {
+      constructor() {
+        this.ctx = null;
+        this.bgmPlaying = false;
+        this.bgmTimer = null;
+        this.tempo = 250; // tempoh tempo nota dalam milisaat
+        this.currentNoteIndex = 0;
+      }
+      init() {
+        if (!this.ctx) {
+          this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+      }
+      // Bunyi Kejayaan
+      playCorrect() {
+        this.init();
+        const now = this.ctx.currentTime;
+        const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+        notes.forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now + idx * 0.08);
+          gain.gain.setValueAtTime(0.15, now + idx * 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.2);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now + idx * 0.08);
+          osc.stop(now + idx * 0.08 + 0.25);
+        });
+      }
+      // Bunyi Kegagalan
+      playWrong() {
+        this.init();
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(220, now); // A3
+        osc.frequency.linearRampToValueAtTime(110, now + 0.3); // A2
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.linearRampToValueAtTime(0.001, now + 0.35);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.4);
+      }
+      // Bunyi Jam Berdetik (Amaran Tamat Masa)
+      playTick() {
+        this.init();
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, now);
+        gain.gain.setValueAtTime(0.1, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.1);
+      }
+      // Melodi Chiptune BGM Latar Belakang
+      startBGM() {
+        this.init();
+        if (this.bgmPlaying) return;
+        this.bgmPlaying = true;
+        
+        const scale = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25];
+        const melody = [
+          4, 4, 5, 6, 7, 6, 5, 4, 
+          3, 3, 4, 5, 6, 5, 4, 3,
+          2, 2, 3, 4, 5, 4, 3, 2,
+          4, 5, 6, 7, 8, 7, 6, 5
+        ];
+        const bass = [130.81, 130.81, 174.61, 174.61, 196.00, 196.00, 130.81, 130.81];
+
+        let step = 0;
+        this.bgmTimer = setInterval(() => {
+          if (!this.bgmPlaying) return;
+          const now = this.ctx.currentTime;
+
+          const oscMel = this.ctx.createOscillator();
+          const gainMel = this.ctx.createGain();
+          oscMel.type = 'sine';
+          
+          const noteIndex = melody[step % melody.length] - 1;
+          const freq = scale[noteIndex] * 1.5; 
+          oscMel.frequency.setValueAtTime(freq, now);
+          gainMel.gain.setValueAtTime(0.04, now);
+          gainMel.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+          
+          oscMel.connect(gainMel);
+          gainMel.connect(this.ctx.destination);
+          oscMel.start();
+          oscMel.stop(now + 0.22);
+
+          if (step % 2 === 0) {
+            const oscBass = this.ctx.createOscillator();
+            const gainBass = this.ctx.createGain();
+            oscBass.type = 'triangle';
+            const bassFreq = bass[Math.floor(step / 2) % bass.length];
+            oscBass.frequency.setValueAtTime(bassFreq, now);
+            gainBass.gain.setValueAtTime(0.12, now);
+            gainBass.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+            oscBass.connect(gainBass);
+            gainBass.connect(this.ctx.destination);
+            oscBass.start();
+            oscBass.stop(now + 0.45);
+          }
+          step++;
+        }, this.tempo);
+      }
+      stopBGM() {
+        this.bgmPlaying = false;
+        if (this.bgmTimer) {
+          clearInterval(this.bgmTimer);
+          this.bgmTimer = null;
+        }
+      }
+    }
+
+    const sfx = new RetroSoundEngine();
+
+    // Kawalan Butang BGM
+    const bgmBtn = document.getElementById('toggle-bgm');
+    const bgmIcon = document.getElementById('bgm-icon');
+    const bgmText = document.getElementById('bgm-text');
+
+    bgmBtn.addEventListener('click', () => {
+      sfx.init();
+      if (!sfx.bgmPlaying) {
+        sfx.startBGM();
+        bgmIcon.className = "fa-solid fa-volume-high text-yellow-300 animate-bounce";
+        bgmText.innerText = "Stop Music / Tutup Muzik";
+      } else {
+        sfx.stopBGM();
+        bgmIcon.className = "fa-solid fa-volume-xmark";
+        bgmText.innerText = "Play Music / Pasang Muzik";
+      }
+    });
+
+    // PANGKALAN DATA SOALAN DWI-BAHASA (ENGLISH UTAMA, BM KEDUA)
+    // Semua "Yesus" dalam Bahasa Melayu ditukarkan kepada "Jesus"
+    const quizDatabase = {
+      // SET 1: Christianity; History and Development
+      1: [
+        {
+          q_en: "Where did Jesus' family home and the story of his miraculous conception belong?",
+          q_bm: "Di manakah kisah bermulanya rumah keluarga Jesus dan konsep kandungan ajaib baginya?",
+          options: [
+            { en: "Nazareth in the north of Israel", bm: "Nazareth di utara Jesus" },
+            { en: "Bethlehem in the south of Israel", bm: "Bethlehem di selatan Israel" },
+            { en: "Jerusalem", bm: "Jerusalem" },
+            { en: "Damascus", bm: "Damascus" }
+          ],
+          correct: 0,
+          fact_en: "Nazareth was where Mary was told she would have a son, although traditional accounts record Bethlehem as his birthplace.",
+          fact_bm: "Nazareth merupakan bandar tempat Mary diberitahu bahawa dia akan melahirkan seorang anak lelaki, sungguhpun sebahagian tradisi menyatakan Jesus dilahirkan di Bethlehem."
+        },
+        {
+          q_en: "Jesus was raised in a pious Jewish family observing traditional customs, EXCEPT:",
+          q_bm: "Jesus dibesarkan dalam keluarga Yahudi yang warak dan mematuhi adat tradisi berikut, KECUALI:",
+          options: [
+            { en: "Learning the Torah", bm: "Mempelajari kitab Taurat (Torah)" },
+            { en: "Practicing circumcision", bm: "Melakukan berkhatan (Circumcision)" },
+            { en: "Observing the Sabbath", bm: "Mematuhi hari Sabat (Sabbath)" },
+            { en: "Worshipping Greco-Roman idols", bm: "Menyembah patung berhala Greco-Roman" }
+          ],
+          correct: 3,
+          fact_en: "Jesus was strictly raised under pious Jewish monotheism, utterly rejecting idol worship.",
+          fact_bm: "Jesus dibesarkan dalam amalan monoteisme Yahudi yang taat dan menolak sama sekali sebarang penyembahan berhala."
+        },
+        {
+          q_en: "Most of what we know about Jesus' public life comes from which part of the scripture?",
+          q_bm: "Kebanyakan maklumat mengenai kehidupan awam Jesus diperoleh daripada kitab apa?",
+          options: [
+            { en: "The Old Testament", bm: "Perjanjian Lama (Old Testament)" },
+            { en: "Paul's Epistles", bm: "Surat-surat Kiriman Paul (Epistles)" },
+            { en: "The Four Gospels", bm: "Empat Kitab Injil (The Four Gospels)" },
+            { en: "The Book of Revelation", bm: "Kitab Wahyu (Revelation)" }
+          ],
+          correct: 2,
+          fact_en: "The four Gospels (Matthew, Mark, Luke, John) focus specifically on Jesus' public ministry and death.",
+          fact_bm: "Empat Injil (Matius, Markus, Lukas, Yohanes) menumpukan pada kehidupan awam, mukjizat, dan kematian Jesus."
+        },
+        {
+          q_en: "When asked how many times one should forgive others, what number did Jesus declare?",
+          q_bm: "Ketika ditanya mengenai kekerapan memaafkan kesalahan orang lain, berapakah jumlah yang dinyatakan oleh Jesus?",
+          options: [
+            { en: "Only seven times", bm: "Tujuh kali sahaja" },
+            { en: "Seventy-seven times (endless forgiveness)", bm: "Tujuh puluh tujuh kali (Memaafkan tanpa henti)" },
+            { en: "Only once a year", bm: "Satu kali sahaja setahun" },
+            { en: "No need to forgive enemies", bm: "Tidak perlu memaafkan musuh" }
+          ],
+          correct: 1,
+          fact_en: "Jesus instructed forgiveness 'seventy-seven times', symbolising continuous grace and rejecting vengeance.",
+          fact_bm: "Jesus menyuruh manusia memaafkan sebanyak tujuh puluh tujuh kali, yang melambangkan kemaafan tanpa batas dan menolak dendam."
+        },
+        {
+          q_en: "What did Jesus teach about the 'Kingdom of God'?",
+          q_bm: "Apakah yang diajar oleh Jesus tentang 'Kerajaan Allah' (Kingdom of God)?",
+          options: [
+            { en: "A physical empire with massive armies", bm: "Kerajaan fizikal dengan tentera besar" },
+            { en: "Love, peace, and total submission of heart to the Creator", bm: "Kasih sayang, kedamaian dan penyerahan jiwa kepada Pencipta" },
+            { en: "A new tax system for the Roman Empire", bm: "Sistem cukai baharu untuk empayar Rom" },
+            { en: "A secret city inside the sea", bm: "Sebuah bandar rahsia di dalam laut" }
+          ],
+          correct: 1,
+          fact_en: "The Kingdom of God refers to spiritual purity and submission to God's will, ensuring peace here and in the Hereafter.",
+          fact_bm: "Kerajaan Allah merujuk kepada ketundukan hati yang murni kepada hukum Pencipta yang menjanjikan keselamatan di dunia dan akhirat."
+        },
+        {
+          q_en: "Why did the ruling authorities perceive Jesus as a threat?",
+          q_bm: "Mengapakah pihak berkuasa Rom dan pemuka agama melihat Jesus sebagai ancaman?",
+          options: [
+            { en: "He wanted to establish a military war alliance", bm: "Beliau ingin menubuhkan pakatan perang" },
+            { en: "His teachings shook the corrupt elite and threatened empire stability", bm: "Ajarannya menggoncang pengaruh elit korup dan mengancam kestabilan empayar" },
+            { en: "He forbade his followers from speaking Greek", bm: "Beliau melarang penganutnya bercakap bahasa Greek" },
+            { en: "He planned to burn Jerusalem city", bm: "Beliau merancang untuk membakar kota Baitulmaqdis" }
+          ],
+          correct: 1,
+          fact_en: "Jesus' radical spiritual messages of justice and challenging corrupt religious leaders threatened the Roman political order.",
+          fact_bm: "Ajaran rohani Jesus yang radikal tentang keadilan dan menentang rasuah pemuka agama dianggap mengancam keamanan politik Rom."
+        },
+        {
+          q_en: "According to Christian perspective, how did Jesus die?",
+          q_bm: "Mengikut perspektif Kristian, bagaimanakah Jesus mati?",
+          options: [
+            { en: "Old age illness in his house", bm: "Sakit tua di rumahnya" },
+            { en: "Falling into a lake", bm: "Terjatuh ke dalam tasik" },
+            { en: "Crucifixion in a public and degrading manner", bm: "Penyaliban (Crucifixion) di khalayak ramai" },
+            { en: "Heart attack during fasting", bm: "Serangan jantung ketika berpuasa" }
+          ],
+          correct: 2,
+          fact_en: "Jesus was tortured and executed via public crucifixion under Roman authority before the Sabbath.",
+          fact_bm: "Jesus diseksa dan dihukum salib oleh pihak berkuasa Rom di bawah perintah Pontius Pilatus sebelum hari Sabat bermula."
+        },
+        {
+          q_en: "Before being known as Apostle Paul, what was his original name when he persecuted Jesus' followers?",
+          q_bm: "Sebelum dikenali sebagai Paul (Apostle Paul), apakah nama asal beliau yang memburu penganut Jesus?",
+          options: [
+            { en: "Peter", bm: "Peter" },
+            { en: "Luke", bm: "Luke" },
+            { en: "Saul of Tarsus", bm: "Saul dari Tarsus" },
+            { en: "John", bm: "John" }
+          ],
+          correct: 2,
+          fact_en: "Saul was a strict orthodox Jew before experiencing a powerful vision of Jesus that led him to assume the name Paul.",
+          fact_bm: "Saul adalah seorang Yahudi Ortodoks yang tegar sebelum mengalami pengalaman penglihatan Jesus yang menukarkan namanya kepada Paul."
+        },
+        {
+          q_en: "What was Paul's primary missionary focus after converting to Christianity?",
+          q_bm: "Apakah matlamat dakwah utama Paul setelah beliau memeluk ajaran Kristian?",
+          options: [
+            { en: "Spreading the faith to non-Jews (Gentiles)", bm: "Menyebarkan ajaran Kristian kepada golongan bukan Yahudi (Gentiles)" },
+            { en: "Abolishing the Jewish language", bm: "Menghapuskan bahasa Yahudi" },
+            { en: "Establishing a cavalry army", bm: "Menubuhkan tentera berkuda" },
+            { en: "Building a third temple", bm: "Membina bait suci ketiga" }
+          ],
+          correct: 0,
+          fact_en: "Paul championed 'Universalism', declaring that all ethnicities (Gentiles) could be accepted into the covenant through faith.",
+          fact_bm: "Paul memulakan era 'Universalism' di mana semua bangsa (Gentiles) boleh dipilih menjadi umat Tuhan melalui iman tanpa mengira bangsa."
+        },
+        {
+          q_en: "How did Pauline Christianity spread extensively across the Mediterranean?",
+          q_bm: "Bagaimanakah corak ajaran Paul (Pauline Christianity) tersebar luas di Mediterranean?",
+          options: [
+            { en: "Through imperial military conquest", bm: "Melalui penaklukan ketenteraan empayar" },
+            { en: "Energetic travels and eloquent letters written in Greek", bm: "Pengembaraan bertenaga dan surat-surat fasih dalam bahasa Greek" },
+            { en: "Via spice trade networks", bm: "Melalui perdagangan rempah-ratus" },
+            { en: "Through ancient weather prophecy", bm: "Melalui ramalan cuaca kuno" }
+          ],
+          correct: 1,
+          fact_en: "Paul's letters (Epistles) written in Greek served as key theological guides that defined the early church structure.",
+          fact_bm: "Surat-surat Paul (Epistle) dalam bahasa Greek merupakan saluran teologi utama membentuk gereja awal."
+        }
+      ],
+      // SET 2: Jesus’ Teachings Revisited
+      2: [
+        {
+          q_en: "What is the name associated with Jesus in the Arabic/Islamic tradition?",
+          q_bm: "Apakah nama yang dikaitkan dengan Jesus dalam tradisi Arab/Islam?",
+          options: [
+            { en: "Musa", bm: "Musa" },
+            { en: "Isa", bm: "Isa" },
+            { en: "Ibrahim", bm: "Ibrahim" },
+            { en: "Yunus", bm: "Yunus" }
+          ],
+          correct: 1,
+          fact_en: "Jesus is historically and traditionally known as Isa Al-Masih in Arabic and Islamic texts.",
+          fact_bm: "Jesus dikenali sebagai Isa Al-Masih dalam tradisi Arab dan Al-Qur'an."
+        },
+        {
+          q_en: "According to objective historical analysis, what was Jesus' immediate mission?",
+          q_bm: "Menurut analisis sejarah objektif, apakah misi asal Jesus ketika diutus?",
+          options: [
+            { en: "To start an entirely new religion", bm: "Memulakan agama baharu sepenuhnya" },
+            { en: "To reform and revitalize the teachings of Moses and Bani Israil", bm: "Memurnikan ajaran Musa & Bani Israil daripada penyelewengan" },
+            { en: "To launch an attack on the Roman Empire", bm: "Menyerang Empayar Rom" },
+            { en: "To construct a giant ship", bm: "Membina kapal besar" }
+          ],
+          correct: 1,
+          fact_en: "Jesus emphasized that his role was to fulfill the Law of Moses and restore sincere worship from human corruption.",
+          fact_bm: "Jesus menegaskan bahawa beliau datang bukan untuk membuang Hukum Taurat, sebaliknya memurnikan amalan Bani Israil dari penyimpangan."
+        },
+        {
+          q_en: "State the scripture from Matthew 5:17 regarding the law of the prophets.",
+          q_bm: "Sebutkan ayat suci dalam Injil Matius (Matthew) 5:17 mengenai hukum para nabi.",
+          options: [
+            { en: "'I have come to destroy the law'", bm: "'Aku datang untuk menghapuskan hukum'" },
+            { en: "'I have not come to abolish the Law or the Prophets, but to fulfill them'", bm: "'Aku tidak datang untuk menolak Hukum atau para Nabi, melainkan untuk menggenapinya'" },
+            { en: "'Follow ancient Roman customs'", bm: "'Patuhi adat Rom kuno'" },
+            { en: "'The law of the prophets is no longer useful'", bm: "'Hukum para nabi tidak lagi berguna'" }
+          ],
+          correct: 1,
+          fact_en: "Jesus explicitly stated his continuity with the Mosaic Law, emphasizing validation over destruction.",
+          fact_bm: "Jesus mengekalkan kesinambungan wahyu nabi-nabi terdahulu dan menyokong pematuhan hukum syariah Musa."
+        },
+        {
+          q_en: "Where is the quote 'I was sent only to the lost sheep of Israel' found?",
+          q_bm: "Di manakah ayat 'Aku hanya diutus kepada kambing yang sesat dari Israel' ditemui?",
+          options: [
+            { en: "Luke 10:1", bm: "Lukas 10:1" },
+            { en: "Matthew 15:24", bm: "Matius (Matthew) 15:24" },
+            { en: "Mark 1:1", bm: "Markus 1:1" },
+            { en: "Romans", bm: "Surat Kiriman Roma" }
+          ],
+          correct: 1,
+          fact_en: "This text emphasizes Jesus' initial primary focus as a local reformer to the Israelite community.",
+          fact_bm: "Fokus dakwah awal Jesus adalah bersifat lokaliti, mensasarkan pemurnian akhlak kaum Yahudi (Bani Israil)."
+        },
+        {
+          q_en: "What is the primary message of monotheism taught by Jesus in Mark 12:29?",
+          q_bm: "Apakah mesej keesaan Tuhan paling utama yang diajar oleh Jesus dalam Markus (Mark) 12:29?",
+          options: [
+            { en: "'Hear, O Israel: The Lord our God, the Lord is One'", bm: "'Dengarlah hai Israel, Tuhan kita adalah Tuhan yang Satu'" },
+            { en: "'God consists of three different gods'", bm: "'Tuhan terdiri daripada tiga tuhan berbeza'" },
+            { en: "'Worship any created thing on earth'", bm: "'Sembahlah apa jua ciptaan di bumi'" },
+            { en: "'God is a mystery of nature without essence'", bm: "'Tuhan adalah satu rahsia alam tanpa zat'" }
+          ],
+          correct: 0,
+          fact_en: "The absolute first commandment according to Jesus is affirming the Oneness of God (pure monotheism).",
+          fact_bm: "Ajaran terpenting Jesus ialah Keesaan Tuhan Mutlak (Pure Monotheism), selari dengan tradisi nabi terdahulu."
+        },
+        {
+          q_en: "What was Jesus' initial instruction to his twelve disciples regarding Gentile paths?",
+          q_bm: "Apakah arahan awal Jesus kepada dua belas muridnya berkenaan laluan bukan Yahudi (Gentiles)?",
+          options: [
+            { en: "Go and preach to all kings in Europe", bm: "Pergi dan berdakwah kepada semua raja di Eropah" },
+            { en: "Avoid paths of the Gentiles, focus on Jewish cities", bm: "Jangan melalui jalan bangsa bukan Yahudi, tumpukan kepada kota Yahudi" },
+            { en: "Learn Roman philosophy first", bm: "Belajar falsafah Rom dahulu" },
+            { en: "Engage in agriculture abroad", bm: "Lakukan aktiviti pertanian di luar negara" }
+          ],
+          correct: 1,
+          fact_en: "Historically, early instructions to the disciples prioritized local Israelite purification over global conversion.",
+          fact_bm: "Sifat dakwah terawal Jesus adalah bersifat eksklusif untuk membetulkan penyimpangan umat Yahudi di kawasannya."
+        },
+        {
+          q_en: "According to the book, what is the internal dimension of the 'Kingdom of God'?",
+          q_bm: "Berdasarkan buku, apakah definisi dimensi kedua 'Kerajaan Allah' dalam diri?",
+          options: [
+            { en: "A state of total submission to God's will within the human heart", bm: "Keadaan penyerahan tindakan secara total kepada kehendak Tuhan di dalam hati" },
+            { en: "The ability to control magic", bm: "Keupayaan menguasai sihir" },
+            { en: "Accumulating physical treasures", bm: "Pengumpulan harta karun fizikal" },
+            { en: "Annual political elections", bm: "Pilihan raya politik tahunan" }
+          ],
+          correct: 0,
+          fact_en: "It represents a psychological and spiritual alignment where one's soul submits entirely to divine laws.",
+          fact_bm: "Kerajaan Allah dalam hati merujuk kepada kesucian jiwa, akhlak murni, dan kedamaian batin dalam beribadah."
+        },
+        {
+          q_en: "What was the purpose of the miracles (healed the blind, comforted lepers) granted to Jesus?",
+          q_bm: "Apakah fungsi mukjizat (healed the blind, comforted lepers) yang diberikan Tuhan kepada Jesus?",
+          options: [
+            { en: "To display personal magic showmanship", bm: "Untuk menunjukkan kuasa magis peribadi" },
+            { en: "As Divine Signs to validate his message and guide back to God", bm: "Sebagai tanda (Signs) pembuktian autoriti wahyu dan risalahnya" },
+            { en: "To collect healthcare service fees", bm: "Untuk mengutip yuran kesihatan" },
+            { en: "As entertainment in the Roman court", bm: "Sebagai bahan hiburan di istana Rom" }
+          ],
+          correct: 1,
+          fact_en: "Miracles served as divine symbols confirming Jesus' prophethood and authorization to reform Israel.",
+          fact_bm: "Mukjizat yang ditunjukkan bukan sekadar pameran, tetapi bukti nyata utusan Tuhan untuk membimbing kaumnya."
+        },
+        {
+          q_en: "What is the core commandment of Jesus in Mark 12:30?",
+          q_bm: "Apakah isi kandungan utama perintah Jesus dalam Markus (Mark) 12:30?",
+          options: [
+            { en: "'Love the Lord your God with all your heart, soul, and mind'", bm: "'Kasihi Tuhanmu dengan segenap hatimu, jiwamu dan mindamu'" },
+            { en: "Searching for wealth is the grand duty", bm: "Mencari kekayaan adalah kewajipan agung" },
+            { en: "Prioritize political authority", bm: "Utamakan kedudukan politik" },
+            { en: "Do not obey parents' rules", bm: "Jangan mematuhi hukum ibu bapa" }
+          ],
+          correct: 0,
+          fact_en: "Loving God wholeheartedly stands as the core essence of the monotheistic spirituality Jesus preached.",
+          fact_bm: "Jesus menegaskan kasih sayang yang tidak berbelah bahagi kepada Tuhan yang Satu sebagai pelengkap ibadah murni."
+        },
+        {
+          q_en: "The conclusion of objective research shows that Jesus acted as:",
+          q_bm: "Kesimpulan kajian objektif menunjukkan Jesus bertindak sebagai:",
+          options: [
+            { en: "The founder of modern bureaucratic structures", bm: "Pengasas struktur birokrasi moden" },
+            { en: "A dedicated moral reformer and restorer of pure worship", bm: "Pembawa pembaharuan moral dan pemulih ibadat murni" },
+            { en: "A leader of armed rebellion", bm: "Pemimpin pemberontakan bersenjata" },
+            { en: "A secular Roman philosopher", bm: "Seorang ahli falsafah sekular Rom" }
+          ],
+          correct: 1,
+          fact_en: "His mission acted as a vital bridge connecting strict legal observance with inner spiritual sincerity.",
+          fact_bm: "Misi utama beliau adalah merapatkan jurang spiritual antara peraturan hukum kaku masa lalu dengan ketulusan hati masa depan."
+        }
+      ],
+      // SET 3: Christian Teachings; The Theology of Paul
+      3: [
+        {
+          q_en: "What are the two primary dimensions of Pauline Theology?",
+          q_bm: "Apakah dua dimensi utama dalam Teologi Paul (Pauline Theology)?",
+          options: [
+            { en: "Universalism & Salvation", bm: "Universalism & Salvation (Penyelamatan)" },
+            { en: "Nationalism & War", bm: "Nasionalisme & Perang (Nationalism & War)" },
+            { en: "Materialism & Monarchy", bm: "Kebendaan & Beraja (Materialism & Monarchy)" },
+            { en: "Asceticism & Solitude", bm: "Zuhud & Menyendiri (Asceticism & Solitude)" }
+          ],
+          correct: 0,
+          fact_en: "Paul's structural theology revolves around global outreach (Universalism) and the theological path to eternal life (Salvation).",
+          fact_bm: "Formula teologi Paul dibina di atas penyebaran global (Universalism) dan kaedah mencapai syurga melalui iman (Salvation)."
+        },
+        {
+          q_en: "What does the concept of 'Universalism' introduced by Paul mean?",
+          q_bm: "Apakah maksud konsep 'Universalism' yang diperkenalkan oleh Paul?",
+          options: [
+            { en: "Only Jewish people can enter heaven", bm: "Hanya kaum Yahudi sahaja boleh masuk syurga" },
+            { en: "The Christian message is a global invitation for all mankind regardless of ethnicity", bm: "Mesej Kristian adalah jemputan global tanpa mengira bangsa" },
+            { en: "The universe is made of stardust", bm: "Alam semesta dicipta dari habuk bintang" },
+            { en: "Dominance of a single language globally", bm: "Penguasaan bahasa tunggal di dunia" }
+          ],
+          correct: 1,
+          fact_en: "Paul detached Christianity from Jewish ethnic boundaries, allowing non-Jewish groups to become the 'Chosen' people.",
+          fact_bm: "Paul membebaskan Kristian daripada had keturunan Yahudi dan membuka ruang kepada orang luar (Gentiles) untuk diselamatkan."
+        },
+        {
+          q_en: "How is Salvation primarily attained according to Pauline theology?",
+          q_bm: "Bagaimanakah cara utama mencapai Penyelamatan (Salvation) menurut teologi Paul?",
+          options: [
+            { en: "Through strict adherence to the Law of Moses", bm: "Melalui usaha patuh kepada Hukum Musa sahaja" },
+            { en: "Formula of Faith: Believing in Jesus as the Savior", bm: "Formula Iman: Percaya kepada Jesus sebagai Penyelamat (Savior)" },
+            { en: "By performing annual pilgrimages to Rome", bm: "Dengan melakukan ziarah ke Rom setiap tahun" },
+            { en: "By accumulating huge wealth for charity", bm: "Mengumpul wang yang banyak untuk kebajikan" }
+          ],
+          correct: 1,
+          fact_en: "Paul taught that human effort was insufficient; hence salvation comes purely through trust in Jesus as Savior.",
+          fact_bm: "Paul berhujah bahawa usaha manusia tidak memadai untuk menghapus dosa, dan penyelamatan hanyalah hadiah rahmat melalui iman kepada Jesus."
+        },
+        {
+          q_en: "What is the doctrine that believes God manifested in a tangible human form?",
+          q_bm: "Apakah nama doktrin yang percaya bahawa Tuhan menjelma dalam bentuk tubuh manusia?",
+          options: [
+            { en: "Doctrine of Reincarnation", bm: "Doktrin Reinkarnasi (Reincarnation)" },
+            { en: "Doctrine of Incarnation", bm: "Doktrin Inkarnasi (Incarnation)" },
+            { en: "Doctrine of Transmigration", bm: "Doktrin Transmigrasi" },
+            { en: "Doctrine of Absolute Invisibility", bm: "Doktrin Keghaiban Mutlak" }
+          ],
+          correct: 1,
+          fact_en: "Incarnation is the central Christian belief that the second person of the Trinity assumed human flesh in Jesus.",
+          fact_bm: "Inkarnasi adalah kepercayaan bahawa Jesus adalah jelmaan fizikal Tuhan (Anak) untuk menebus dosa manusia."
+        },
+        {
+          q_en: "What was the origin of 'Original/Inherited Sin' according to Paul?",
+          q_bm: "Apakah punca asal kewujudan 'Dosa Warisan' (Original/Inherited Sin) menurut dakwaan Paul?",
+          options: [
+            { en: "The disobedience of Adam and Eve in Paradise", bm: "Ketidakpatuhan Adam dan Hawa di syurga" },
+            { en: "Selfishness in modern science", bm: "Sikap mementingkan diri dalam sains moden" },
+            { en: "Errors of ancient Egyptian Pharaohs", bm: "Kesalahan firaun Mesir kuno" },
+            { en: "The construction of the Tower of Babel", bm: "Pembinaan Menara Babel" }
+          ],
+          correct: 0,
+          fact_en: "Paul argued that Adam's transgression passed down a spiritual debt of sin to all human descendants.",
+          fact_bm: "Mengikut Paul, dosa Adam di syurga telah diwarisi oleh seluruh zuriat manusia, menyebabkan semua manusia lahir dalam keadaan berdosa."
+        },
+        {
+          q_en: "Why was Jesus' crucifixion viewed as a cosmic necessity by Paul?",
+          q_bm: "Mengapakah kematian Jesus di kayu salib dianggap sebagai satu kemestian kosmik menurut Paul?",
+          options: [
+            { en: "Because he lost a political election", bm: "Kerana beliau kalah dalam pertempuran politik" },
+            { en: "To pay the 'ransom' for humanity's inherited Original Sin", bm: "Untuk membayar 'tebusan' hutang Dosa Warisan manusia" },
+            { en: "As an annual spring season festival", bm: "Sebagai upacara tahunan musim bunga" },
+            { en: "To satisfy Roman astrologers' predictions", bm: "Untuk memenuhi ramalan ahli nujum Rom" }
+          ],
+          correct: 1,
+          fact_en: "Paul preached that Jesus died as a sacrifice to satisfy divine justice, settling humanity's inherited sin debt.",
+          fact_bm: "Kematian Jesus dilihat sebagai pengorbanan suci bagi memuaskan keadilan ilahi bagi membebaskan manusia dari dosa."
+        },
+        {
+          q_en: "What replaced the requirements of the 'Old Law' after the crucifixion?",
+          q_bm: "Apakah yang menggantikan kewajipan 'Hukum Lama' (Old Law) setelah berlakunya penyaliban Jesus?",
+          options: [
+            { en: "Roman military martial laws", bm: "Undang-undang tentera Rom" },
+            { en: "The era of Grace and Faith", bm: "Era Rahmat (Grace) dan Keimanan" },
+            { en: "New trade regulations", bm: "Hukum perdagangan baharu" },
+            { en: "Social caste systems", bm: "Sistem kasta sosial" }
+          ],
+          correct: 1,
+          fact_en: "Paul taught that faith in Christ replaced the necessity of following strict Jewish legal requirements.",
+          fact_bm: "Paul mendakwa bahawa kematian Jesus membatalkan kewajipan undang-undang fizikal Taurat seperti sunat dan larangan makan."
+        },
+        {
+          q_en: "Why is the Resurrection crucial in Paul's theology?",
+          q_bm: "Mengapakah doktrin Kebangkitan (Resurrection) Jesus sangat penting dalam teologi Paul?",
+          options: [
+            { en: "It proved Jesus could return to physical work", bm: "Ia membuktikan Jesus boleh kembali bekerja" },
+            { en: "It represents victory over death and guarantee of eternal spiritual life", bm: "Ia menandakan kemenangan ke atas maut dan jaminan tubuh rohani yang kekal" },
+            { en: "It allowed Jesus to rule in Rome", bm: "Ia membolehkan Jesus berkuasa di Rom" },
+            { en: "It was a fictional story to entertain followers", bm: "Ia sekadar cerita fiksyen untuk menghibur penganut" }
+          ],
+          correct: 1,
+          fact_en: "The Resurrection serves as the final proof that the spiritual debt was paid, and physical decay is conquered.",
+          fact_bm: "Kebangkitan pada hari ketiga membuktikan hutang dosa telah dibayar dan maut telah dikalahkan secara kekal melalui kebangkitan Jesus."
+        },
+        {
+          q_en: "How did Paul depict Jesus' status before the creation of the world?",
+          q_bm: "Bagaimanakah Paul menggambarkan kedudukan Jesus sebelum penciptaan alam?",
+          options: [
+            { en: "A clever scientist", bm: "Seorang ahli sains yang bijak" },
+            { en: "A cosmic figure and Only Begotten Son co-existing with the Creator", bm: "Tokoh kosmik dan Anak Tunggal yang wujud bersama Pencipta" },
+            { en: "A regular wood carpenter", bm: "Seorang pengukir kayu biasa" },
+            { en: "A fictional character in stories", bm: "Satu karakter fiksyen dalam hikayat" }
+          ],
+          correct: 1,
+          fact_en: "Paul argued that Jesus shared the same eternal and divine nature as God, making him worthy of worship.",
+          fact_bm: "Melalui dakwaan ketuhanan ini, Paul meletakkan Jesus setaraf dengan Tuhan dan layak disembah oleh manusia."
+        },
+        {
+          q_en: "What is the core essence of the Doctrine of Redemption according to Paul?",
+          q_bm: "Apakah intipati Doktrin Penebusan (Redemption) menurut Paul?",
+          options: [
+            { en: "Humanity was bought back from sin's slavery by Jesus' blood", bm: "Manusia dibeli balik dari belenggu dosa menggunakan darah Jesus" },
+            { en: "Physical cleansing using salt water", bm: "Pembersihan fizikal menggunakan air garam" },
+            { en: "Abolishing slave status in social class", bm: "Penghapusan status hamba dalam sistem sosial" },
+            { en: "Demanding land compensation from Rome", bm: "Tuntutan pampasan tanah daripada empayar Rom" }
+          ],
+          correct: 0,
+          fact_en: "Redemption defines believers as prisoners whose bail was paid entirely by the Savior's blood.",
+          fact_bm: "Penebusan melambangkan penganut Kristian sebagai banduan yang jaminannya telah dibayar lunas oleh darah Jesus."
+        }
+      ],
+      // SET 4: Christianity; Sacred Books, Rites, and Rituals
+      4: [
+        {
+          q_en: "How did Dr. Roberts describe the structure of the Holy Bible?",
+          q_bm: "Bagaimanakah Dr. Roberts menerangkan struktur fizikal Al-Kitab (Bible)?",
+          options: [
+            { en: "A single book without chapters", bm: "Sebuah buku tunggal tanpa bab" },
+            { en: "A library of faith containing a collection of sacred writings", bm: "Satu perpustakaan iman (library of faith) yang mengandungi banyak kitab" },
+            { en: "A compilation of ancient Roman law codes", bm: "Kompilasi kod undang-undang Rom kuno" },
+            { en: "A dictionary of ancient Jewish language", bm: "Sebuah kamus bahasa Yahudi kuno" }
+          ],
+          correct: 1,
+          fact_en: "The Bible is not a single book, but a library divided into the Old Testament and the New Testament.",
+          fact_bm: "Bible adalah kompilasi penulisan suci yang dibahagikan kepada dua bahagian utama: Perjanjian Lama dan Perjanjian Baru."
+        },
+        {
+          q_en: "What are the four pillars of the Old Testament structure?",
+          q_bm: "Apakah empat bahagian utama struktur Perjanjian Lama (Old Testament)?",
+          options: [
+            { en: "Pentateuch, Historical, Poetical/Wisdom, Prophetical", bm: "Pentateuch (Hukum), Sejarah, Puisi/Hikmah, dan Prophetical (Nabi)" },
+            { en: "Philosophy, Mathematics, Science, Geography", bm: "Falsafah, Matematik, Sains, dan Geografi" },
+            { en: "Stories, Drama, Dictionary, Encyclopedia", bm: "Cerita, Drama, Kamus, dan Ensiklopedia" },
+            { en: "Laws, Tax Codes, Royal Orders, Ancient Maps", bm: "Undang-undang, Kod Cukai, Arahan Raja, dan Peta Kuno" }
+          ],
+          correct: 0,
+          fact_en: "These four pillars compose the bedrock containing ancient Jewish law, history, philosophy, and prophecies.",
+          fact_bm: "Empat tiang ini membentuk asas sejarah keturunan Israel dan ramalan kedatangan penyelamat."
+        },
+        {
+          q_en: "How many books are organized inside the New Testament?",
+          q_bm: "Berapakah jumlah kitab yang terkandung dalam Perjanjian Baru (New Testament)?",
+          options: [
+            { en: "39 books", bm: "39 buah buku" },
+            { en: "27 books", bm: "27 buah buku" },
+            { en: "66 books", bm: "66 buah buku" },
+            { en: "73 books", bm: "73 buah buku" }
+          ],
+          correct: 1,
+          fact_en: "The New Testament canon universally contains 27 books focusing on Jesus and the early Church.",
+          fact_bm: "Perjanjian Baru terdiri daripada 27 buah kitab termasuk Injil, Kisah Para Rasul, Surat Kiriman, dan Wahyu."
+        },
+        {
+          q_en: "What is the difference in the book count between Protestant and Catholic Bibles?",
+          q_bm: "Berapakah perbezaan bilangan buku di dalam Bible Protestan berbanding Katolik?",
+          options: [
+            { en: "Protestant has 66 books; Catholic has 73 books", bm: "Protestan mempunyai 66 buku; Katolik mempunyai 73 buku" },
+            { en: "Protestant has 100 books; Catholic has 50 books", bm: "Protestan mempunyai 100 buku; Katolik mempunyai 50 buku" },
+            { en: "Both are identical with 66 books", bm: "Kedua-duanya adalah sama iaitu 66 buku" },
+            { en: "Catholic contains 10 fewer books", bm: "Katolik mengandungi kurang 10 buku" }
+          ],
+          correct: 0,
+          fact_en: "Protestants follow a 66-book canon, whereas Catholics include 7 additional books (Deuterocanon), making it 73.",
+          fact_bm: "Katolik memasukkan buku Deuterokanon (Deuterocanon) dalam Perjanjian Lama yang dikeluarkan oleh Protestan semasa Reformasi."
+        },
+        {
+          q_en: "What is the meaning and purpose of the Baptism rite?",
+          q_bm: "Apakah maksud upacara Pembaptisan (Baptism)?",
+          options: [
+            { en: "A holy matrimony ceremony", bm: "Upacara perkahwinan suci" },
+            { en: "A water rite symbolizing purification, spiritual renewal, and formal admission into the Church", bm: "Ritual air melambangkan penyucian, pembaharuan rohani, dan kemasukan rasmi penganut ke dalam gereja" },
+            { en: "A gold charity ritual", bm: "Ritual penyerahan zakat emas" },
+            { en: "Written admission of guilt", bm: "Pengakuan bersalah secara bertulis" }
+          ],
+          correct: 1,
+          fact_en: "Baptism is a foundational sacrament marking the beginning of a believer's formal Christian life.",
+          fact_bm: "Baptis adalah sakramen pertama yang wajib bagi seseorang yang ingin memulakan kehidupan beriman."
+        },
+        {
+          q_en: "What is the Eucharist, also known as the Lord's Supper?",
+          q_bm: "Apakah itu Ekaristi (Eucharist) atau Perjamuan Kudus?",
+          options: [
+            { en: "A morning ritual without food", bm: "Upacara berkabung tanpa makanan" },
+            { en: "Sharing bread and wine to remember Jesus' sacrifice of body and blood", bm: "Sajian roti dan wain bagi mengingati kematian, pengorbanan tubuh & darah Jesus" },
+            { en: "A celebration of baby births", bm: "Majlis sambutan kelahiran bayi" },
+            { en: "Church horse riding practice", bm: "Latihan menunggang kuda gereja" }
+          ],
+          correct: 1,
+          fact_en: "The Eucharist utilizes bread and wine to physically and spiritually commemorate the Last Supper and Jesus' sacrifice.",
+          fact_bm: "Roti melambangkan tubuh Jesus yang diseksa dan wain melambangkan darahnya yang ditumpahkan untuk membasuh dosa."
+        },
+        {
+          q_en: "How does the Sacrament of Confession (Reconciliation) help believers?",
+          q_bm: "Bagaimanakah Sakramen Pengakuan Dosa (Confession / Reconciliation) membantu penganut?",
+          options: [
+            { en: "To claim financial compensation", bm: "Untuk memohon ganti rugi kewangan" },
+            { en: "Repenting and confessing sins to a priest to receive absolution and heal relationship with God", bm: "Meluahkan penyesalan & mengaku dosa kepada paderi untuk menerima keampunan ilahi" },
+            { en: "To change official registration names", bm: "Untuk menukar nama pendaftaran rasmi" },
+            { en: "As a requirement for overseas travel", bm: "Sebagai syarat melancong ke luar negara" }
+          ],
+          correct: 1,
+          fact_en: "Confession encourages moral responsibility and provides absolution, repairing the relationship with God.",
+          fact_bm: "Pengakuan dosa menawarkan penyembuhan rohani dan menggalakkan akauntabiliti tindakan moral peribadi."
+        },
+        {
+          q_en: "What was the core theological debate between Arianism and Athanasianism?",
+          q_bm: "Apakah perbezaan utama teologi antara Arianism dan Athanasianism?",
+          options: [
+            { en: "Arius taught Jesus was created (not eternal); Athanasius taught Jesus shares the same essence with the Father (homoousios)", bm: "Arius mengajar Jesus adalah ciptaan (bukan kekal); Athanasius mengajar Jesus se-hakikat dengan Bapa (homoousios)" },
+            { en: "They disputed over Vatican's physical location", bm: "Mereka berbalah tentang lokasi Vatican" },
+            { en: "Arianism wanted Latin language only in churches", bm: "Arianism mahukan bahasa Latin sahaja di gereja" },
+            { en: "Disagreement over dinner menus", bm: "Perbezaan pendapat tentang menu perjamuan" }
+          ],
+          correct: 0,
+          fact_en: "Arius taught Jesus was a created being, while Athanasius defended the co-eternal divinity of the Son.",
+          fact_bm: "Arius menganggap Jesus mempunyai permulaan dan bukan Tuhan kekal, manakala Athanasius mempertahankan konsep Trinitas yang bersatu."
+        },
+        {
+          q_en: "What major decision was established by the Council of Nicaea in 325 CE?",
+          q_bm: "Apakah keputusan penting yang dicapai dalam Majlis Nicaea (Council of Nicaea) pada tahun 325 Masihi?",
+          options: [
+            { en: "Accepting Roman Emperors as gods", bm: "Penerimaan pengaruh raja Rom sebagai tuhan" },
+            { en: "Rejecting Arianism and affirming the Trinity as foundational Christian doctrine", bm: "Menolak Arianism dan mengesahkan Doktrin Trinitas sebagai asas iman penganut" },
+            { en: "Mandating all followers migrate to Greece", bm: "Mewajibkan semua penganut berhijrah ke Greece" },
+            { en: "Allowing sale of church lands", bm: "Membenarkan penjualan tanah gereja" }
+          ],
+          correct: 1,
+          fact_en: "Convened by Emperor Constantine I, the council rejected Arianism and formally established the Trinity.",
+          fact_bm: "Majlis Nicaea yang diketuai Maharaja Constantine I menetapkan pegangan rasmi Trinitas sebagai akidah muktamad empayar."
+        },
+        {
+          q_en: "What are the three main denominations of Christianity today?",
+          q_bm: "Apakah tiga denominasi (mahzab) utama dalam agama Kristian masa kini?",
+          options: [
+            { en: "Anglican, Baptist, and Methodist", bm: "Anglikan, Baptist, dan Methodist" },
+            { en: "Roman Catholic, Eastern Orthodox, and Protestant", bm: "Roman Katolik, Ortodoks Timur, dan Protestan" },
+            { en: "Jehovah's Witnesses, Mormon, and Gnostic", bm: "Saksi Yehuwa, Mormon, dan Gnostik" },
+            { en: "Arian, Nestorian, and Coptic", bm: "Arian, Nestorian, dan Koptik" }
+          ],
+          correct: 1,
+          fact_en: "The three major streams represent unique structures of authority, liturgical rites, and geographical histories.",
+          fact_bm: "Katolik dipimpin oleh Paus di Vatican, Ortodoks dipimpin oleh Patriark, manakala Protestan lahir akibat gerakan reformasi Martin Luther."
+        }
+      ]
+    };
+
+    // PEMUBAH KEADAAN PERMAINAN
+    let currentSet = 1;
+    let currentQuestionIndex = 0;
+    let playerScore = 0;
+    let timeRemaining = 20; 
+    let timerInterval = null;
+    let totalStars = 0;
+    let isRetrying = false;
+    let scoreRecords = [];
+
+    // Persediaan Semasa Memuatkan Fail
+    window.onload = function() {
+      const savedScores = localStorage.getItem('christian_quiz_leaderboard');
+      if (savedScores) {
+        scoreRecords = JSON.parse(savedScores);
+      } else {
+        scoreRecords = [
+          { name: "Siti Khalijah", score: 9, set: "Set 1", stars: 9, time: "2026-06-10" },
+          { name: "John Doe", score: 8, set: "Set 2", stars: 8, time: "2026-06-10" },
+          { name: "Alvin Tan", score: 7, set: "Set 4", stars: 7, time: "2026-06-10" }
+        ];
+        localStorage.setItem('christian_quiz_leaderboard', JSON.stringify(scoreRecords));
+      }
+      updateStarProgress();
+      showScreen('screen-setup');
+    };
+
+    function updateStarProgress() {
+      let calculatedTotal = 0;
+      for (let i = 1; i <= 4; i++) {
+        const key = `book_${i}_highscore`;
+        const score = localStorage.getItem(key) || 0;
+        document.getElementById(`book-${i}-progress`).innerText = `${score}/10 Stars / Bintang`;
+        calculatedTotal += parseInt(score);
+      }
+      totalStars = calculatedTotal;
+      document.getElementById('global-stars').innerText = totalStars;
+    }
+
+    function showScreen(screenId) {
+      document.getElementById('screen-setup').classList.add('hidden');
+      document.getElementById('screen-game').classList.add('hidden');
+      document.getElementById('screen-score').classList.add('hidden');
+      document.getElementById(screenId).classList.remove('hidden');
+
+      if (screenId === 'screen-setup') {
+        updateStarProgress();
+      }
+    }
+
+    function startGame(setId) {
+      const playerNameInput = document.getElementById('player-name').value.trim();
+      if (!playerNameInput) {
+        document.getElementById('player-name').value = "Smart Kid";
+      }
+
+      currentSet = setId;
+      currentQuestionIndex = 0;
+      playerScore = 0;
+      isRetrying = false;
+
+      document.getElementById('game-set-id').innerText = currentSet;
+      const setNames = {
+        1: "History & Development",
+        2: "Jesus' Teachings Revisited",
+        3: "Theology of Paul",
+        4: "Books, Rites & Rituals"
+      };
+      document.getElementById('game-set-name').innerText = setNames[setId];
+
+      const starTracker = document.getElementById('star-tracker');
+      starTracker.innerHTML = "";
+      for (let i = 0; i < 10; i++) {
+        starTracker.innerHTML += `<i id="star-dot-${i}" class="fa-solid fa-star text-gray-300 text-sm"></i>`;
+      }
+
+      showScreen('screen-game');
+      loadQuestion();
+    }
+
+    function loadQuestion() {
+      const questionsList = quizDatabase[currentSet];
+      const q = questionsList[currentQuestionIndex];
+
+      document.getElementById('current-question-num').innerText = currentQuestionIndex + 1;
+
+      // Paparan Teks Dwi-Bahasa (English Utama lebih besar, BM kedua lebih kecil)
+      document.getElementById('question-en').innerText = q.q_en;
+      document.getElementById('question-bm').innerText = q.q_bm;
+
+      // Paparan Jawapan MCQ
+      const optionButtons = document.querySelectorAll('.option-btn');
+      q.options.forEach((opt, idx) => {
+        const btn = optionButtons[idx];
+        
+        btn.disabled = false;
+        btn.className = "option-btn bg-white hover:bg-yellow-100 border-4 border-purple-300 hover:border-yellow-400 text-left p-4 rounded-2xl shadow-md transition bounce-hover flex items-center gap-3 w-full";
+        
+        btn.querySelector('.option-en').innerText = opt.en;
+        btn.querySelector('.option-bm').innerText = opt.bm;
+        
+        const badges = ["A", "B", "C", "D"];
+        btn.querySelector('.option-badge').innerText = badges[idx];
+        btn.querySelector('.option-badge').className = "option-badge bg-purple-500 text-white font-playful w-8 h-8 rounded-full flex items-center justify-center text-lg flex-shrink-0";
+      });
+
+      resetTimer();
+    }
+
+    // Mekanisme Jangka Masa Soalan
+    function resetTimer() {
+      clearInterval(timerInterval);
+      timeRemaining = 20;
+      const bar = document.getElementById('timer-bar');
+      bar.style.width = "100%";
+      bar.className = "bg-gradient-to-r from-green-500 to-yellow-400 h-full transition-all duration-100";
+
+      timerInterval = setInterval(() => {
+        timeRemaining -= 0.1;
+        const percent = (timeRemaining / 20) * 100;
+        bar.style.width = `${percent}%`;
+
+        if (timeRemaining <= 5) {
+          bar.className = "bg-red-500 h-full animate-pulse transition-all duration-100";
+          if (Math.floor(timeRemaining * 10) % 10 === 0) {
+            sfx.playTick(); 
+          }
+        }
+
+        if (timeRemaining <= 0) {
+          clearInterval(timerInterval);
+          triggerWrong();
+        }
+      }, 100);
+    }
+
+    function checkAnswer(selectedIdx) {
+      clearInterval(timerInterval);
+      const questionsList = quizDatabase[currentSet];
+      const q = questionsList[currentQuestionIndex];
+
+      const optionButtons = document.querySelectorAll('.option-btn');
+      optionButtons.forEach(btn => btn.disabled = true);
+
+      if (selectedIdx === q.correct) {
+        triggerCorrect(selectedIdx);
+      } else {
+        triggerWrong(selectedIdx);
+      }
+    }
+
+    // Menguruskan Jawapan Betul
+    function triggerCorrect(idx) {
+      sfx.playCorrect();
+      
+      confetti({
+        particleCount: 150,
+        spread: 80,
+        origin: { y: 0.6 }
+      });
+
+      const correctBtn = document.querySelectorAll('.option-btn')[idx];
+      correctBtn.className = "option-btn bg-green-100 border-4 border-green-500 text-left p-4 rounded-2xl shadow-lg flex items-center gap-3 w-full";
+      correctBtn.querySelector('.option-badge').className = "option-badge bg-green-500 text-white font-playful w-8 h-8 rounded-full flex items-center justify-center text-lg flex-shrink-0";
+
+      document.getElementById(`star-dot-${currentQuestionIndex}`).className = "fa-solid fa-star text-yellow-400 text-sm animate-bounce drop-shadow-md";
+
+      if (!isRetrying) {
+        playerScore++;
+      }
+
+      const questionsList = quizDatabase[currentSet];
+      const q = questionsList[currentQuestionIndex];
+      document.getElementById('correct-fact-en').innerText = q.fact_en;
+      document.getElementById('correct-fact-bm').innerText = q.fact_bm;
+
+      setTimeout(() => {
+        document.getElementById('modal-correct').classList.remove('hidden');
+      }, 600);
+    }
+
+    // Menguruskan Jawapan Salah
+    function triggerWrong(selectedIdx) {
+      sfx.playWrong();
+
+      if (selectedIdx !== undefined) {
+        const wrongBtn = document.querySelectorAll('.option-btn')[selectedIdx];
+        wrongBtn.className = "option-btn bg-red-100 border-4 border-red-500 text-left p-4 rounded-2xl shadow-lg flex items-center gap-3 w-full animate-shake";
+        wrongBtn.querySelector('.option-badge').className = "option-badge bg-red-500 text-white font-playful w-8 h-8 rounded-full flex items-center justify-center text-lg flex-shrink-0";
+      }
+
+      document.getElementById(`star-dot-${currentQuestionIndex}`).className = "fa-regular fa-star text-red-300 text-sm";
+
+      const questionsList = quizDatabase[currentSet];
+      const q = questionsList[currentQuestionIndex];
+      const correctText = q.options[q.correct];
+
+      document.getElementById('wrong-hint-en').innerText = `The correct answer is: "${correctText.en}"`;
+      document.getElementById('wrong-hint-bm').innerText = `Jawapan yang betul adalah: "${correctText.bm}"`;
+
+      setTimeout(() => {
+        document.getElementById('modal-wrong').classList.remove('hidden');
+      }, 600);
+    }
+
+    function retryQuestion() {
+      document.getElementById('modal-wrong').classList.add('hidden');
+      isRetrying = true; 
+      loadQuestion();
+    }
+
+    function nextQuestion(skipped = false) {
+      document.getElementById('modal-correct').classList.add('hidden');
+      document.getElementById('modal-wrong').classList.add('hidden');
+
+      const questionsList = quizDatabase[currentSet];
+      currentQuestionIndex++;
+
+      if (currentQuestionIndex < questionsList.length) {
+        isRetrying = false;
+        loadQuestion();
+      } else {
+        endGame();
+      }
+    }
+
+    // Permainan Tamat
+    function endGame() {
+      clearInterval(timerInterval);
+
+      const key = `book_${currentSet}_highscore`;
+      const previousHigh = parseInt(localStorage.getItem(key)) || 0;
+      if (playerScore > previousHigh) {
+        localStorage.setItem(key, playerScore);
+      }
+
+      const playerName = document.getElementById('player-name').value.trim() || "Smart Player";
+      document.getElementById('final-player-name').innerText = playerName;
+      document.getElementById('final-score').innerText = `${playerScore}/10`;
+
+      const praises = {
+        10: "Perfect Score! You are a Bible Master! / Luar Biasa! Sempurna!",
+        9: "Outstanding Performance! / Hebat Sungguh!",
+        8: "Brilliant Job! / Sangat Bagus!",
+        7: "Great Effort! / Usaha yang Bagus!",
+        0: "Keep learning and try again! / Boleh Cuba Lagi untuk berjaya!"
+      };
+      let praise = praises[playerScore] || "Well done, keep learning! / Syabas! Teruskan Belajar!";
+      document.getElementById('praise-message').innerText = praise;
+
+      const record = {
+        name: playerName,
+        score: playerScore,
+        set: `Set ${currentSet}`,
+        stars: playerScore,
+        time: new Date().toISOString().split('T')[0]
+      };
+      scoreRecords.push(record);
+      scoreRecords.sort((a, b) => b.score - a.score);
+      scoreRecords = scoreRecords.slice(0, 10);
+      localStorage.setItem('christian_quiz_leaderboard', JSON.stringify(scoreRecords));
+
+      buildLeaderboard();
+      showScreen('screen-score');
+    }
+
+    function buildLeaderboard() {
+      const container = document.getElementById('leaderboard-list');
+      container.innerHTML = "";
+
+      scoreRecords.forEach((item, index) => {
+        let rankColor = "text-gray-700";
+        let rankIcon = "";
+        let rowBg = "bg-white";
+
+        if (index === 0) {
+          rankColor = "text-yellow-600 font-bold";
+          rankIcon = "🏆";
+          rowBg = "bg-yellow-50";
+        } else if (index === 1) {
+          rankColor = "text-gray-500 font-bold";
+          rankIcon = "🥈";
+          rowBg = "bg-gray-100/50";
+        } else if (index === 2) {
+          rankColor = "text-amber-700 font-bold";
+          rankIcon = "🥉";
+        }
+
+        container.innerHTML += `
+          <div class="flex items-center justify-between p-3 border-b border-gray-100 last:border-0 ${rowBg}">
+            <div class="flex items-center gap-3">
+              <span class="w-6 text-center font-playful ${rankColor}">${rankIcon ? rankIcon : index + 1}</span>
+              <div>
+                <span class="font-bold text-gray-800 text-sm md:text-base">${item.name}</span>
+                <span class="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full ml-2 font-bold">${item.set}</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-1 font-playful text-yellow-600">
+              <span>${item.score}/10 Stars</span>
+              <i class="fa-solid fa-star text-xs animate-pulse"></i>
+            </div>
+          </div>
+        `;
+      });
+    }
+  </script>
+</body>
+</html>
