@@ -1,1494 +1,410 @@
-import React, { useState, useEffect } from 'react';
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Kembara Agama - Quiz 5: Zoroastrianism</title>
+  
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-// --- HIGH-ENERGY SYNTHESIZED SOUND ENGINE (WEB AUDIO API) ---
-class EducationalSoundSynth {
-  constructor() {
-    this.ctx = null;
-    this.bgmInterval = null;
-    this.isMuted = false;
-  }
-
-  init() {
-    if (!this.ctx) {
-      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+  <style>
+    /* Prevent text selection and optimize mobile view */
+    body {
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
     }
-    if (this.ctx.state === 'suspended') {
-      this.ctx.resume();
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen selection:bg-indigo-500/30">
+
+  <div id="root"></div>
+
+  <script type="text/babel">
+    
+    // ==========================================
+    // YOUR ORIGINAL CODE STARTS HERE
+    // ==========================================
+
+    class EducationalSoundSynth {
+      constructor() {
+        this.ctx = null;
+        this.bgmInterval = null;
+        this.isMuted = false;
+      }
+
+      init() {
+        if (!this.ctx) {
+          this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+
+      playCorrect() {
+        if (this.isMuted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51]; 
+        notes.forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, now + idx * 0.06);
+          gain.gain.setValueAtTime(0.25, now + idx * 0.06);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.4);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now + idx * 0.06);
+          osc.stop(now + idx * 0.06 + 0.45);
+        });
+      }
+
+      playWrong() {
+        if (this.isMuted) return;
+        this.init();
+        const now = this.ctx.currentTime;
+        const osc1 = this.ctx.createOscillator();
+        const osc2 = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc1.type = 'sawtooth';
+        osc1.frequency.setValueAtTime(150, now);
+        osc1.frequency.linearRampToValueAtTime(80, now + 0.35);
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(155, now);
+        osc2.frequency.linearRampToValueAtTime(0.01, now + 0.35);
+        osc1.connect(gain);
+        osc2.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc1.start(now);
+        osc2.start(now);
+        osc1.stop(now + 0.35);
+        osc2.stop(now + 0.35);
+        gain.gain.setValueAtTime(0.18, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+      }
+
+      startBGM() {
+        if (this.isMuted) return;
+        this.init();
+        if (this.bgmInterval) return;
+        let step = 0;
+        const melody = [329.63, 392.00, 440.00, 392.00, 329.63, 392.00, 440.00, 349.23];
+        const playStep = () => {
+          const now = this.ctx.currentTime;
+          const note = melody[step % melody.length];
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(note, now);
+          gain.gain.setValueAtTime(0.06, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(now);
+          osc.stop(now + 0.85);
+          if (step % 2 === 0) {
+            const pulseOsc = this.ctx.createOscillator();
+            const pulseGain = this.ctx.createGain();
+            pulseOsc.type = 'triangle';
+            pulseOsc.frequency.setValueAtTime(note / 2, now);
+            pulseGain.gain.setValueAtTime(0.04, now);
+            pulseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+            pulseOsc.connect(pulseGain);
+            pulseGain.connect(this.ctx.destination);
+            pulseOsc.start(now);
+            pulseOsc.stop(now + 0.45);
+          }
+          step++;
+        };
+        this.bgmInterval = setInterval(playStep, 500);
+      }
+
+      toggleMute() {
+        this.isMuted = !this.isMuted;
+        if (this.isMuted) {
+          if (this.bgmInterval) {
+            clearInterval(this.bgmInterval);
+            this.bgmInterval = null;
+          }
+        } else {
+          this.startBGM();
+        }
+        return this.isMuted;
+      }
     }
-  }
 
-  // High-energy positive arpeggio (Loud & Bright)
-  playCorrect() {
-    if (this.isMuted) return;
-    this.init();
-    const now = this.ctx.currentTime;
-    
-    // Bright C-Major Sparkle chord
-    const notes = [523.25, 659.25, 783.99, 1046.50, 1318.51]; 
-    notes.forEach((freq, idx) => {
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(freq, now + idx * 0.06);
-      
-      gain.gain.setValueAtTime(0.25, now + idx * 0.06);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.06 + 0.4);
-      
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      
-      osc.start(now + idx * 0.06);
-      osc.stop(now + idx * 0.06 + 0.45);
-    });
-  }
-
-  // Kid-friendly cartoon "boing" / buzzer for incorrect attempt
-  playWrong() {
-    if (this.isMuted) return;
-    this.init();
-    const now = this.ctx.currentTime;
-    
-    const osc1 = this.ctx.createOscillator();
-    const osc2 = this.ctx.createOscillator();
-    const gain = this.ctx.createGain();
-    
-    osc1.type = 'sawtooth';
-    osc1.frequency.setValueAtTime(150, now);
-    osc1.frequency.linearRampToValueAtTime(80, now + 0.35);
-
-    osc2.type = 'sine';
-    osc2.frequency.setValueAtTime(155, now);
-    osc2.frequency.linearRampToValueAtTime(85, now + 0.35);
-    
-    gain.gain.setValueAtTime(0.25, now);
-    gain.gain.linearRampToValueAtTime(0.01, now + 0.35);
-    
-    osc1.connect(gain);
-    osc2.connect(gain);
-    gain.connect(this.ctx.destination);
-    
-    osc1.start(now);
-    osc2.start(now);
-    osc1.stop(now + 0.35);
-    osc2.stop(now + 0.35);
-  }
-
-  // Grand celebratory fanfare upon completing a world
-  playTriumph() {
-    if (this.isMuted) return;
-    this.init();
-    const now = this.ctx.currentTime;
-    
-    const fanfare = [261.63, 329.63, 392.00, 523.25, 659.25, 783.99];
-    fanfare.forEach((freq, idx) => {
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(freq, now + idx * 0.1);
-      osc.frequency.setValueAtTime(freq * 1.5, now + idx * 0.1 + 0.2);
-      
-      gain.gain.setValueAtTime(0.18, now + idx * 0.1);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + idx * 0.1 + 0.5);
-      
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      
-      osc.start(now + idx * 0.1);
-      osc.stop(now + idx * 0.1 + 0.5);
-    });
-  }
-
-  // Engaging, fast-tempo retro-synth beat for dynamic background music
-  startBGM() {
-    if (this.isMuted) return;
-    this.init();
-    if (this.bgmInterval) return;
-
-    let step = 0;
-    const melody = [
-      329.63, 392.00, 440.00, 392.00, // E4, G4, A4, G4
-      329.63, 392.00, 523.25, 493.88, // E4, G4, C5, B4
-      440.00, 523.25, 392.00, 349.23, // A4, C5, G4, F4
-      329.63, 293.66, 329.63, 392.00  // E4, D4, E4, G4
+    const QUIZ_SETS = [
+      {
+        id: 1,
+        book: "Book 1: History and Development",
+        bookMalay: "Buku 1: Sejarah dan Perkembangan",
+        title: "Origins & Zarathustra's Mission",
+        malayTitle: "Asal-usul & Misi Perjuangan Zarathustra",
+        description: "Explore the miraculous birth, Spitama clan origins, and Zarathustra's divine mission to reform ancient Persian religion.",
+        malayDescription: "Terokai kelahiran ajaib, asal-usul puak Spitama, dan misi suci Zarathustra dalam memperbaharui kepercayaan Parsi purba.",
+        color: "from-amber-400 to-orange-500",
+        questions: [
+          {
+            q: "In which geographical region do historical estimations place the birth of Zarathustra?",
+            qM: "Di manakah kawasan geografi yang dikaitkan oleh ahli sejarah sebagai tempat lahir Zarathustra?",
+            options: [
+              { text: "Azerbaijan (Northern/Northwestern Iran)", textM: "Azerbaijan (Utara/Barat Laut Iran)", isCorrect: true },
+              { text: "Mesopotamia (Modern Iraq)", textM: "Mesopotamia (Iraq Moden)" },
+              { text: "Persepolis (Southern Iran)", textM: "Persepolis (Selatan Iran)" },
+              { text: "The Arabian Peninsula", textM: "Semenanjung Arab" }
+            ],
+            hint: "This rugged mountainous area in Northwestern Iran is central to his early life.",
+            hintM: "Kawasan bergunung-ganang di Barat Laut Iran ini sangat penting bagi awal hidupnya.",
+            tip: "Historians and scriptures suggest Zarathustra was born in Northwestern Iran/Azerbaijan in the Spitama clan.",
+            tipM: "Sejarawan dan kitab suci mencatatkan bahawa Zarathustra dilahirkan di Barat Laut Iran/Azerbaijan dalam puak Spitama."
+          },
+          {
+            q: "Zarathustra belonged to which ancient noble and priestly lineage?",
+            qM: "Zarathustra tergolong dalam keturunan bangsawan dan golongan pendeta purba yang mana?",
+            options: [
+              { text: "The Spitama Clan", textM: "Puak Spitama", isCorrect: true },
+              { text: "The Sasanian Clan", textM: "Puak Sasanian" },
+              { text: "The Achaemenid Lineage", textM: "Keturunan Achaemenid" },
+              { text: "The Parthian Dynasty", textM: "Dinasti Parthian" }
+            ],
+            hint: "The name of this lineage translates to 'of brilliant or white descent'.",
+            hintM: "Nama keturunan ini diterjemahkan sebagai 'daripada keturunan yang putih berkilau'.",
+            tip: "Zarathustra came from the Spitama family, a family revered for spiritual devotion.",
+            tipM: "Zarathustra berasal daripada keluarga Spitama, sebuah keluarga yang dihormati dalam hal keagamaan."
+          },
+          {
+            q: "Who were the parents of the prophet Zarathustra according to historical records?",
+            qM: "Siapakah nama ibu bapa nabi Zarathustra menurut catatan sejarah?",
+            options: [
+              { text: "Pourushaspa and Dughdova", textM: "Pourushaspa dan Dughdova", isCorrect: true },
+              { text: "King Vishtaspa and Hutosa", textM: "Raja Vishtaspa dan Hutosa" },
+              { text: "Cyrus the Great and Cassandane", textM: "Cyrus Agung dan Cassandane" },
+              { text: "Darius and Atossa", textM: "Darius dan Atossa" }
+            ],
+            hint: "His father's name relates to horses, and his mother's name means 'maiden of light'.",
+            hintM: "Nama bapanya mempunyai maksud berkaitan kuda, dan ibunya bermaksud 'gadis cahaya'.",
+            tip: "His father, Pourushaspa, and his mother, Dughdova, raised Zarathustra despite early magical threats.",
+            tipM: "Bapanya, Pourushaspa, dan ibunya, Dughdova, membesarkan Zarathustra walaupun menghadapi ancaman sihir awal."
+          },
+          {
+            q: "What miraculous baby behavior is unique to Zarathustra at the moment of his birth?",
+            qM: "Apakah kelakuan ajaib bayi yang unik kepada Zarathustra ketika beliau dilahirkan?",
+            options: [
+              { text: "He laughed out loud instead of crying", textM: "Beliau ketawa riang dan bukannya menangis", isCorrect: true },
+              { text: "He pointed towards the eastern sky", textM: "Beliau menunjuk ke arah langit timur" },
+              { text: "A small flame burned gently on his head", textM: "Api kecil menyala lembut di kepalanya" },
+              { text: "He spoke clearly to comfort his mother", textM: "Beliau berkata-kata dengan jelas untuk menenangkan ibunya" }
+            ],
+            hint: "His joyous laughter signaled the ultimate triumph of optimism over dark spiritual forces.",
+            hintM: "Ketawa gembiranya menandakan kemenangan muktamad cahaya ke atas kuasa kegelapan.",
+            tip: "The sacred texts highlight that Zarathustra laughed at birth, scattering dark spirits and evil entities.",
+            tipM: "Kitab suci menekankan bahawa Zarathustra ketawa semasa lahir, menyebabkan roh gelap dan entiti jahat bertempiaran lari."
+          }
+        ]
+      }
     ];
 
-    const playStep = () => {
-      const now = this.ctx.currentTime;
-      const note = melody[step % melody.length];
-      
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(note, now);
-      
-      gain.gain.setValueAtTime(0.06, now); 
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
-      
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start(now);
-      osc.stop(now + 0.85);
+    // Simple placeholder UI wrapper to replace imports
+    function QuizApp() {
+      const [currentQuestionIdx, setCurrentQuestionIdx] = React.useState(0);
+      const [score, setScore] = React.useState(0);
+      const [showScore, setShowScore] = React.useState(false);
+      const [selectedOption, setSelectedOption] = React.useState(null);
+      const [isAnswered, setIsAnswered] = React.useState(false);
+      const [showHint, setShowHint] = React.useState(false);
+      const [showTipModal, setShowTipModal] = React.useState(false);
+      const [synth] = React.useState(() => new EducationalSoundSynth());
+      const [muted, setMuted] = React.useState(false);
 
-      if (step % 2 === 0) {
-        const pulseOsc = this.ctx.createOscillator();
-        const pulseGain = this.ctx.createGain();
-        pulseOsc.type = 'triangle';
-        pulseOsc.frequency.setValueAtTime(note / 2, now); 
-        pulseGain.gain.setValueAtTime(0.04, now);
-        pulseGain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
-        pulseOsc.connect(pulseGain);
-        pulseGain.connect(this.ctx.destination);
-        pulseOsc.start(now);
-        pulseOsc.stop(now + 0.45);
-      }
+      const activeQuiz = QUIZ_SETS[0];
+      const activeQuestion = activeQuiz.questions[currentQuestionIdx];
 
-      step++;
-    };
+      React.useEffect(() => {
+        synth.startBGM();
+        return () => clearInterval(synth.bgmInterval);
+      }, [synth]);
 
-    this.bgmInterval = setInterval(playStep, 500); 
-  }
-
-  stopBGM() {
-    if (this.bgmInterval) {
-      clearInterval(this.bgmInterval);
-      this.bgmInterval = null;
-    }
-  }
-
-  toggleMute() {
-    this.isMuted = !this.isMuted;
-    if (this.isMuted) {
-      this.stopBGM();
-    } else {
-      this.startBGM();
-    }
-    return this.isMuted;
-  }
-}
-
-const sounds = new EducationalSoundSynth();
-
-// --- BILINGUAL QUESTIONS DEVELOPED ACCORDING TO BOOK 1 & BOOK 2 ---
-const QUIZ_SETS = [
-  {
-    id: 1,
-    book: "Book 1: History and Development",
-    bookMalay: "Buku 1: Sejarah dan Perkembangan",
-    title: "Origins & Zarathustra's Mission",
-    malayTitle: "Asal-usul & Misi Perjuangan Zarathustra",
-    description: "Explore the miraculous birth, Spitama clan origins, and Zarathustra's divine mission to reform ancient Persian religion.",
-    malayDescription: "Terokai kelahiran ajaib, asal-usul puak Spitama, dan misi suci Zarathustra dalam memperbaharui kepercayaan Parsi purba.",
-    color: "from-amber-400 to-orange-500",
-    questions: [
-      {
-        q: "In which geographical region do historical estimations place the birth of Zarathustra?",
-        qM: "Di manakah kawasan geografi yang dikaitkan oleh ahli sejarah sebagai tempat lahir Zarathustra?",
-        options: [
-          { text: "Azerbaijan (Northern/Northwestern Iran)", textM: "Azerbaijan (Utara/Barat Laut Iran)", isCorrect: true },
-          { text: "Mesopotamia (Modern Iraq)", textM: "Mesopotamia (Iraq Moden)" },
-          { text: "Persepolis (Southern Iran)", textM: "Persepolis (Selatan Iran)" },
-          { text: "The Arabian Peninsula", textM: "Semenanjung Arab" }
-        ],
-        hint: "This rugged mountainous area in Northwestern Iran is central to his early life.",
-        hintM: "Kawasan bergunung-ganang di Barat Laut Iran ini sangat penting bagi awal hidupnya.",
-        tip: "Historians and scriptures suggest Zarathustra was born in Northwestern Iran/Azerbaijan in the Spitama clan.",
-        tipM: "Sejarahwan dan kitab suci mencatatkan bahawa Zarathustra dilahirkan di Barat Laut Iran/Azerbaijan dalam puak Spitama."
-      },
-      {
-        q: "Zarathustra belonged to which ancient noble and priestly lineage?",
-        qM: "Zarathustra tergolong dalam keturunan bangsawan dan golongan pendeta purba yang mana?",
-        options: [
-          { text: "The Spitama Clan", textM: "Puak Spitama", isCorrect: true },
-          { text: "The Sasanian Clan", textM: "Puak Sasanian" },
-          { text: "The Achaemenid Lineage", textM: "Keturunan Achaemenid" },
-          { text: "The Parthian Dynasty", textM: "Dinasti Parthian" }
-        ],
-        hint: "The name of this lineage translates to 'of brilliant or white descent'.",
-        hintM: "Nama keturunan ini diterjemahkan sebagai 'daripada keturunan yang putih berkilau'.",
-        tip: "Zarathustra came from the Spitama family, a family revered for spiritual devotion.",
-        tipM: "Zarathustra berasal daripada keluarga Spitama, sebuah keluarga yang dihormati dalam hal keagamaan."
-      },
-      {
-        q: "Who were the parents of the prophet Zarathustra according to historical records?",
-        qM: "Siapakah nama ibu bapa nabi Zarathustra menurut catatan sejarah?",
-        options: [
-          { text: "Pourushaspa and Dughdova", textM: "Pourushaspa dan Dughdova", isCorrect: true },
-          { text: "King Vishtaspa and Hutosa", textM: "Raja Vishtaspa dan Hutosa" },
-          { text: "Cyrus the Great and Cassandane", textM: "Cyrus Agung dan Cassandane" },
-          { text: "Darius and Atossa", textM: "Darius dan Atossa" }
-        ],
-        hint: "His father's name relates to horses, and his mother's name means 'maiden of light'.",
-        hintM: "Nama bapanya mempunyai maksud berkaitan kuda, dan ibunya bermaksud 'gadis cahaya'.",
-        tip: "His father, Pourushaspa, and his mother, Dughdova, brought up Zarathustra despite early magical threats.",
-        tipM: "Bapanya, Pourushaspa, dan ibunya, Dughdova, membesarkan Zarathustra walaupun menghadapi ancaman sihir awal."
-      },
-      {
-        q: "What miraculous baby behavior is unique to Zarathustra at the moment of his birth?",
-        qM: "Apakah kelakuan ajaib bayi yang unik kepada Zarathustra ketika beliau dilahirkan?",
-        options: [
-          { text: "He laughed out loud instead of crying", textM: "Beliau ketawa riang dan bukannya menangis", isCorrect: true },
-          { text: "He pointed towards the eastern sky", textM: "Beliau menunjuk ke arah langit timur" },
-          { text: "A small flame burned gently on his head", textM: "Api kecil menyala lembut di kepalanya" },
-          { text: "He spoke clearly to comfort his mother", textM: "Beliau berkata-kata dengan jelas untuk menenangkan ibunya" }
-        ],
-        hint: "His joyous laughter signaled the ultimate triumph of optimism over dark spiritual forces.",
-        hintM: "Ketawa gembiranya menandakan kemenangan muktamad cahaya ke atas kuasa gelap.",
-        tip: "The sacred texts highlight that Zarathustra laughed at birth, scattering dark elements and evil spirits.",
-        tipM: "Kitab suci menekankan bahawa Zarathustra ketawa semasa lahir, menakutkan unsur-unsur gelap dan roh jahat."
-      },
-      {
-        q: "What was the dominant religious state of ancient Persians before Zarathustra's historical reforms?",
-        qM: "Apakah keadaan keagamaan utama orang Parsi kuno sebelum reformasi bersejarah Zarathustra?",
-        options: [
-          { text: "Polytheism with blood-soaked animal sacrifices", textM: "Politeisme dengan upacara korban haiwan berdarah", isCorrect: true },
-          { text: "Strict philosophical atheism", textM: "Ateisme berfalsafah yang ketat" },
-          { text: "Sun-centric worship without any rituals", textM: "Penyembahan matahari tanpa sebarang ritual" },
-          { text: "Worship of water spirits inside dark caves", textM: "Penyembahan roh air di dalam gua gelap" }
-        ],
-        hint: "This pre-Zoroastrian practice involved appeasing multiple 'daevas' with brutal killings.",
-        hintM: "Amalan sebelum Zoroastrian ini melibatkan pemuasan banyak tuhan dengan pembunuhan kejam.",
-        tip: "Zarathustra courageously condemned the animal slaughter and multi-god magic of the existing priests.",
-        tipM: "Zarathustra dengan berani mengecam penyembelihan haiwan dan sihir berbilang tuhan oleh para pendeta lama."
-      },
-      {
-        q: "At what key age did Zarathustra leave his home to search for true spiritual wisdom?",
-        qM: "Pada usia penting berapakah Zarathustra meninggalkan rumahnya untuk mencari kebijaksanaan rohani yang sebenar?",
-        options: [
-          { text: "30 years old", textM: "30 tahun", isCorrect: true },
-          { text: "15 years old", textM: "15 tahun" },
-          { text: "20 years old", textM: "20 tahun" },
-          { text: "40 years old", textM: "40 tahun" }
-        ],
-        hint: "It represents a standard stage of intellectual and emotional maturity in ancient history.",
-        hintM: "Ia mewakili peringkat matang dari segi intelek dan emosi dalam sejarah purba." ,
-        tip: "At age 30, Zarathustra received his first massive revelation after a decade of searching.",
-        tipM: "Pada usia 30 tahun, Zarathustra menerima wahyu agung pertamanya setelah sedekad mencari."
-      },
-      {
-        q: "Which volcanic peak in Northwestern Iran is celebrated as his spot of high meditation and vision?",
-        qM: "Puncak gunung berapi manakah di Barat Laut Iran yang diraikan sebagai tempat meditasi dan wahyu agungnya?",
-        options: [
-          { text: "Mount Sabalan", textM: "Gunung Sabalan", isCorrect: true },
-          { text: "Mount Damavand", textM: "Gunung Damavand" },
-          { text: "Mount Ararat", textM: "Gunung Ararat" },
-          { text: "Mount Sinai", textM: "Gunung Sinai" }
-        ],
-        hint: "This peaks stands high in Azerbaijan, covered with snow and holy springs.",
-        hintM: "Gunung ini berdiri tinggi di Azerbaijan, dilitupi salji dan kolam air suci.",
-        tip: "According to historical accounts, Mount Sabalan was where Zarathustra communed with God.",
-        tipM: "Menurut sejarah, Gunung Sabalan merupakan tempat Zarathustra merenung dan berhubung dengan Tuhan."
-      },
-      {
-        q: "Who was the brilliant celestial being (Amesha Spenta) that led him to Ahura Mazda?",
-        qM: "Siapakah makhluk syurga bercahaya (Amesha Spenta) yang memimpin beliau menemui Ahura Mazda?",
-        options: [
-          { text: "Vohu Manah (The Good Mind)", textM: "Vohu Manah (Minda yang Baik)", isCorrect: true },
-          { text: "Ahriman (The Dark One)", textM: "Ahriman (Si Gelap)" },
-          { text: "Mithra (The Guardian)", textM: "Mithra (Sang Penjaga)" },
-          { text: "Atar (The Flame)", textM: "Atar (Sang Api)" }
-        ],
-        hint: "This entity represents divine wisdom, clean consciousness, and pure mind.",
-        hintM: "Entiti ini mewakili kebijaksanaan ilahi, kesedaran murni, dan minda yang bersih.",
-        tip: "Vohu Manah appeared as an immense figure of pure light, asking Zarathustra who he was.",
-        tipM: "Vohu Manah muncul sebagai lembaga cahaya yang sangat besar, menanyakan Zarathustra siapa dirinya."
-      },
-      {
-        q: "How many years of preaching did it take before Zarathustra gained his very first convert?",
-        qM: "Berapa tahunkah masa yang diambil untuk berdakwah sebelum Zarathustra mendapat pengikut pertamanya?",
-        options: [
-          { text: "10 years", textM: "10 tahun", isCorrect: true },
-          { text: "1 year", textM: "1 tahun" },
-          { text: "5 years", textM: "5 tahun" },
-          { text: "12 years", textM: "12 tahun" }
-        ],
-        hint: "It required an entire decade of continuous rejection, persecution, and isolation.",
-        hintM: "Ia memerlukan sedekad penuh penolakan, penindasan, dan pengasingan diri.",
-        tip: "Zarathustra struggled for ten long years until his cousin accepted his monotheistic vision.",
-        tipM: "Zarathustra berjuang selama sepuluh tahun sebelum sepupunya menerima ajaran monoteistik ini."
-      },
-      {
-        q: "Who was this very first convert who recognized his divine revelation?",
-        qM: "Siapakah nama pengikut pertama yang mengakui kebenaran wahyu beliau?",
-        options: [
-          { text: "Maidhyoimanha (His cousin)", textM: "Maidhyoimanha (Sepupunya)", isCorrect: true },
-          { text: "King Vishtaspa", textM: "Raja Vishtaspa" },
-          { text: "Queen Hutosa", textM: "Ratu Hutosa" },
-          { text: "Jamshid the Ruler", textM: "Jamshid sang Pemerintah" }
-        ],
-        hint: "He was a close cousin of Zarathustra who remained loyal through difficult trials.",
-        hintM: "Beliau ialah sepupu rapat Zarathustra yang setia melalui tempoh sukar.",
-        tip: "Maidhyoimanha accepted the faith first, followed eventually by powerful rulers.",
-        tipM: "Maidhyoimanha menerima agama ini pertama kali, diikuti kemudian oleh pemerintah yang berkuasa."
-      }
-    ]
-  },
-  {
-    id: 2,
-    book: "Book 1: History and Development",
-    bookMalay: "Buku 1: Sejarah dan Perkembangan",
-    title: "Empires, Kings & Sacred Texts",
-    malayTitle: "Empayar, Raja & Kitab Suci",
-    description: "Learn about King Vishtaspa's conversion, Persia's great dynasties (Achaemenid, Sasanian), and how the Avesta scriptures were compiled.",
-    malayDescription: "Ketahui tentang pengislaman Raja Vishtaspa, dinasti agung Parsi (Achaemenid, Sasanian), dan bagaimana kitab suci Avesta dikumpulkan.",
-    color: "from-blue-500 to-indigo-600",
-    questions: [
-      {
-        q: "Whose conversion as a powerful regional King marked the true turning point of the religion's growth?",
-        qM: "Penukaran agama raja wilayah yang berkuasa mana yang menandakan titik tolak pertumbuhan pesat kepercayaan ini?",
-        options: [
-          { text: "King Kavi Vishtaspa", textM: "Raja Kavi Vishtaspa", isCorrect: true },
-          { text: "King Cyrus the Great", textM: "Raja Cyrus Agung" },
-          { text: "King Darius the Great", textM: "Raja Darius Agung" },
-          { text: "King Xerxes I", textM: "Raja Xerxes I" }
-        ],
-        hint: "He accepted the faith after Zarathustra healed his favorite stallion from paralysis.",
-        hintM: "Beliau menerima kepercayaan ini selepas Zarathustra menyembuhkan kuda kegemarannya yang lumpuh.",
-        tip: "King Vishtaspa embraced the religion and gave royal protection, helping to spread it widely.",
-        tipM: "Raja Vishtaspa memeluk agama ini dan memberikan perlindungan diraja, membantu penyebarannya luas."
-      },
-      {
-        q: "What is the primary, authoritative collection of sacred Zoroastrian scriptures called?",
-        qM: "Apakah nama bagi himpunan utama kitab suci penganut Zoroastrian?",
-        options: [
-          { text: "The Avesta", textM: "Kitab Avesta", isCorrect: true },
-          { text: "The Vedas", textM: "Kitab Veda" },
-          { text: "The Torah", textM: "Kitab Taurat" },
-          { text: "The Upanishads", textM: "Kitab Upanishad" }
-        ],
-        hint: "Its name refers to the foundational text or core wisdom.",
-        hintM: "Namanya merujuk kepada teks asas atau kebijaksanaan teras.",
-        tip: "The Avesta contains liturgical hymns, laws, daily prayers, and priestly guidance.",
-        tipM: "Avesta mengandungi nyanyian liturgi, undang-undang, doa harian, dan panduan pendeta."
-      },
-      {
-        q: "Which specific section of the Avesta contains the actual poetic hymns composed directly by the Prophet?",
-        qM: "Bahagian Avesta manakah yang mengandungi nyanyian puitis yang dikarang secara langsung oleh Sang Nabi?",
-        options: [
-          { text: "The Gathas", textM: "Kitab Gathas", isCorrect: true },
-          { text: "The Vendidad", textM: "Kitab Vendidad" },
-          { text: "The Yashts", textM: "Kitab Yashts" },
-          { text: "The Visperad", textM: "Kitab Visperad" }
-        ],
-        hint: "These are 17 ancient hymns containing the core monotheistic philosophy.",
-        hintM: "Ini adalah 17 nyanyian purba yang mengandungi falsafah teras monoteisme.",
-        tip: "The Gathas are the most sacred part of the Avesta, preserved in an extremely ancient dialect.",
-        tipM: "Gathas ialah bahagian paling suci dalam Avesta, dipelihara dalam dialek yang sangat purba."
-      },
-      {
-        q: "What is the ancient Indo-Iranian sister language in which the oldest Zoroastrian texts were written?",
-        qM: "Apakah bahasa Indo-Iran purba yang digunakan untuk menulis kitab terawal Zoroastrian?",
-        options: [
-          { text: "Avestan", textM: "Bahasa Avestan", isCorrect: true },
-          { text: "Sanskrit", textM: "Bahasa Sanskrit" },
-          { text: "Pahlavi", textM: "Bahasa Pahlavi" },
-          { text: "Ancient Greek", textM: "Bahasa Yunani Purba" }
-        ],
-        hint: "It is closely related to Vedic Sanskrit and named directly after the texts.",
-        hintM: "Ia sangat rapat dengan bahasa Sanskrit Veda dan dinamakan sempena kitab tersebut.",
-        tip: "Avestan is a dead language preserved only because of continuous liturgical use by priests.",
-        tipM: "Bahasa Avestan ialah bahasa mati yang terpelihara hasil pembacaan doa berterusan oleh pendeta."
-      },
-      {
-        q: "Which dynasty elevated Zoroastrianism to its absolute state religion, centralizing its administration?",
-        qM: "Dinasti manakah yang mengangkat Zoroastrianisme sebagai agama rasmi mutlak, memusatkan pentadbirannya?",
-        options: [
-          { text: "The Sasanian Empire", textM: "Empayar Sasanian", isCorrect: true },
-          { text: "The Achaemenid Empire", textM: "Empayar Achaemenid" },
-          { text: "The Parthian Empire", textM: "Empayar Parthian" },
-          { text: "The Seleucid Empire", textM: "Empayar Seleucid" }
-        ],
-        hint: "They ruled from the 3rd to the 7th century CE, building majestic stone fire temples.",
-        hintM: "Mereka memerintah dari abad ke-3 hingga ke-7 M, membina kuil api batu yang megah.",
-        tip: "The Sasanians institutionalized the priesthood and created a structured national church.",
-        tipM: "Sasanian menetapkan institusi pendeta dan mewujudkan struktur gereja kebangsaan yang tersusun."
-      },
-      {
-        q: "The destruction of which capital city by Alexander the Great in 330 BCE lost major ancient scrolls?",
-        qM: "Kemusnahan ibu kota mana oleh Alexander Agung pada 330 SM menyebabkan lenyapnya skrol purba yang berharga?",
-        options: [
-          { text: "Persepolis", textM: "Persepolis", isCorrect: true },
-          { text: "Babylon", textM: "Babylon" },
-          { text: "Susa", textM: "Susa" },
-          { text: "Ecbatana", textM: "Ecbatana" }
-        ],
-        hint: "This city was the rich ceremonial heart of the Achaemenid Empire.",
-        hintM: "Kota ini merupakan pusat upacara yang kaya bagi Empayar Achaemenid.",
-        tip: "Alexander burned the royal palace and libraries at Persepolis, destroying text written with gold ink.",
-        tipM: "Alexander membakar istana diraja dan perpustakaan di Persepolis, memusnahkan teks bertinta emas."
-      },
-      {
-        q: "Which Achaemenid Emperor carved his deep devotion to Ahura Mazda into the Behistun Inscription?",
-        qM: "Maharaja Achaemenid manakah yang mengukir pengabdian mendalamnya kepada Ahura Mazda di Prasasti Behistun?",
-        options: [
-          { text: "Darius I (The Great)", textM: "Darius I (Agung)", isCorrect: true },
-          { text: "Cyrus the Great", textM: "Cyrus Agung" },
-          { text: "Xerxes II", textM: "Xerxes II" },
-          { text: "Cambyses II", textM: "Cambyses II" }
-        ],
-        hint: "He is famous for his royal road network and his military conquests.",
-        hintM: "Beliau terkenal dengan rangkaian jalan raya diraja dan penaklukan ketenteraannya.",
-        tip: "Darius the Great credited Ahura Mazda on high rock cliffs for establishing his royal line.",
-        tipM: "Darius Agung memuji Ahura Mazda di tebing batu tinggi kerana mengesahkan takhta dirajanya."
-      },
-      {
-        q: "What is the title of the Middle Persian commentary and explanation system of the Avesta?",
-        qM: "Apakah gelaran bagi sistem ulasan dan penjelasan bahasa Parsi Tengah untuk kitab Avesta?",
-        options: [
-          { text: "The Zand", textM: "Zand", isCorrect: true },
-          { text: "The Talmud", textM: "Talmud" },
-          { text: "The Hadith", textM: "Hadith" },
-          { text: "The Sutras", textM: "Sutra" }
-        ],
-        hint: "The word translates directly to mean 'interpretation' or 'knowledge'.",
-        hintM: "Perkataan ini diterjemahkan secara langsung sebagai 'tafsiran' atau 'pengetahuan'.",
-        tip: "The Zand helped later generations understand the ancient, complex Avestan language.",
-        tipM: "Zand membantu generasi terkemudian memahami bahasa Avestan kuno yang sukar."
-      },
-      {
-        q: "What major historical event in the 7th Century CE caused the gradual decline of Zoroastrianism in Persia?",
-        qM: "Apakah peristiwa sejarah utama pada abad ke-7 M yang menyebabkan kemerosotan beransur-ansur Zoroastrianisme di Parsi?",
-        options: [
-          { text: "The Islamic Arab Conquest", textM: "Penaklukan Arab Islam", isCorrect: true },
-          { text: "The Crusades", textM: "Perang Salib" },
-          { text: "The Mongol Invasions", textM: "Pencerobohan Mongol" },
-          { text: "The Byzantine Incursion", textM: "Pencerobohan Byzantine" }
-        ],
-        hint: "It saw the collapse of the Sasanian state and the start of large-scale conversion.",
-        hintM: "Ia menyaksikan kejatuhan kerajaan Sasanian dan permulaan penukaran agama secara besar-besaran.",
-        tip: "Following the conquest, many Persians converted, while others fled to preserve their religion.",
-        tipM: "Selepas penaklukan, ramai orang Parsi memeluk Islam, manakala sebahagian lagi melarikan diri demi memelihara agama."
-      },
-      {
-        q: "The refugees who fled Persia to Western India to preserve their faith are known as what community?",
-        qM: "Pelarian yang melarikan diri dari Parsi ke Barat India demi memelihara iman dikenali sebagai komuniti apa?",
-        options: [
-          { text: "The Parsis", textM: "Masyarakat Parsi", isCorrect: true },
-          { text: "The Kurds", textM: "Masyarakat Kurdi" },
-          { text: "The Yazidis", textM: "Masyarakat Yazidi" },
-          { text: "The Druze", textM: "Masyarakat Druze" }
-        ],
-        hint: "Their name literally means 'Persians' in Indian dialects.",
-        hintM: "Nama mereka membawa maksud 'Orang Parsi' dalam dialek India.",
-        tip: "The Parsis landed in Gujarat, India, establishing major cultural centers that thrive to this day.",
-        tipM: "Masyarakat Parsi mendarat di Gujarat, India, membina pusat kebudayaan utama yang makmur hingga kini."
-      }
-    ]
-  },
-  {
-    id: 3,
-    book: "Book 2: Beliefs, Rites, and Rituals",
-    bookMalay: "Buku 2: Kepercayaan, Amalan dan Ritual",
-    title: "Cosmology, Dualism & Ethics",
-    malayTitle: "Kosmologi, Dualisme & Etika",
-    description: "Based on Book 2 (including Page 4 Dualism Illustration): Discover the eternal clash of Ahura Mazda (Good) vs Angra Mainyu (Evil), Asha, and the path to judgment.",
-    malayDescription: "Berdasarkan Buku 2 (termasuk Ilustrasi Dualisme Halaman 4): Temui pertembungan abadi Ahura Mazda (Baik) lwn Angra Mainyu (Jahat), konsep Asha, dan laluan penghakiman.",
-    color: "from-purple-500 to-pink-600",
-    questions: [
-      {
-        q: "Who is the supreme, all-good Creator God in Zoroastrian beliefs?",
-        qM: "Siapakah nama Tuhan pencipta yang maha baik dan agung dalam kepercayaan Zoroastrian?",
-        options: [
-          { text: "Ahura Mazda", textM: "Ahura Mazda", isCorrect: true },
-          { text: "Angra Mainyu", textM: "Angra Mainyu" },
-          { text: "Spenta Mainyu", textM: "Spenta Mainyu" },
-          { text: "Ahriman", textM: "Ahriman" }
-        ],
-        hint: "This name translates to 'The Wise Lord' or 'Lord of Wisdom'.",
-        hintM: "Nama tuhan ini diterjemahkan sebagai 'Tuan Yang Bijaksana'.",
-        tip: "Ahura Mazda is the ultimate creator of all things bright, good, and orderly.",
-        tipM: "Ahura Mazda ialah pencipta mutlak bagi segala perkara yang terang, baik, dan teratur."
-      },
-      {
-        q: "Who represents the Hostile Spirit, bringing death, illness, and deceit to creation?",
-        qM: "Siapakah yang mewakili Roh Musuh, membawa kematian, penyakit, dan penipuan kepada alam ciptaan?",
-        options: [
-          { text: "Angra Mainyu (Ahriman)", textM: "Angra Mainyu (Ahriman)", isCorrect: true },
-          { text: "Vohu Manah", textM: "Vohu Manah" },
-          { text: "Asha Vahishta", textM: "Asha Vahishta" },
-          { text: "Yazata", textM: "Yazata" }
-        ],
-        hint: "He is the corrupting force depicted on the dark, cracked-earth side of Book 2's art.",
-        hintM: "Beliau ialah kuasa perosak yang digambarkan pada bahagian bumi retak yang gelap dalam lukisan Buku 2.",
-        tip: "Angra Mainyu opposes Ahura Mazda's work but is destined to be defeated in the end times.",
-        tipM: "Angra Mainyu menentang ciptaan Ahura Mazda tetapi ditakdirkan untuk kalah pada akhir zaman."
-      },
-      {
-        q: "What is the cosmic principle of ultimate truth, cosmic order, and righteousness?",
-        qM: "Apakah prinsip kosmik yang mewakili kebenaran mutlak, ketertiban alam, dan keadilan?",
-        options: [
-          { text: "Asha", textM: "Asha", isCorrect: true },
-          { text: "Druj", textM: "Druj" },
-          { text: "Aeshma", textM: "Aeshma" },
-          { text: "Gahanbar", textM: "Gahanbar" }
-        ],
-        hint: "Its direct opposite is 'Druj', which means chaos and lies.",
-        hintM: "Lawan langsungnya ialah 'Druj', yang membawa maksud kekacauan dan penipuan.",
-        tip: "Asha is the natural, beautiful blueprint of creation that humans must align with.",
-        tipM: "Asha ialah pelan tindakan alam semesta yang indah dan semula jadi yang wajib disokong manusia."
-      },
-      {
-        q: "What are the 'Holy Seven' divine qualities or sparks of Ahura Mazda called?",
-        qM: "Apakah panggilan untuk 'Tujuh Kudus' kualiti ketuhanan atau pancaran Ahura Mazda?",
-        options: [
-          { text: "Amesha Spentas", textM: "Amesha Spentas", isCorrect: true },
-          { text: "The Yazatas", textM: "Yazata" },
-          { text: "The Daevas", textM: "Daeva" },
-          { text: "The Fravashis", textM: "Fravashi" }
-        ],
-        hint: "They translate as 'Bounteous Immortals' and guard different elements like fire and water.",
-        hintM: "Nama mereka bermaksud 'Makhluk Abadi yang Pemurah' dan menjaga unsur seperti api dan air.",
-        tip: "Amesha Spentas act as models of cosmic virtue and guardians of physical creations.",
-        tipM: "Amesha Spentas bertindak sebagai model kebaikan kosmik dan penjaga fizikal ciptaan."
-      },
-      {
-        q: "What is the simple three-part ethical slogan that guides a Zoroastrian's daily life?",
-        qM: "Apakah slogan etika tiga serangkai mudah yang membimbing kehidupan harian penganut Zoroastrian?",
-        options: [
-          { text: "Good Thoughts, Good Words, Good Deeds", textM: "Fikiran Baik, Kata-kata Baik, Perbuatan Baik", isCorrect: true },
-          { text: "Peace, Equality, Wisdom", textM: "Kedamaian, Kesaksamaan, Kebijaksanaan" },
-          { text: "Absolute Silence, Fasting, Sacrifice", textM: "Kesunyian Mutlak, Berpuasa, Pengorbanan" },
-          { text: "Faith, Obedience, Victory", textM: "Keyakinan, Kepatuhan, Kemenangan" }
-        ],
-        hint: "In ancient language: Humata, Hukhta, Hvarshta.",
-        hintM: "Dalam bahasa purba: Humata, Hukhta, Hvarshta.",
-        tip: "Zoroastrianism demands active participation in life through continuous ethical deeds.",
-        tipM: "Zoroastrianisme menuntut penglibatan aktif melalui amalan etika harian yang berterusan."
-      },
-      {
-        q: "What is the pre-existing guardian spirit belonging to every human soul called?",
-        qM: "Apakah roh penjaga sedia ada yang dimiliki oleh setiap jiwa manusia?",
-        options: [
-          { text: "Fravashi", textM: "Fravashi", isCorrect: true },
-          { text: "Daeva", textM: "Daeva" },
-          { text: "Urvan", textM: "Urvan" },
-          { text: "Khvarenah", textM: "Khvarenah" }
-        ],
-        hint: "It represents a person's inner divine guide that remains perfectly uncorrupted.",
-        hintM: "Ia mewakili pembimbing ilahi dalaman seseorang yang kekal suci tanpa rosak.",
-        tip: "The Fravashi guides the soul (Urvan) towards making good ethical decisions on earth.",
-        tipM: "Fravashi membantu jiwa (Urvan) untuk membuat keputusan etika yang baik semasa di bumi."
-      },
-      {
-        q: "What is the name of the bridge that souls must cross after death to be judged?",
-        qM: "Apakah nama jambatan yang mesti dilintasi oleh roh selepas kematian untuk diadili?",
-        options: [
-          { text: "The Chinvat Bridge", textM: "Jambatan Chinvat", isCorrect: true },
-          { text: "The Sirat Bridge", textM: "Jambatan Sirat" },
-          { text: "The Bifrost", textM: "Jambatan Bifrost" },
-          { text: "The Golden Gate", textM: "Pintu Gerbang Emas" }
-        ],
-        hint: "It becomes wide for the righteous but turns razor-thin for the wicked.",
-        hintM: "Ia menjadi luas untuk orang baik tetapi menjadi nipis setajam pisau untuk orang jahat.",
-        tip: "The Chinvat Bridge (Bridge of the Separator) is where ethical accounts are balanced.",
-        tipM: "Jambatan Chinvat (Jambatan Pemisah) ialah tempat di mana timbangan amalan dinilai."
-      },
-      {
-        q: "Where do righteous, loving souls spend eternity after passing the judgment?",
-        qM: "Di manakah roh-roh orang baik akan menghabiskan keabadian mereka selepas melepasi penghakiman?",
-        options: [
-          { text: "The House of Song (Garotman)", textM: "Rumah Nyanyian (Garotman)", isCorrect: true },
-          { text: "The House of Lies", textM: "Rumah Penipuan" },
-          { text: "The Void of Silence", textM: "Kekosongan Sunyi" },
-          { text: "The Hall of Kings", textM: "Dewan Para Raja" }
-        ],
-        hint: "It is a heavenly paradise filled with light, music, and divine fragrance.",
-        hintM: "Ia adalah syurga yang dipenuhi cahaya, muzik, dan haruman ilahi.",
-        tip: "Garotman is the highest heaven of Ahura Mazda, where pure joy is everlasting.",
-        tipM: "Garotman ialah syurga tertinggi Ahura Mazda, di mana kegembiraan abadi dikecap."
-      },
-      {
-        q: "Who is the promised savior destined to arise and purify the universe at the end of time?",
-        qM: "Siapakah penyelamat yang dijanjikan bakal muncul untuk menyucikan alam semesta pada akhir zaman?",
-        options: [
-          { text: "Saoshyant", textM: "Saoshyant", isCorrect: true },
-          { text: "Yima", textM: "Yima" },
-          { text: "Jamshid", textM: "Jamshid" },
-          { text: "Mithra", textM: "Mithra" }
-        ],
-        hint: "His name translates to 'one who brings benefit' or 'restorer'.",
-        hintM: "Namanya diterjemahkan sebagai 'pembawa manfaat' atau 'pemulih'.",
-        tip: "The Saoshyant will destroy all decay and resurrect the dead for final cleansing.",
-        tipM: "Saoshyant akan memusnahkan segala kerosakan dan menghidupkan semula orang mati untuk penyucian terakhir."
-      },
-      {
-        q: "What is the ultimate, perfect purification and renewal of cosmic creation called?",
-        qM: "Apakah nama bagi fasa penyucian mutlak dan pembaharuan kosmik di akhir zaman?",
-        options: [
-          { text: "Frashokereti", textM: "Frashokereti", isCorrect: true },
-          { text: "Nowruz", textM: "Nowruz" },
-          { text: "Yalda", textM: "Yalda" },
-          { text: "Sadeh", textM: "Sadeh" }
-        ],
-        hint: "It translates directly to 'making excellent' or 'making wonderful'.",
-        hintM: "Ia diterjemahkan secara langsung sebagai 'menjadikan hebat' atau 'menjadikan luar biasa'.",
-        tip: "Frashokereti is the final state of the universe where evil is gone forever.",
-        tipM: "Frashokereti ialah keadaan akhir alam semesta di mana kejahatan lenyap selama-lamanya."
-      }
-    ]
-  },
-  {
-    id: 4,
-    book: "Book 2: Beliefs, Rites, and Rituals",
-    bookMalay: "Buku 2: Kepercayaan, Amalan dan Ritual",
-    title: "Sacred Rites & Fire Temples",
-    malayTitle: "Ritual Suci & Kuil Api",
-    description: "Explore the core physical rituals of Book 2, including Fire Temple worship (Atar), the Navjote initiation, and the Towers of Silence.",
-    malayDescription: "Terokai ritual fizikal utama daripada Buku 2, termasuk ibadah di Kuil Api (Atar), upacara Navjote, dan Menara Kesunyian.",
-    color: "from-teal-500 to-emerald-600",
-    questions: [
-      {
-        q: "What element is revered as the ultimate physical symbol of divine purity and light?",
-        qM: "Apakah unsur fizikal yang dihormati sebagai simbol mutlak kesucian dan cahaya ketuhanan?",
-        options: [
-          { text: "Fire (Atar)", textM: "Api (Atar)", isCorrect: true },
-          { text: "Water (Anahita)", textM: "Air (Anahita)" },
-          { text: "Earth (Armaiti)", textM: "Tanah (Armaiti)" },
-          { text: "Sacred Air", textM: "Udara Suci" }
-        ],
-        hint: "It represents the blazing wisdom, presence, and life-force of Ahura Mazda.",
-        hintM: "Ia mewakili kebijaksanaan membara, kehadiran, dan kuasa hidup Ahura Mazda.",
-        tip: "Zoroastrians do not worship fire itself; they face fire as a focus of pure divine energy.",
-        tipM: "Penganut Zoroastrian tidak menyembah api; mereka menghadap api sebagai pusat fokus tenaga ilahi."
-      },
-      {
-        q: "What is a consecrated Zoroastrian place of communal worship called?",
-        qM: "Apakah nama bagi tempat ibadah rasmi komuniti Zoroastrian?",
-        options: [
-          { text: "Fire Temple (Agiary)", textM: "Kuil Api (Agiary)", isCorrect: true },
-          { text: "Synagogue", textM: "Sinagog" },
-          { text: "Pagoda", textM: "Pagoda" },
-          { text: "Cathedral", textM: "Katedral" }
-        ],
-        hint: "A continuous sacred flame is kept burning inside this secure building.",
-        hintM: "Api suci yang berterusan dipelihara agar sentiasa menyala di dalam bangunan ini.",
-        tip: "Fire Temples (Agiaries) house the sacred embers, tended daily by purified priests.",
-        tipM: "Kuil Api (Agiary) menampung bara api suci yang dijaga setiap hari oleh pendeta yang bersih."
-      },
-      {
-        q: "What is the sacred thread tied around the waist during daily prayers?",
-        qM: "Apakah nama tali pintal suci yang diikat di sekeliling pinggang semasa berdoa?",
-        options: [
-          { text: "Kusti", textM: "Kusti", isCorrect: true },
-          { text: "Sudreh", textM: "Sudreh" },
-          { text: "Hijab", textM: "Hijab" },
-          { text: "Kippah", textM: "Kippah" }
-        ],
-        hint: "It is woven from 72 fine wool threads representing Yasna chapters.",
-        hintM: "Ia ditenun daripada 72 helai benang bulu biri-biri yang mewakili bab-bab Yasna.",
-        tip: "The Kusti is tied three times around the waist over the white undershirt.",
-        tipM: "Kusti diikat sebanyak tiga kali di sekeliling pinggang di atas baju dalam putih."
-      },
-      {
-        q: "What is the thin, white cotton undershirt worn beneath the Kusti called?",
-        qM: "Apakah nama baju dalam kapas putih nipis yang dipakai di bawah Kusti?",
-        options: [
-          { text: "Sudreh", textM: "Sudreh", isCorrect: true },
-          { text: "Kusti", textM: "Kusti" },
-          { text: "Dhoti", textM: "Dhoti" },
-          { text: "Tunic", textM: "Tunik" }
-        ],
-        hint: "It features a tiny pocket at the front collar to gather symbolic 'good deeds'.",
-        hintM: "Ia mempunyai poket kecil di bahagian kolarnya untuk mengumpul 'amalan baik' secara simbolik.",
-        tip: "The Sudreh represents spiritual armor, protecting the wearer from moral corruption.",
-        tipM: "Sudreh mewakili perisai rohani, melindungi pemakainya daripada kerosakan akhlak."
-      },
-      {
-        q: "What is the official initiation ceremony celebrating a child's entry into the faith?",
-        qM: "Apakah nama upacara rasmi kemasukan kanak-kanak ke dalam agama Zoroastrian?",
-        options: [
-          { text: "Navjote (Sedreh Pushi)", textM: "Navjote (Sedreh Pushi)", isCorrect: true },
-          { text: "The Baptism", textM: "Baptis" },
-          { text: "Bar Mitzvah", textM: "Bar Mitzvah" },
-          { text: "Upanayana", textM: "Upanayana" }
-        ],
-        hint: "This name translates roughly to 'new singer' or 'new birth'.",
-        hintM: "Nama ini secara kasar bermaksud 'penyanyi baru' atau 'kelahiran baru'.",
-        tip: "During Navjote, children are invested with their first Sudreh and Kusti.",
-        tipM: "Semasa Navjote, kanak-kanak dipasangkan Sudreh dan Kusti buat pertama kali."
-      },
-      {
-        q: "To avoid polluting earth or fire, traditional Zoroastrians utilize what structure for sky burials?",
-        qM: "Bagi mengelakkan pencemaran tanah atau api, penganut tradisional menggunakan struktur apa untuk pengebumian langit?",
-        options: [
-          { text: "Tower of Silence (Dakhma)", textM: "Menara Kesunyian (Dakhma)", isCorrect: true },
-          { text: "Mausoleum", textM: "Makam Diraja" },
-          { text: "Pyre", textM: "Tempat Pembakaran" },
-          { text: "Catacomb", textM: "Katakomba" }
-        ],
-        hint: "These circular, open structures allow birds of prey to consume bodies naturally.",
-        hintM: "Struktur bulat terbuka ini membolehkan burung pemangsa memakan jenazah secara semula jadi.",
-        tip: "Dakhmas reflect the belief that a dead body is spiritually corrupt and must not taint holy elements.",
-        tipM: "Dakhma mencerminkan kepercayaan bahawa jenazah boleh mencemarkan unsur suci bumi dan api."
-      },
-      {
-        q: "What is the traditional title of the Zoroastrian priest who maintains the sacred fire?",
-        qM: "Apakah gelaran tradisional bagi pendeta Zoroastrian yang menjaga api suci?",
-        options: [
-          { text: "Mobed", textM: "Mobed", isCorrect: true },
-          { text: "Rabbi", textM: "Rabbi" },
-          { text: "Monk", textM: "Sami" },
-          { text: "Guru", textM: "Guru" }
-        ],
-        hint: "They undergo rigorous training and purification ceremonies.",
-        hintM: "Mereka menjalani latihan dan upacara penyucian yang sangat ketat.",
-        tip: "A Mobed wears a special white mouth-veil (Padan) to avoid polluting the sacred fire with breath.",
-        tipM: "Mobed memakai penutup mulut putih (Padan) untuk mengelakkan pencemaran api suci dengan nafas."
-      },
-      {
-        q: "What is the name of the sacred mountain plant juice prepared during high liturgical rites?",
-        qM: "Apakah nama jus tumbuhan gunung suci yang disediakan semasa upacara liturgi tinggi?",
-        options: [
-          { text: "Haoma", textM: "Haoma", isCorrect: true },
-          { text: "Soma", textM: "Soma" },
-          { text: "Nectar", textM: "Nektar" },
-          { text: "Ambrosia", textM: "Ambrosia" }
-        ],
-        hint: "It is associated with clear thinking, health, and spiritual vigor.",
-        hintM: "Ia dikaitkan dengan minda yang jelas, kesihatan, dan kecergasan rohani.",
-        tip: "Haoma juice is prepared using sacred mortars and pestles while chanting Gatha verses.",
-        tipM: "Jus Haoma disediakan menggunakan lesung suci sambil membaca ayat-ayat Gatha."
-      },
-      {
-        q: "Which spring festival celebrates the creation, renewal of life, and the Zoroastrian New Year?",
-        qM: "Festival musim bunga manakah yang merayakan penciptaan, pembaharuan kehidupan, dan Tahun Baru Zoroastrian?",
-        options: [
-          { text: "Nowruz", textM: "Nowruz", isCorrect: true },
-          { text: "Yalda", textM: "Yalda" },
-          { text: "Mehregan", textM: "Mehregan" },
-          { text: "Tirgan", textM: "Tirgan" }
-        ],
-        hint: "It falls exactly on the vernal equinox, celebrated globally.",
-        hintM: "Ia jatuh tepat pada waktu ekuinoks musim bunga, disambut di seluruh dunia.",
-        tip: "Nowruz remains a massive holiday representing the triumph of cosmic light over winter.",
-        tipM: "Nowruz kekal menjadi perayaan besar yang mewakili kemenangan cahaya kosmik ke over musim sejuk."
-      },
-      {
-        q: "How many times a day should a devout Zoroastrian perform the Kusti ritual prayer?",
-        qM: "Berapa kalikah sehari seorang penganut Zoroastrian sepatutnya melakukan ritual doa Kusti?",
-        options: [
-          { text: "5 times a day", textM: "5 kali sehari", isCorrect: true },
-          { text: "3 times a day", textM: "3 kali sehari" },
-          { text: "Once a week", textM: "Sekali seminggu" },
-          { text: "Twice a day", textM: "Dua kali sehari" }
-        ],
-        hint: "These intervals are timed to distinct periods of daylight and night.",
-        hintM: "Selang masa ini diselaraskan dengan tempoh siang hari dan malam yang ketara.",
-        tip: "The prayers (Gahs) are performed facing the sun or a light source to renew moral duty.",
-        tipM: "Doa (Gah) dilakukan dengan menghadap matahari atau sumber cahaya untuk memperbaharui janji moral."
-      }
-    ]
-  }
-];
-
-// --- LEADERS DATABASE (LOCALSTORAGE FALLBACK) ---
-const INITIAL_LEADERS = [
-  { name: "Syafiq Roslan", score: 120, stars: 30, avatar: "🔥", date: "2026-06-10" },
-  { name: "Darshini Nair", score: 110, stars: 28, avatar: "⭐", date: "2026-06-10" },
-  { name: "Chloe Tan", score: 95, stars: 25, avatar: "🦁", date: "2026-06-10" }
-];
-
-export default function App() {
-  const [currentScreen, setCurrentScreen] = useState('welcome'); // welcome, levels, quiz, completed, leaderboard
-  const [activeSet, setActiveSet] = useState(null);
-  const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
-  const [selectedOption, setSelectedOption] = useState(null);
-  const [isAnswered, setIsAnswered] = useState(false);
-  const [attemptCount, setAttemptCount] = useState(0);
-  
-  // Scoring
-  const [starsWon, setStarsWon] = useState({}); // { setId: totalStars }
-  const [correctCount, setCorrectCount] = useState(0);
-  const [temporaryScore, setTemporaryScore] = useState(0); 
-  const [questionAttempts, setQuestionAttempts] = useState([]); // array of stars earned for the active set
-
-  // Option Shuffling State to prevent layout jumping on render
-  const [shuffledOptions, setShuffledOptions] = useState([]);
-
-  // Visual & Feedback triggers
-  const [showCelebration, setShowCelebration] = useState(false);
-  const [showTryAgainPopup, setShowTryAgainPopup] = useState(false);
-  const [isMuted, setIsMuted] = useState(false);
-
-  // Leaderboard states
-  const [leaderboard, setLeaderboard] = useState([]);
-  const [playerName, setPlayerName] = useState("");
-  const [playerAvatar, setPlayerAvatar] = useState("🔥");
-
-  // --- OPTION SHUFFLER SYSTEM (Fisher-Yates) ---
-  // Shuffles options dynamically every time a new question is rendered or set is selected
-  useEffect(() => {
-    if (activeSet && activeSet.questions[currentQuestionIdx]) {
-      const originalOptions = activeSet.questions[currentQuestionIdx].options;
-      const shuffled = [...originalOptions];
-      
-      // Shuffle array in-place ensuring positions are randomized
-      for (let i = shuffled.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        const temp = shuffled[i];
-        shuffled[i] = shuffled[j];
-        shuffled[j] = temp;
-      }
-      setShuffledOptions(shuffled);
-    }
-  }, [activeSet, currentQuestionIdx]);
-
-  useEffect(() => {
-    const stored = localStorage.getItem('zoro_leaderboard_v2');
-    if (stored) {
-      setLeaderboard(JSON.parse(stored));
-    } else {
-      localStorage.setItem('zoro_leaderboard_v2', JSON.stringify(INITIAL_LEADERS));
-      setLeaderboard(INITIAL_LEADERS);
-    }
-
-    const storedStars = localStorage.getItem('zoro_user_stars_v2');
-    if (storedStars) {
-      setStarsWon(JSON.parse(storedStars));
-    }
-  }, []);
-
-  const handleStartMusic = () => {
-    sounds.init();
-    sounds.startBGM();
-  };
-
-  const handleToggleMute = () => {
-    const muted = sounds.toggleMute();
-    setIsMuted(muted);
-  };
-
-  const handleSelectSet = (set) => {
-    setActiveSet(set);
-    setCurrentQuestionIdx(0);
-    setSelectedOption(null);
-    setIsAnswered(false);
-    setAttemptCount(0);
-    setCorrectCount(0);
-    setTemporaryScore(0);
-    setQuestionAttempts([]);
-    setCurrentScreen('quiz');
-    sounds.init();
-  };
-
-  // --- AUTO-ADVANCE TRIGGER LOGIC ---
-  // Triggers automated transition to the next question after celebration duration
-  const autoAdvanceNextQuestion = (updatedAttempts, updatedScore) => {
-    setSelectedOption(null);
-    setIsAnswered(false);
-    setAttemptCount(0);
-
-    if (currentQuestionIdx + 1 < activeSet.questions.length) {
-      setCurrentQuestionIdx(prev => prev + 1);
-    } else {
-      sounds.playTriumph();
-      const totalStarsForThisRun = updatedAttempts.reduce((sum, item) => sum + item, 0);
-      
-      const updatedStars = { 
-        ...starsWon, 
-        [activeSet.id]: Math.max(starsWon[activeSet.id] || 0, totalStarsForThisRun) 
+      const handleOptionClick = (option) => {
+        if (isAnswered) return;
+        setSelectedOption(option);
+        setIsAnswered(true);
+        if (option.isCorrect) {
+          setScore(score + 1);
+          synth.playCorrect();
+        } else {
+          synth.playWrong();
+        }
+        setShowTipModal(true);
       };
-      setStarsWon(updatedStars);
-      localStorage.setItem('zoro_user_stars_v2', JSON.stringify(updatedStars));
-      
-      setCurrentScreen('completed');
-    }
-  };
 
-  const handleOptionClick = (option) => {
-    if (isAnswered && option.isCorrect) return; 
-    
-    setSelectedOption(option);
-    const newAttemptCount = attemptCount + 1;
-    setAttemptCount(newAttemptCount);
-
-    if (option.isCorrect) {
-      sounds.playCorrect();
-      setIsAnswered(true);
-      setShowCelebration(true);
-
-      // Star calculation: 1st try = 3 stars, 2nd try = 2 stars, 3+ tries = 1 star
-      let starsGiven = 1;
-      if (newAttemptCount === 1) starsGiven = 3;
-      else if (newAttemptCount === 2) starsGiven = 2;
-
-      const updatedAttempts = [...questionAttempts, starsGiven];
-      setQuestionAttempts(updatedAttempts);
-
-      const scoreGain = starsGiven * 10;
-      const updatedScore = temporaryScore + scoreGain;
-      setTemporaryScore(updatedScore);
-      setCorrectCount(prev => prev + 1);
-
-      // Automatically advance to next question after 2.2 seconds (allowing celebration to show)
-      setTimeout(() => {
-        setShowCelebration(false);
-        autoAdvanceNextQuestion(updatedAttempts, updatedScore);
-      }, 2200);
-    } else {
-      sounds.playWrong();
-      setShowTryAgainPopup(true);
-    }
-  };
-
-  const handleManualTryAgainDismiss = () => {
-    setShowTryAgainPopup(false);
-    // Keep option selected state but let player retry
-  };
-
-  const handleSubmitScore = (e) => {
-    e.preventDefault();
-    if (!playerName.trim()) return;
-
-    const totalStarsForThisRun = questionAttempts.reduce((sum, item) => sum + item, 0);
-    const newEntry = {
-      name: playerName.trim(),
-      score: temporaryScore,
-      stars: totalStarsForThisRun,
-      avatar: playerAvatar,
-      date: new Date().toISOString().split('T')[0]
-    };
-
-    const updatedLeaderboard = [...leaderboard, newEntry]
-      .sort((a, b) => b.stars - a.stars || b.score - a.score)
-      .slice(0, 10);
-
-    setLeaderboard(updatedLeaderboard);
-    localStorage.setItem('zoro_leaderboard_v2', JSON.stringify(updatedLeaderboard));
-    setPlayerName("");
-    setCurrentScreen('leaderboard');
-  };
-
-  const activeQuestion = activeSet ? activeSet.questions[currentQuestionIdx] : null;
-
-  return (
-    <div className="min-h-screen bg-slate-950 text-white font-sans overflow-x-hidden relative flex flex-col justify-between">
-      {/* Dynamic Background Sparkles */}
-      <style>{`
-        @keyframes float {
-          0% { transform: translateY(0px) rotate(0deg); opacity: 0.8; }
-          50% { transform: translateY(-20px) rotate(180deg); opacity: 1; }
-          100% { transform: translateY(-40px) rotate(360deg); opacity: 0; }
+      const handleNext = () => {
+        setShowTipModal(false);
+        setIsAnswered(false);
+        setSelectedOption(null);
+        setShowHint(false);
+        if (currentQuestionIdx + 1 < activeQuiz.questions.length) {
+          setCurrentQuestionIdx(currentQuestionIdx + 1);
+        } else {
+          setShowScore(true);
         }
-        .animate-float-particle {
-          animation: float 2.5s infinite linear;
-        }
-      `}</style>
+      };
 
-      {/* Background Starry Atmosphere */}
-      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-12 left-12 w-56 h-56 bg-amber-500/10 rounded-full blur-3xl"></div>
-        <div className="absolute bottom-24 right-12 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl"></div>
-      </div>
+      const handleManualTryAgainDismiss = () => {
+        setShowTipModal(false);
+        setIsAnswered(false);
+        setSelectedOption(null);
+      };
 
-      {/* --- RESPONSIVE HEADER --- */}
-      <header className="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 p-4 sticky top-0 z-40 shadow-xl flex items-center justify-between">
-        <div className="flex items-center space-x-3 cursor-pointer" onClick={() => setCurrentScreen('welcome')}>
-          <div className="bg-gradient-to-br from-amber-400 to-orange-500 p-2.5 rounded-2xl shadow-lg shadow-orange-500/25">
-            <span className="text-2xl">🔥</span>
-          </div>
-          <div>
-            <h1 className="font-black text-lg tracking-tight text-amber-400 sm:text-xl">ZOROASTRIAN QUEST</h1>
-            <p className="text-[10px] text-slate-400 italic">Bilingual Interactive Edu-Game</p>
-          </div>
-        </div>
+      const toggleMute = () => {
+        const isMuted = synth.toggleMute();
+        setMuted(isMuted);
+      };
 
-        <div className="flex items-center space-x-2 sm:space-x-3">
-          <button 
-            onClick={handleToggleMute} 
-            className="p-2.5 bg-slate-800 hover:bg-slate-700 rounded-xl transition-all flex items-center justify-center text-lg border border-slate-700"
-            title="Toggle BGM & Sounds"
-          >
-            {isMuted ? "🔇" : "🔊 Music ON"}
-          </button>
-          
-          <button 
-            onClick={() => { sounds.init(); setCurrentScreen('leaderboard'); }}
-            className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-xs sm:text-sm font-black shadow-lg transition duration-200 border border-indigo-500 flex items-center gap-1.5"
-          >
-            🏆 <span>Leaderboard</span>
-          </button>
-        </div>
-      </header>
+      const restartQuiz = () => {
+        setCurrentQuestionIdx(0);
+        setScore(0);
+        setShowScore(false);
+        setIsAnswered(false);
+        setSelectedOption(null);
+        setShowHint(false);
+        setShowTipModal(false);
+      };
 
-      {/* --- CONTENT AREA --- */}
-      <main className="flex-grow flex items-center justify-center p-4 sm:p-6 z-10">
-        
-        {/* SCREEN 1: WELCOME */}
-        {currentScreen === 'welcome' && (
-          <div className="max-w-2xl w-full text-center space-y-8 bg-slate-900/90 p-6 sm:p-10 rounded-3xl border border-slate-800 shadow-2xl relative overflow-hidden">
-            <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 w-48 h-48 bg-gradient-to-b from-amber-400 to-transparent opacity-15 blur-2xl rounded-full"></div>
-            
-            <div className="space-y-4">
-              <span className="inline-block text-6xl animate-bounce">👑</span>
-              <h2 className="text-3xl sm:text-5xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-400 to-red-500 uppercase leading-none">
-                Zoroastrianism Interactive Arena
-              </h2>
-              <p className="text-base sm:text-xl font-extrabold text-amber-300 italic">
-                Kuiz Edu-Game Berdasarkan Buku Teks Agama & Sejarah
-              </p>
+      return (
+        <div class="max-w-2xl mx-auto p-4 sm:p-6 min-h-screen flex flex-col justify-between">
+          <header class="flex justify-between items-center bg-slate-900/80 p-4 rounded-xl border border-slate-800 backdrop-blur">
+            <div>
+              <h1 class="text-lg font-black text-indigo-400">🔥 Kembara Agama</h1>
+              <p class="text-xs text-slate-400">Siri Pembelajaran Digital Dr. MRAR</p>
             </div>
-
-            {/* Book Reference Tags */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg mx-auto">
-              <div className="bg-slate-800/80 p-3 rounded-xl border border-slate-700 text-left">
-                <span className="text-[10px] font-black text-amber-400 block uppercase">Book 1 / Buku 1:</span>
-                <span className="text-xs font-bold text-slate-200">History and Development</span>
-              </div>
-              <div className="bg-slate-800/80 p-3 rounded-xl border border-slate-700 text-left">
-                <span className="text-[10px] font-black text-emerald-400 block uppercase">Book 2 / Buku 2:</span>
-                <span className="text-xs font-bold text-slate-200">Beliefs, Rites, and Rituals</span>
-              </div>
-            </div>
-
-            <div className="p-5 bg-slate-950 rounded-2xl border border-slate-800 text-left space-y-3 shadow-inner">
-              <h3 className="text-xs uppercase tracking-widest text-slate-400 font-black">Ciri Edu-Game Menarik:</h3>
-              <ul className="space-y-2 text-xs">
-                <li className="flex items-center gap-2">
-                  <span className="text-amber-400">⭐</span>
-                  <p className="text-slate-300"><span className="font-bold text-white">Kad Bintang:</span> Jawab cepat & tepat untuk simpan 3 bintang penuh!</p>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-indigo-400">🎀</span>
-                  <p className="text-slate-300"><span className="font-bold text-white">Riben & Bunga Api:</span> Perayaan gembira muncul setiap kali jawapan betul.</p>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-rose-400">💡</span>
-                  <p className="text-slate-300"><span className="font-bold text-white">Popup Cuba Lagi:</span> Menerangkan kesilapan secara saintifik & akademik.</p>
-                </li>
-              </ul>
-            </div>
-
-            <button 
-              onClick={() => { handleStartMusic(); setCurrentScreen('levels'); }}
-              className="w-full max-w-xs mx-auto py-4 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-400 hover:to-orange-400 text-slate-950 font-black text-lg sm:text-xl rounded-2xl shadow-xl shadow-amber-500/30 transform hover:-translate-y-1 transition duration-200 uppercase tracking-wider border-b-4 border-amber-700"
-            >
-              Start Game / Mula Bermain 🎮
+            <button onClick={toggleMute} class="p-2 bg-slate-800 rounded-lg text-sm">
+              {muted ? "🔇 Muted" : "🔊 Sound On"}
             </button>
-          </div>
-        )}
+          </header>
 
-        {/* SCREEN 2: LEVEL SELECT */}
-        {currentScreen === 'levels' && (
-          <div className="max-w-4xl w-full space-y-6">
-            <div className="text-center">
-              <h2 className="text-3xl font-black tracking-tight text-white sm:text-4xl">
-                SELECT YOUR QUEST WORLD
-              </h2>
-              <p className="text-slate-400 text-xs sm:text-sm mt-1">Pilih Dunia Cabaran Sejarah & Amalan Agama Anda</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {QUIZ_SETS.map((set) => {
-                const earnedStars = starsWon[set.id] || 0;
-                return (
-                  <div 
-                    key={set.id}
-                    onClick={() => handleSelectSet(set)}
-                    className="group bg-slate-900/90 hover:bg-slate-900 rounded-3xl border border-slate-800 p-6 shadow-xl cursor-pointer hover:border-slate-700 transform hover:-translate-y-1.5 transition-all duration-200 flex flex-col justify-between relative overflow-hidden"
-                  >
-                    <div className={`absolute top-0 right-0 w-28 h-28 bg-gradient-to-br ${set.color} opacity-10 rounded-full blur-2xl group-hover:opacity-15 transition duration-300`}></div>
-
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <span className={`px-2.5 py-1 rounded-lg text-[10px] font-black uppercase bg-gradient-to-r ${set.color} text-slate-950`}>
-                          World {set.id}
-                        </span>
-                        
-                        <div className="flex items-center space-x-1 bg-slate-950 px-2 py-0.5 rounded-md border border-slate-800">
-                          <span className="text-amber-400 text-xs">⭐</span>
-                          <span className="text-[10px] font-bold text-amber-300">{earnedStars} / 30</span>
-                        </div>
-                      </div>
-
-                      <div>
-                        <span className="text-[10px] font-black text-indigo-400 block uppercase mb-1 tracking-wider">
-                          {set.book} / {set.bookMalay}
-                        </span>
-                        <h3 className="text-xl font-extrabold text-slate-100 group-hover:text-amber-400 transition">
-                          {set.title}
-                        </h3>
-                        <p className="text-xs text-amber-300/80 font-semibold italic mt-0.5">
-                          {set.malayTitle}
-                        </p>
-                      </div>
-
-                      <div className="space-y-1 text-xs text-slate-400">
-                        <p>{set.description}</p>
-                        <p className="italic text-slate-500 font-medium">{set.malayDescription}</p>
-                      </div>
-                    </div>
-
-                    <div className="mt-6 pt-4 border-t border-slate-800/60 flex items-center justify-between text-xs">
-                      <span className="font-bold text-indigo-400 group-hover:translate-x-1 transition duration-250 flex items-center gap-1">
-                        ENTER PORTAL / MASUK PORTAL ➔
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="text-center">
-              <button 
-                onClick={() => setCurrentScreen('welcome')}
-                className="text-xs font-semibold text-slate-400 hover:text-slate-200 transition"
-              >
-                ◀ Back to Welcome Screen / Kembali ke Utama
+          {showScore ? (
+            <div class="my-auto bg-slate-900/60 p-8 rounded-2xl border border-slate-800/80 text-center backdrop-blur shadow-2xl">
+              <span class="text-5xl">🏆</span>
+              <h2 class="text-2xl font-black text-white mt-4">Tamat Kuiz! / Quiz Completed!</h2>
+              <p class="text-slate-400 text-sm mt-1">{activeQuiz.bookMalay}</p>
+              <div class="inline-block bg-indigo-950/40 border border-indigo-500/30 rounded-2xl px-8 py-4 my-6">
+                <p class="text-xs text-indigo-300 uppercase font-black tracking-wider">Skor Anda / Your Score</p>
+                <p class="text-4xl font-black text-indigo-400 mt-1">{score} / {activeQuiz.questions.length}</p>
+              </div>
+              <button onClick={restartQuiz} class="w-full py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-black rounded-xl text-sm transition tracking-wider shadow-lg">
+                🔄 Main Semula / Play Again
               </button>
             </div>
-          </div>
-        )}
-
-        {/* SCREEN 3: ACTIVE QUIZ */}
-        {currentScreen === 'quiz' && activeQuestion && (
-          <div className="max-w-3xl w-full space-y-4 relative">
-            
-            {/* RIBBON & FIREWORKS SUCCESS OVERLAY */}
-            {showCelebration && (
-              <div className="absolute inset-0 pointer-events-none z-50 flex flex-col items-center justify-center bg-slate-950/70 rounded-3xl animate-fade-in">
-                {/* Simulated Floating Firework Particles */}
-                <div className="absolute flex justify-between w-full max-w-sm px-10">
-                  <span className="text-5xl animate-float-particle">🎆</span>
-                  <span className="text-5xl animate-float-particle" style={{ animationDelay: '0.4s' }}>💥</span>
-                  <span className="text-5xl animate-float-particle" style={{ animationDelay: '0.8s' }}>✨</span>
-                  <span className="text-5xl animate-float-particle" style={{ animationDelay: '1.2s' }}>🌺</span>
-                </div>
-
-                <div className="text-center space-y-4 scale-up-center">
-                  {/* Majestic Ribbon Badge */}
-                  <div className="inline-block bg-gradient-to-r from-yellow-400 via-amber-500 to-red-500 text-slate-950 font-black px-8 py-3 rounded-full shadow-2xl border-4 border-white text-2xl uppercase tracking-widest relative">
-                    <span className="absolute -left-6 top-1.5 text-3xl">🎀</span>
-                    EXCELLENT / TERBAIK!
-                    <span className="absolute -right-6 top-1.5 text-3xl">🎀</span>
-                  </div>
-                  
-                  <div className="bg-emerald-950/80 border border-emerald-500 px-6 py-2 rounded-xl text-emerald-300 font-bold text-base shadow animate-pulse">
-                    CORRECT! AUTO-ADVANCING... 🚀
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Navigation & Action Header */}
-            <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between bg-slate-900/95 px-5 py-4 rounded-2xl border border-slate-800 shadow-lg">
-              <div className="flex items-center justify-between flex-1">
-                <div className="flex flex-col">
-                  <span className="text-[10px] font-black text-indigo-400 uppercase tracking-wider">
-                    {activeSet.book}
-                  </span>
-                  <h4 className="text-xs sm:text-sm font-bold text-amber-400 truncate max-w-[180px] sm:max-w-xs">
-                    {activeSet.title}
-                  </h4>
-                </div>
-
-                <div className="flex items-center space-x-3 text-xs sm:text-sm ml-4">
-                  <span className="px-3 py-1 bg-slate-950 rounded-lg text-slate-300 font-bold border border-slate-800">
-                    {currentQuestionIdx + 1} / {activeSet.questions.length}
-                  </span>
-                  <span className="px-3 py-1 bg-amber-500/10 rounded-lg text-amber-300 font-black border border-amber-500/20">
-                    {temporaryScore} PTS
-                  </span>
-                </div>
+          ) : (
+            <main class="my-auto py-6">
+              <div class="bg-slate-900/40 border border-slate-800/60 rounded-xl p-4 mb-4 flex justify-between items-center">
+                <span class="text-xs text-slate-400 uppercase font-bold tracking-widest">
+                  Soalan / Question {currentQuestionIdx + 1} daripada {activeQuiz.questions.length}
+                </span>
+                <span class="px-3 py-1 bg-indigo-500/10 border border-indigo-500/20 rounded-full text-[11px] text-indigo-400 font-bold">
+                  Skor: {score}
+                </span>
               </div>
 
-              {/* Back to main menu instantly */}
-              <button 
-                onClick={() => setCurrentScreen('levels')}
-                className="w-full sm:w-auto px-4 py-2 bg-slate-800 hover:bg-slate-700 hover:text-rose-400 text-xs font-black rounded-xl transition border border-slate-700 text-slate-300 uppercase tracking-wider text-center"
-              >
-                ◀ Back to Worlds / Menu Utama
-              </button>
-            </div>
-
-            {/* Interactive Question Card */}
-            <div className="bg-slate-900 rounded-3xl border-2 border-slate-800 p-6 sm:p-8 shadow-2xl space-y-6 relative overflow-hidden">
-              
-              {/* Dynamic Star Ratings Card */}
-              <div className="flex items-center justify-between bg-slate-950/60 p-3 rounded-2xl border border-slate-800/80">
-                <span className="text-xs font-black text-slate-400 uppercase tracking-widest">Question Rating / Penilaian Bintang:</span>
-                <div className="flex space-x-1.5">
-                  <span className={`text-xl transition-all duration-300 ${attemptCount <= 0 ? "text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]" : "text-slate-800"}`}>⭐</span>
-                  <span className={`text-xl transition-all duration-300 ${attemptCount <= 1 ? "text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]" : "text-slate-800"}`}>⭐</span>
-                  <span className={`text-xl transition-all duration-300 ${attemptCount <= 2 ? "text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]" : "text-slate-800"}`}>⭐</span>
-                </div>
+              <div class="bg-slate-900/60 p-6 rounded-2xl border border-slate-800/80 shadow-xl backdrop-blur mb-6">
+                <h3 class="text-base sm:text-lg font-bold text-slate-100 leading-relaxed mb-2">{activeQuestion.q}</h3>
+                <p class="text-slate-400 italic text-sm border-l-2 border-indigo-500/40 pl-3 leading-relaxed">{activeQuestion.qM}</p>
               </div>
 
-              {/* Main Bilingual Question Titles */}
-              <div className="space-y-3 pt-2">
-                <h3 className="text-2xl sm:text-3xl font-black text-white leading-tight">
-                  {activeQuestion.q}
-                </h3>
-                <h4 className="text-sm sm:text-base text-amber-300/80 font-bold italic border-l-4 border-amber-500/40 pl-3">
-                  {activeQuestion.qM}
-                </h4>
-              </div>
-
-              {/* MCQ Options Grid (Shuffled dynamically on render) */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {(shuffledOptions.length > 0 ? shuffledOptions : activeQuestion.options).map((opt, idx) => {
-                  const letter = ["A", "B", "C", "D"][idx];
-                  const isThisSelected = selectedOption === opt;
-                  
-                  let btnStyle = "bg-slate-950 hover:bg-slate-900 text-slate-200 border-slate-800";
-                  if (isThisSelected) {
-                    btnStyle = opt.isCorrect 
-                      ? "bg-emerald-600/90 text-white border-emerald-400 shadow-lg shadow-emerald-500/20" 
-                      : "bg-rose-600/90 text-white border-rose-400 shadow-lg shadow-rose-500/20";
-                  } else if (isAnswered && opt.isCorrect) {
-                    btnStyle = "bg-emerald-600/60 text-emerald-100 border-emerald-500";
+              <div class="space-y-3">
+                {activeQuestion.options.map((option, idx) => {
+                  let btnStyle = "bg-slate-900/40 border-slate-800 hover:border-slate-700 hover:bg-slate-900/80 text-slate-300";
+                  if (isAnswered) {
+                    if (option.isCorrect) btnStyle = "bg-emerald-950/40 border-emerald-500 text-emerald-300 shadow-emerald-950/20 shadow-md";
+                    else if (selectedOption === option) btnStyle = "bg-rose-950/40 border-rose-500 text-rose-300 shadow-rose-950/20 shadow-md";
+                    else btnStyle = "bg-slate-900/20 border-slate-900 text-slate-600 opacity-60";
                   }
 
                   return (
-                    <button
-                      key={idx}
-                      disabled={isAnswered}
-                      onClick={() => handleOptionClick(opt)}
-                      className={`group w-full p-4 rounded-2xl border-2 text-left transition-all duration-150 transform hover:-translate-y-0.5 active:translate-y-0 ${btnStyle} flex flex-col justify-between`}
-                    >
-                      <div className="flex items-start space-x-3">
-                        <span className="bg-slate-800 group-hover:bg-slate-700 px-2.5 py-1 rounded-xl text-xs font-black text-indigo-400 border border-slate-700">
-                          {letter}
-                        </span>
-                        <div className="flex-1">
-                          <p className="font-extrabold text-sm sm:text-base leading-snug">{opt.text}</p>
-                          <p className="text-[11px] text-slate-400 italic group-hover:text-slate-300 mt-1 leading-snug">{opt.textM}</p>
-                        </div>
-                      </div>
+                    <button key={idx} onClick={() => handleOptionClick(option)} disabled={isAnswered} class={`w-full text-left p-4 rounded-xl border text-sm transition flex flex-col ${btnStyle}`}>
+                      <span class="font-semibold text-white">{option.text}</span>
+                      <span class="italic text-xs mt-0.5 opacity-80">{option.textM}</span>
                     </button>
                   );
                 })}
               </div>
 
-              {/* Helpful Hint (Shown after a wrong attempt) */}
-              {attemptCount >= 1 && !isAnswered && (
-                <div className="bg-slate-950 p-4 rounded-xl border border-dashed border-amber-500/30 flex items-start gap-2.5 animate-pulse">
-                  <span className="text-xl">💡</span>
-                  <div className="text-xs">
-                    <p className="font-black text-amber-400 uppercase">Need help? / Petunjuk:</p>
-                    <p className="text-slate-300 mt-0.5">{activeQuestion.hint}</p>
-                    <p className="text-slate-400 italic mt-0.5">{activeQuestion.hintM}</p>
-                  </div>
+              <div class="mt-6 flex gap-3">
+                <button onClick={() => setShowHint(!showHint)} class="px-4 py-3 bg-slate-900 text-slate-400 font-bold border border-slate-800 rounded-xl text-xs sm:text-sm tracking-wide transition hover:text-slate-200">
+                  💡 Hint / Petunjuk
+                </button>
+              </div>
+
+              {showHint && (
+                <div class="mt-4 bg-amber-950/20 border border-amber-500/20 rounded-xl p-4 text-xs sm:text-sm text-amber-300 leading-relaxed">
+                  <p class="font-bold mb-1">💡 English Hint:</p>
+                  <p class="mb-2 text-slate-300">{activeQuestion.hint}</p>
+                  <p class="font-bold mb-1 border-t border-amber-500/10 pt-2">🇲🇾 Petunjuk Melayu:</p>
+                  <p class="text-slate-400 italic">{activeQuestion.hintM}</p>
                 </div>
               )}
-            </div>
+            </main>
+          )}
 
-            <div className="text-center pt-2">
-              <button 
-                onClick={() => setCurrentScreen('levels')}
-                className="text-xs font-bold text-slate-500 hover:text-rose-400 transition"
-              >
-                ✖ Quit Game / Keluar Portal Kuiz
-              </button>
-            </div>
-          </div>
-        )}
+          {/* --- DIALOG MODAL FOR EXPLANATION --- */}
+          {showTipModal && selectedOption && (
+            <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+              <div class="bg-slate-900 border border-slate-800 w-full max-w-md p-6 rounded-2xl shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+                <div class="text-center mb-4">
+                  {selectedOption.isCorrect ? (
+                    <div>
+                      <span class="inline-flex p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-2xl text-emerald-400">✨</span>
+                      <h4 class="text-lg font-black text-emerald-400 mt-2 uppercase tracking-wide">Tahniah! / Correct!</h4>
+                    </div>
+                  ) : (
+                    <div>
+                      <span class="inline-flex p-3 bg-rose-500/10 border border-rose-500/20 rounded-full text-2xl text-rose-400">❌</span>
+                      <h4 class="text-lg font-black text-rose-400 mt-2 uppercase tracking-wide">Kurang Tepat / Incorrect</h4>
+                    </div>
+                  )}
+                </div>
 
-        {/* SCREEN 4: SUCCESS CONQUERED SCREEN */}
-        {currentScreen === 'completed' && activeSet && (
-          <div className="max-w-md w-full bg-slate-900 rounded-3xl border-2 border-slate-800 p-6 sm:p-8 text-center space-y-6 shadow-2xl relative overflow-hidden">
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none"></div>
+                <div class="bg-slate-950/50 border border-slate-800/80 rounded-xl p-4 mb-5 space-y-3 max-h-[240px] overflow-y-auto">
+                  <div>
+                    <p class="text-[10px] uppercase tracking-widest text-slate-500 font-black">Your Answer / Pilihan Anda:</p>
+                    <p class="text-slate-200 font-bold text-xs mt-0.5">{selectedOption.text}</p>
+                    <p class="text-[11px] text-slate-500 italic">{selectedOption.textM}</p>
+                  </div>
 
-            <div className="space-y-2">
-              <span className="inline-block text-6xl animate-bounce">🏆</span>
-              <h2 className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-amber-400 to-orange-500 uppercase tracking-widest">
-                QUEST COMPLETED!
-              </h2>
-              <p className="text-emerald-400 text-xs sm:text-sm font-extrabold uppercase tracking-widest">
-                DUNIA BERJAYA DISELESAIKAN!
-              </p>
-            </div>
+                  <div class="pt-2.5 border-t border-slate-800/80">
+                    <p class="text-[10px] uppercase tracking-widest text-indigo-400 font-black">Book Fact / Info Ilmu Buku:</p>
+                    <p class="text-slate-200 font-medium text-xs mt-1 leading-relaxed">{activeQuestion.tip}</p>
+                    <p class="text-slate-400 italic text-[11px] mt-1 leading-relaxed border-l-2 border-indigo-500/50 pl-2">{activeQuestion.tipM}</p>
+                  </div>
+                </div>
 
-            {/* Performance Card */}
-            <div className="bg-slate-950 p-5 rounded-2xl border border-slate-800 space-y-3.5 shadow-inner text-xs sm:text-sm">
-              <div className="flex justify-between items-center border-b border-slate-800 pb-2">
-                <span className="text-slate-400">Challenge World:</span>
-                <span className="font-black text-amber-400">{activeSet.title}</span>
-              </div>
-              <div className="flex justify-between items-center border-b border-slate-800 pb-2">
-                <span className="text-slate-400">Total Score:</span>
-                <span className="font-extrabold text-white">{temporaryScore} PTS</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-slate-400">Stars Earned:</span>
-                <span className="font-black text-amber-300">
-                  ⭐ {questionAttempts.reduce((sum, item) => sum + item, 0)} / 30
-                </span>
-              </div>
-            </div>
-
-            {/* Badge Notification */}
-            <div className="p-4 bg-indigo-950/40 rounded-xl border border-indigo-500/30 flex items-center space-x-3.5">
-              <span className="text-3xl">🏅</span>
-              <div className="text-left">
-                <p className="text-[10px] font-black text-indigo-300 uppercase">Badge Unlocked / Lencana Dibuka:</p>
-                <p className="text-sm font-black text-white">Guardian of {activeSet.title.split(" ")[0]} 🌟</p>
-              </div>
-            </div>
-
-            {/* Leaderboard Submission Form */}
-            <form onSubmit={handleSubmitScore} className="space-y-3">
-              <label className="block text-[10px] font-black text-slate-400 text-left uppercase tracking-wider">
-                Register on Board / Daftar Rekod:
-              </label>
-              <div className="flex gap-2">
-                <input 
-                  type="text" 
-                  maxLength={15}
-                  value={playerName}
-                  onChange={(e) => setPlayerName(e.target.value)}
-                  placeholder="Enter name / Masuk Nama..." 
-                  className="flex-1 bg-slate-950 border-2 border-slate-850 rounded-xl px-4 py-2.5 text-xs sm:text-sm text-white focus:outline-none focus:border-amber-400"
-                  required
-                />
-                
-                <select 
-                  value={playerAvatar} 
-                  onChange={(e) => setPlayerAvatar(e.target.value)}
-                  className="bg-slate-950 border-2 border-slate-850 rounded-xl px-3 py-2 text-lg text-white cursor-pointer"
-                >
-                  <option value="🔥">🔥</option>
-                  <option value="🦁">🦁</option>
-                  <option value="⭐">⭐</option>
-                  <option value="👑">👑</option>
-                  <option value="🦅">🦅</option>
-                </select>
-              </div>
-
-              <button 
-                type="submit"
-                className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-black rounded-xl text-xs sm:text-sm transition shadow-lg shadow-indigo-600/20 border-b-4 border-indigo-800"
-              >
-                SUBMIT SCORE / HANTAR REKOD 🏆
-              </button>
-            </form>
-
-            <button 
-              onClick={() => setCurrentScreen('levels')}
-              className="text-xs font-bold text-slate-500 hover:text-slate-300 transition block mx-auto"
-            >
-              ◀ Return to Quest Menu
-            </button>
-          </div>
-        )}
-
-        {/* SCREEN 5: LEADERBOARD */}
-        {currentScreen === 'leaderboard' && (
-          <div className="max-w-md w-full bg-slate-900 rounded-3xl border-2 border-slate-800 p-6 sm:p-8 space-y-6 shadow-2xl relative">
-            <div className="text-center space-y-1">
-              <span className="text-4xl">🏆</span>
-              <h2 className="text-2xl sm:text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-300 uppercase tracking-wide">
-                HALL OF GUARDIANS
-              </h2>
-              <p className="text-xs text-slate-400 italic">Senarai Rekod Jaguh Tertinggi</p>
-            </div>
-
-            {/* List Table */}
-            <div className="bg-slate-950 rounded-2xl border border-slate-800 overflow-hidden shadow-inner">
-              <div className="grid grid-cols-12 gap-1 bg-slate-900 px-4 py-2.5 text-[10px] font-black text-slate-400 uppercase tracking-wider border-b border-slate-800">
-                <span className="col-span-2 text-center">Rank</span>
-                <span className="col-span-5">Player</span>
-                <span className="col-span-3 text-right">Stars</span>
-                <span className="col-span-2 text-right">PTS</span>
-              </div>
-
-              <div className="divide-y divide-slate-900">
-                {leaderboard.length === 0 ? (
-                  <p className="p-4 text-xs text-slate-500 text-center italic">No records registered yet.</p>
+                {selectedOption.isCorrect ? (
+                  <button onClick={handleNext} class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-black rounded-xl text-xs sm:text-sm transition uppercase tracking-wider shadow-lg">
+                    ➡ Continue Soalan Seterusnya
+                  </button>
                 ) : (
-                  leaderboard.map((item, idx) => {
-                    const medals = ["🥇", "🥈", "🥉"];
-                    const medal = medals[idx] || `${idx + 1}`;
-                    return (
-                      <div 
-                        key={idx} 
-                        className={`grid grid-cols-12 gap-1 px-4 py-3 items-center text-xs sm:text-sm transition hover:bg-slate-900/50 ${idx === 0 ? "bg-amber-500/5" : ""}`}
-                      >
-                        <span className="col-span-2 text-center text-base font-black">{medal}</span>
-                        <div className="col-span-5 flex items-center space-x-2 truncate">
-                          <span className="text-base">{item.avatar}</span>
-                          <span className="font-extrabold text-slate-200 truncate">{item.name}</span>
-                        </div>
-                        <span className="col-span-3 text-right font-black text-amber-300">⭐ {item.stars}</span>
-                        <span className="col-span-2 text-right font-black text-slate-300">{item.score}</span>
-                      </div>
-                    );
-                  })
+                  <button onClick={handleManualTryAgainDismiss} class="w-full py-3.5 bg-gradient-to-r from-rose-500 to-orange-500 text-white font-black rounded-xl text-xs sm:text-sm transition uppercase tracking-wider shadow-lg">
+                    🔄 Re-attempt Question / Cuba Lagi
+                  </button>
                 )}
               </div>
             </div>
+          )}
 
-            {/* Navigation Options */}
-            <div className="space-y-2">
-              <button 
-                onClick={() => setCurrentScreen('levels')}
-                className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 font-black rounded-xl text-xs sm:text-sm shadow hover:opacity-90 transition uppercase tracking-wider"
-              >
-                SELECT PLAY WORLD 🎮
-              </button>
-              
-              <button 
-                onClick={() => setCurrentScreen('welcome')}
-                className="w-full py-2.5 bg-slate-850 hover:bg-slate-800 text-slate-300 font-bold rounded-xl text-xs transition"
-              >
-                ◀ Go To Welcome Screen
-              </button>
-            </div>
-          </div>
-        )}
-
-      </main>
-
-      {/* --- PLAY AGAIN POPUP MODAL (For Wrong Answers with Academic Guidance) --- */}
-      {showTryAgainPopup && activeQuestion && selectedOption && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="max-w-md w-full bg-slate-950 rounded-3xl border-2 border-rose-500 p-6 text-center space-y-6 shadow-2xl">
-            
-            <div className="space-y-2">
-              <span className="inline-block text-5xl animate-bounce">💡</span>
-              <h3 className="text-xl sm:text-2xl font-black text-rose-400 uppercase tracking-wider">
-                TRY AGAIN / CUBA LAGI!
-              </h3>
-              <p className="text-slate-400 text-xs italic">
-                Sains & Ilmu sentiasa berkembang, mari kita belajar dari buku!
-              </p>
-            </div>
-
-            {/* Educational Fact Explanation */}
-            <div className="bg-slate-900 p-4 rounded-2xl border border-slate-850 text-left space-y-3">
-              <div>
-                <p className="text-[10px] uppercase tracking-widest text-rose-400 font-black">Your Choice / Pilihan Anda:</p>
-                <p className="text-slate-300 font-extrabold text-xs sm:text-sm mt-0.5 line-through decoration-rose-500">{selectedOption.text}</p>
-                <p className="text-[11px] text-slate-500 italic">{selectedOption.textM}</p>
-              </div>
-
-              <div className="pt-2.5 border-t border-slate-800/80">
-                <p className="text-[10px] uppercase tracking-widest text-indigo-400 font-black">Book Fact / Info Ilmu Buku:</p>
-                <p className="text-slate-200 font-medium text-xs mt-1 leading-relaxed">
-                  {activeQuestion.tip}
-                </p>
-                <p className="text-slate-400 italic text-[11px] mt-1 leading-relaxed border-l-2 border-indigo-500/50 pl-2">
-                  {activeQuestion.tipM}
-                </p>
-              </div>
-            </div>
-
-            <button 
-              onClick={handleManualTryAgainDismiss}
-              className="w-full py-3.5 bg-gradient-to-r from-rose-500 to-orange-500 text-white font-black rounded-xl text-xs sm:text-sm transition uppercase tracking-wider shadow-lg"
-            >
-              🔄 Re-attempt Question / Cuba Lagi
-            </button>
-          </div>
+          <footer class="bg-slate-950 p-4 text-center border-t border-slate-900 text-slate-600 text-xs">
+            <p>© 2026 Dr. MRAR. All Rights Reserved.</p>
+          </footer>
         </div>
-      )}
+      );
+    }
 
-      {/* --- FOOTER COPYRIGHT --- */}
-      <footer className="bg-slate-950 p-4 text-center border-t border-slate-900 text-slate-600 text-xs">
-        <p>© 2026 Zoroastrian Quest: History, Development, Beliefs & Rituals. Malaysia Kids Edu-Edition.</p>
-        <p className="mt-0.5 italic text-slate-600 text-[10px]">Reference: Books 1 & 2 (History and Development | Beliefs, Rites and Rituals)</p>
-      </footer>
-    </div>
-  );
-}
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<QuizApp />);
+  </script>
+</body>
+</html>
